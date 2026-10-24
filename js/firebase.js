@@ -25,10 +25,17 @@ const provider = new GoogleAuthProvider();
 const standalone = () => window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 
 export async function login() {
-  // En la app instalada (pantalla de inicio) la ventana emergente no funciona: se usa redirección.
-  if (standalone()) return signInWithRedirect(auth, provider);
+  // Ventana emergente siempre: la redirección pierde el resultado en Safari/Chrome móvil cuando authDomain
+  // es otro dominio. En la app instalada (pantalla de inicio) la emergente no abre: lo informamos.
   try { return await signInWithPopup(auth, provider); }
-  catch (e) { if (e && /popup/.test(e.code || "")) return signInWithRedirect(auth, provider); throw e; }
+  catch (e) {
+    const code = (e && e.code) || "";
+    if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") throw Object.assign(new Error("Cerraste la ventana de Google antes de terminar."), { code });
+    if (code === "auth/unauthorized-domain") throw Object.assign(new Error("Este dominio no está autorizado en Firebase: agregá " + location.hostname + " en Authentication → Dominios autorizados."), { code });
+    if (standalone() || code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment")
+      throw Object.assign(new Error("Acá no se puede abrir la ventana de Google. Entrá desde Safari o Chrome (no desde el ícono de inicio) y después volvé."), { code });
+    throw e;
+  }
 }
 export const logout = () => signOut(auth);
 export const watchAuth = (cb) => onAuthStateChanged(auth, cb);

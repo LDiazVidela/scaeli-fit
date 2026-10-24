@@ -78,7 +78,7 @@ let view="hoy",foods=[],combos=[],targets=DEFAULT_TARGETS,routines=DEFAULT_ROUTI
     cur=today(),day=null,workout=null,wcur=today(),routineSel=null,backend=null,ready=false,offerSkip=false;
 
 /* ---------- Almacenamiento: ver firebase.js ---------- */
-let statusTxt="Conectando…",statusErr=false;
+let statusTxt="",statusErr=false;
 function setStatus(t,err){statusTxt=t;statusErr=!!err;const s=$("#status");if(s){s.textContent=t;s.classList.toggle("err",!!err)}}
 function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>el.hidden=true,2000)}
 async function write(p,okMsg){try{await p;if(okMsg)toast(okMsg)}catch(e){toast(e&&e.code==="quota_exceeded"?"La base está llena: borrá lo que no uses.":"No se pudo guardar. Probá de nuevo.")}}
@@ -575,10 +575,10 @@ function startSession(u){
 }
 function endSession(){user=null;backend=null;ready=false;unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];profile=null;foods=[];userFoods=[];combos=[];recipes=[];bodyRows=[];tracks=[];loads={};intents=[];day=null;workout=null;targets=DEFAULT_TARGETS;routines=DEFAULT_ROUTINES;closeSheet();renderLogin()}
 document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
-  if(b.id==="login"){b.disabled=true;setStatus("Abriendo Google…");login().catch(err=>{setStatus("No se pudo entrar: "+(err&&err.message||""),true);b.disabled=false})}
+  if(b.id==="login"){b.disabled=true;setStatus("Abriendo Google…");login().then(()=>setStatus("Entrando…")).catch(err=>{setStatus(err&&err.message||"No se pudo entrar. Probá de nuevo.",true);b.disabled=false})}
   else if(b.id==="logout"){logout()}});
 try{if(localStorage.getItem("balanza_theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}
 fetch("data/foods.json").then(r=>r.json()).then(list=>{BASE=list;mergeFoods()}).catch(()=>setStatus("No se pudo cargar la base de alimentos.",true));
 if(navigator.serviceWorker&&navigator.serviceWorker.register){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
 renderLogin();
-finishRedirect().then(()=>{watchAuth(u=>{if(u)startSession(u);else endSession()})});
+finishRedirect().then(()=>{watchAuth(u=>{if(u)startSession(u);else{endSession();if(!statusTxt)setStatus("Guardado en tu cuenta de Google. Nada es público.")}})});
