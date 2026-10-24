@@ -1,0 +1,10 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Música y archivos de cada persona, en su propia carpeta. Máximo 40 MB por archivo.
+    match /users/{uid}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid
+                         && (request.resource == null || request.resource.size < 40 * 1024 * 1024);
+    }
+  }
+}
