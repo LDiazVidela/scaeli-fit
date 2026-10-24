@@ -8,5 +8,6 @@
 //   quieto   : cuadro para miniaturas/fichas (por defecto = inicio)
 //   vista    : dirección exportada en PixelLab, informativa
 export const EJERCICIOS = {
-  "sentadilla-goblet": { nombre: "Sentadilla goblet", fps: 8, inicio: 1, espejar: false, quieto: 2, vista: "east" },
+  "sentadilla-goblet": { nombre: "Sentadilla goblet", fps: 8, inicio: 2, espejar: false, quieto: 2, vista: "east" },
+  "peso-muerto-rumano": { nombre: "Peso muerto rumano", fps: 8, inicio: 0, espejar: false, quieto: 0, vista: "east" },
 };

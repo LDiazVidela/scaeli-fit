@@ -1,0 +1,60 @@
+{
+ "frameW": 172,
+ "frameH": 172,
+ "frames": 8,
+ "floorY": 147,
+ "direction": "east",
+ "bboxes": [
+  [
+   23,
+   25,
+   149,
+   147
+  ],
+  [
+   23,
+   25,
+   149,
+   147
+  ],
+  [
+   23,
+   25,
+   149,
+   147
+  ],
+  [
+   23,
+   31,
+   149,
+   147
+  ],
+  [
+   22,
+   38,
+   147,
+   147
+  ],
+  [
+   23,
+   38,
+   147,
+   147
+  ],
+  [
+   22,
+   33,
+   148,
+   147
+  ],
+  [
+   23,
+   25,
+   149,
+   147
+  ]
+ ],
+ "source": "pixellab",
+ "character": "Young adult male athlete, athletic muscular build, realistic proportions (about ",
+ "animation": "Romanian_deadlift_animation_8_frames_seamless_loop"
+}

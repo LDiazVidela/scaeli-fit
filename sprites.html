@@ -43,7 +43,7 @@
   <div class="seg" id="fpsSel"><span>FPS</span><button data-v="6">6</button><button data-v="8" class="on">8</button><button data-v="10">10</button></div>
   <div class="seg" id="scaleSel"><span>Escala</span><button data-v="1">1×</button><button data-v="2" class="on">2×</button><button data-v="3">3×</button><button data-v="4">4×</button></div>
   <div class="seg" id="flipSel"><span>Mira</span><button data-v="0" class="on">→</button><button data-v="1">←</button></div>
-  <div class="seg" id="startSel"><span>Loop desde</span><button data-v="1" class="on">cuadro 2</button><button data-v="2">cuadro 3</button><button data-v="0">todos</button></div>
+  <div class="seg" id="startSel"><span>Loop desde</span><button data-v="0">1</button><button data-v="1">2</button><button data-v="2">3</button></div>
   <div class="seg" id="playSel"><button data-v="1" class="on">▶</button><button data-v="0">❚❚</button></div>
 </div>
 
@@ -78,6 +78,7 @@
     try { sprite = await loadSprite(state.id); }
     catch (e) { $("#sub").textContent = e.message; return; }
     const m = sprite.meta, c = sprite.cfg;
+    state.start = c.inicio ?? 0; document.querySelectorAll("#startSel button").forEach((b) => b.classList.toggle("on", +b.dataset.v === state.start));
     $("#sub").textContent = `${c.nombre} · ${m.frames} cuadros de ${m.frameW}×${m.frameH} px · piso y=${m.floorY} · vista ${m.direction}`;
     const common = { fps: state.fps, scale: state.scale, flip: state.flip, start: state.start, autoplay: true };
     anims = [new SpriteAnim($("#cL"), sprite, common), new SpriteAnim($("#cD"), sprite, common)];
