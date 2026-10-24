@@ -1,0 +1,66 @@
+{
+ "frameW": 172,
+ "frameH": 172,
+ "frames": 9,
+ "floorY": 147,
+ "direction": "east",
+ "bboxes": [
+  [
+   75,
+   25,
+   102,
+   147
+  ],
+  [
+   75,
+   26,
+   102,
+   147
+  ],
+  [
+   74,
+   27,
+   113,
+   147
+  ],
+  [
+   70,
+   34,
+   113,
+   147
+  ],
+  [
+   67,
+   47,
+   116,
+   147
+  ],
+  [
+   67,
+   53,
+   116,
+   147
+  ],
+  [
+   67,
+   53,
+   115,
+   147
+  ],
+  [
+   68,
+   42,
+   114,
+   147
+  ],
+  [
+   68,
+   33,
+   113,
+   147
+  ]
+ ],
+ "source": "pixellab",
+ "character": "Young adult male athlete, athletic muscular build, realistic proportions (about ",
+ "animation": "Goblet_squat_animation_8_frames_seamless_loop._Fra"
+}

@@ -62,3 +62,13 @@ GitHub Pages desde la rama `main`, carpeta raíz. Cada `push` actualiza la app; 
 ## Licencia
 
 Código: MIT. Textos de oraciones y meditaciones: libres para uso personal y pastoral.
+
+## Sprites de ejercicios (pixel art)
+
+Las animaciones viven en `assets/ejercicios/<id>/<id>.png` (spritesheet horizontal) + `<id>.json` (tamaño de cuadro, cantidad, línea de piso). Pantalla de prueba: `sprites.html`.
+
+Para sumar un ejercicio nuevo:
+1. Exportá el personaje desde PixelLab (ZIP con `metadata.json`), con la animación del ejercicio ya generada.
+2. Corré `python3 tools/pixellab2sheet.py <archivo.zip> <id-del-ejercicio> --dir east` (nombre en minúsculas con guiones, ej. `peso-muerto-rumano`). Genera el PNG y el JSON en `assets/ejercicios/<id>/` y avisa si los pies no quedan en la misma línea.
+3. Registralo en `data/ejercicios.js`: `"<id>": { nombre, fps: 8, inicio: 1, espejar: false }` (`inicio: 1` saltea el cuadro quieto que agrega PixelLab).
+4. Abrí `sprites.html`, elegí el ejercicio y revisá loop, FPS y espejado. Listo: la app lo usa desde el mismo registro.

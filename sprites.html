@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scaeli Fit · prueba de sprites</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0C0D10;--surface:#15171C;--inset:#1E2027;--ink:#F3F1EC;--muted:#7E8087;--accent:#F2B544;--paper:#ECEAE4;--paper-ink:#1B1C20}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;padding:20px 16px 48px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+  .ctrl{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+  .seg{display:flex;background:var(--inset);border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;font-size:13px;padding:7px 12px;border-radius:999px;cursor:pointer}
+  .seg button.on{background:var(--accent);color:#1B1C20}
+  .seg span{color:var(--muted);font-size:12px;padding:8px 6px 0 10px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:520px){.grid{grid-template-columns:1fr}}
+  .stage{border-radius:22px;padding:16px;min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden}
+  .stage.dark{background:var(--surface);border:1px solid rgba(255,255,255,.07)}
+  .stage.light{background:var(--paper);color:var(--paper-ink)}
+  .stage small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.6}
+  canvas{image-rendering:pixelated;image-rendering:crisp-edges}
+  .info{margin-top:16px;background:var(--surface);border-radius:16px;padding:12px 14px;font-size:13px;color:var(--muted);line-height:1.5}
+  .info b{color:var(--ink)}
+  .strip{margin-top:14px;overflow-x:auto;background:var(--paper);border-radius:16px;padding:10px;display:flex;gap:4px}
+  .strip canvas{flex:none;outline:1px solid rgba(0,0,0,.06);border-radius:6px;width:86px!important;height:86px!important}
+  .strip canvas.off{opacity:.3}
+  .strip canvas.cur{outline:2px solid var(--accent)}
+  .rotas{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .rotas img{width:64px;height:64px;image-rendering:pixelated;background:var(--inset);border-radius:10px}
+</style>
+</head>
+<body>
+<h1>Prueba de sprites</h1>
+<p class="sub" id="sub">Cargando…</p>
+
+<div class="ctrl">
+  <div class="seg" id="exSel"><span>Ejercicio</span></div>
+  <div class="seg" id="fpsSel"><span>FPS</span><button data-v="6">6</button><button data-v="8" class="on">8</button><button data-v="10">10</button></div>
+  <div class="seg" id="scaleSel"><span>Escala</span><button data-v="1">1×</button><button data-v="2" class="on">2×</button><button data-v="3">3×</button><button data-v="4">4×</button></div>
+  <div class="seg" id="flipSel"><span>Mira</span><button data-v="0" class="on">→</button><button data-v="1">←</button></div>
+  <div class="seg" id="startSel"><span>Loop desde</span><button data-v="1" class="on">cuadro 2</button><button data-v="2">cuadro 3</button><button data-v="0">todos</button></div>
+  <div class="seg" id="playSel"><button data-v="1" class="on">▶</button><button data-v="0">❚❚</button></div>
+</div>
+
+<div class="grid">
+  <div class="stage light"><small>Fondo claro</small><canvas id="cL"></canvas></div>
+  <div class="stage dark"><small>Fondo oscuro</small><canvas id="cD"></canvas></div>
+</div>
+
+<div class="strip" id="strip"></div>
+<div class="info" id="info"></div>
+<div class="info">Personaje base (rotaciones de PixelLab, 128 px):<div class="rotas" id="rotas"></div></div>
+
+<script type="module">
+  import { SpriteAnim, loadSprite, EJERCICIOS } from "./js/sprite.js";
+  const $ = (s) => document.querySelector(s);
+  const state = { id: Object.keys(EJERCICIOS)[0], fps: 8, scale: 2, flip: false, start: 1 };
+  let anims = [], sprite = null, stripCanvases = [];
+
+  const exSel = $("#exSel");
+  Object.keys(EJERCICIOS).forEach((id, i) => { const b = document.createElement("button"); b.dataset.v = id; b.textContent = EJERCICIOS[id].nombre; if (!i) b.className = "on"; exSel.appendChild(b); });
+
+  function seg(el, fn) { el.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; el.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); fn(b.dataset.v); }); }
+  seg(exSel, (v) => { state.id = v; load(); });
+  seg($("#fpsSel"), (v) => { state.fps = +v; anims.forEach((a) => a.set({ fps: +v })); paintInfo(); });
+  seg($("#scaleSel"), (v) => { state.scale = +v; anims.forEach((a) => a.set({ scale: +v })); });
+  seg($("#flipSel"), (v) => { state.flip = v === "1"; anims.forEach((a) => a.set({ flip: state.flip })); });
+  seg($("#startSel"), (v) => { state.start = +v; anims.forEach((a) => a.set({ start: +v })); markStrip(); paintInfo(); });
+  seg($("#playSel"), (v) => { anims.forEach((a) => v === "1" ? a.play() : a.stop()); });
+
+  async function load() {
+    anims.forEach((a) => a.stop()); anims = [];
+    try { sprite = await loadSprite(state.id); }
+    catch (e) { $("#sub").textContent = e.message; return; }
+    const m = sprite.meta, c = sprite.cfg;
+    $("#sub").textContent = `${c.nombre} · ${m.frames} cuadros de ${m.frameW}×${m.frameH} px · piso y=${m.floorY} · vista ${m.direction}`;
+    const common = { fps: state.fps, scale: state.scale, flip: state.flip, start: state.start, autoplay: true };
+    anims = [new SpriteAnim($("#cL"), sprite, common), new SpriteAnim($("#cD"), sprite, common)];
+    // tira de cuadros
+    const strip = $("#strip"); strip.innerHTML = ""; stripCanvases = [];
+    for (let i = 0; i < m.frames; i++) { const cv = document.createElement("canvas"); cv.title = "cuadro " + (i + 1); strip.appendChild(cv); new SpriteAnim(cv, sprite, { scale: 1, start: i, end: i }); stripCanvases.push(cv); }
+    markStrip(); paintInfo(); followFrame();
+  }
+  function markStrip() { stripCanvases.forEach((cv, i) => cv.classList.toggle("off", i < state.start)); }
+  function followFrame() { requestAnimationFrame(followFrame); if (!anims[0]) return; stripCanvases.forEach((cv, i) => cv.classList.toggle("cur", i === anims[0].frame)); }
+  function paintInfo() {
+    if (!sprite) return;
+    const m = sprite.meta, a = anims[0];
+    const floors = [...new Set(m.bboxes.map((b) => b[3]))];
+    const heights = m.bboxes.map((b) => b[3] - b[1]);
+    $("#info").innerHTML = `<b>Loop:</b> cuadros ${a.start + 1} a ${a.end + 1} (${a.length} cuadros) a ${a.fps} fps = ${(a.length / a.fps).toFixed(2)} s por repetición.<br>
+      <b>Pies:</b> ${floors.length === 1 ? "misma línea en todos los cuadros (y=" + floors[0] + "), desfasaje 0 px" : "DESFASAJE: líneas " + floors.join(", ")}.<br>
+      <b>Alto del personaje por cuadro:</b> ${heights.join(" · ")} px.<br>
+      <b>Ancho mínimo necesario:</b> ${Math.max(...m.bboxes.map((b) => b[2] - b[0]))} px de ${m.frameW} (no hay recortes en los bordes).`;
+  }
+  ["south", "south-east", "east", "north-east", "north", "north-west", "west", "south-west"].forEach((d) => { const im = new Image(); im.src = "assets/personaje/" + d + ".png"; im.title = d; $("#rotas").appendChild(im); });
+  load();
+</script>
+</body>
+</html>

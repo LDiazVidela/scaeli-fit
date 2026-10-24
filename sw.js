@@ -1,5 +1,5 @@
 // Service worker: la app funciona sin señal. El índice se busca primero en la red (para recibir versiones nuevas) y cae al caché.
-const VERSION = "scaeli-fit-v3";
+const VERSION = "scaeli-fit-v4";
 const SHELL = ["./", "./index.html", "./css/app.css", "./js/app.js", "./js/firebase.js", "./data/foods.json", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
