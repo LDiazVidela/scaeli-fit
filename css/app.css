@@ -154,7 +154,11 @@ form{display:flex;flex-direction:column;gap:10px}
 .sheet.short{height:auto;max-height:86vh}
 .sheet .in{max-width:560px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:12px;min-height:0;flex:1}
 .sheet h3{margin:0;font-size:22px;font-weight:500;letter-spacing:-.02em;display:flex;justify-content:space-between;align-items:center;gap:10px}
-.scroll{overflow-y:auto;min-height:0;flex:1;margin:0 -4px;padding:0 4px;-webkit-overflow-scrolling:touch}
+.scroll{overflow-y:auto;min-height:0;flex:1;margin:0 -4px;padding:0 4px 8px;-webkit-overflow-scrolling:touch}
+.scroll>*{flex-shrink:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips button{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:12px}
+.chips button[aria-pressed="true"],.chips button.on{border-color:var(--accent-line);background:var(--accent-dim);color:var(--accent)}
 .food{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:12px 2px}
 .food b{font-weight:500}
 .food small{color:var(--muted);font-size:12px;white-space:nowrap}
@@ -172,7 +176,7 @@ form{display:flex;flex-direction:column;gap:10px}
 .rosary .beads{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
 .rosary .beads i{width:10px;height:10px;border-radius:999px;background:var(--track);display:block}
 .rosary .beads i.on{background:var(--accent)}
-.rosary .txt{font-size:20px;font-weight:300;line-height:1.4;min-height:5em}
+.rosary .txt{font-size:20px;font-weight:300;line-height:1.4;margin:0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;z-index:30}
 @media (prefers-reduced-motion:no-preference){ .bar i,.bar3 i{transition:width .3s ease} .sheet{animation:up .18s ease-out} @keyframes up{from{transform:translateY(24px);opacity:.6}} }
 @media (max-width:380px){ .kcal .big{font-size:56px} .sets{grid-template-columns:20px 1fr 1fr 1fr 36px 36px;gap:6px} .title{font-size:32px} }
