@@ -10,4 +10,5 @@
 export const EJERCICIOS = {
   "sentadilla-goblet": { nombre: "Sentadilla goblet", fps: 8, inicio: 2, espejar: false, quieto: 2, vista: "east" },
   "peso-muerto-rumano": { nombre: "Peso muerto rumano", fps: 8, inicio: 0, espejar: false, quieto: 0, vista: "east" },
+  "jalon-al-pecho": { nombre: "Jalón al pecho (provisorio)", fps: 8, inicio: 0, espejar: false, quieto: 0, vista: "east" },
 };

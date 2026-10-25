@@ -1,0 +1,60 @@
+{
+ "frameW": 105,
+ "frameH": 150,
+ "frames": 8,
+ "floorY": 146,
+ "direction": "east",
+ "bboxes": [
+  [
+   4,
+   4,
+   101,
+   146
+  ],
+  [
+   4,
+   18,
+   101,
+   146
+  ],
+  [
+   4,
+   32,
+   101,
+   146
+  ],
+  [
+   4,
+   41,
+   101,
+   146
+  ],
+  [
+   4,
+   41,
+   101,
+   146
+  ],
+  [
+   4,
+   41,
+   101,
+   146
+  ],
+  [
+   4,
+   34,
+   101,
+   146
+  ],
+  [
+   4,
+   32,
+   101,
+   146
+  ]
+ ],
+ "source": "pixellab",
+ "character": "Same character, seat",
+ "animation": "Lat pulldown animation from the seated state, 8 frames, seam"
+}
