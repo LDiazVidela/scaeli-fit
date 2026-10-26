@@ -1,0 +1,225 @@
+# nombre | kcal | prot | carb | grasa (por 100 g) | unitG | unitName
+# Valores de referencia de tablas argentinas (Argenfoods UNLu / SARA) y recetas típicas; redondeados.
+# ---- Puré y guarniciones ----
+Puré de batata|105|1.6|22.0|1.5|200|porción
+Puré de batata con manteca y leche|125|2.0|22.0|3.5|200|porción
+Puré mixto (papa y zapallo)|78|1.8|15.0|1.5|200|porción
+Puré de zapallo|45|1.2|9.0|0.5|200|porción
+Puré instantáneo preparado|95|2.0|15.0|3.0|200|porción
+Batata frita|210|1.8|32.0|8.5|100|porción
+Papas fritas caseras|270|3.5|35.0|13.0|120|porción
+Papas al horno con aceite|130|2.2|24.0|3.0|150|porción
+Papas noisette|190|2.5|28.0|8.0|100|porción
+Mandioca hervida|120|1.0|28.0|0.3|120|porción
+Choclo con manteca|130|3.5|22.0|4.0|180|choclo
+Ensalada rusa|155|3.0|14.0|10.0|150|porción
+Ensalada de zanahoria y huevo|95|4.0|8.0|5.0|150|porción
+Tortilla de papa|175|5.5|15.0|11.0|150|porción
+Revuelto gramajo|215|8.0|14.0|14.0|250|plato
+Arroz con queso|165|5.5|25.0|5.0|200|plato
+Arroz primavera|140|3.5|27.0|2.0|200|plato
+Polenta cocida|80|2.0|17.0|0.5|250|plato
+Polenta con queso y salsa|130|5.0|17.0|4.5|300|plato
+# ---- Panes y panadería ----
+Pan blanco común de panadería (mignón, felipe)|270|8.5|55.0|1.5|50|mignón
+Pan flauta|275|8.5|56.0|1.5|60|porción
+Pan de miga|265|8.5|50.0|3.5|30|rebanada
+Pan de salvado|250|10.0|45.0|3.5|30|rebanada
+Pan de campo|265|8.5|53.0|2.0|60|porción
+Pan de viena / pancho|290|8.5|52.0|5.0|45|unidad
+Pan de pebete|285|9.0|52.0|4.5|60|pebete
+Figacita de manteca|330|8.0|52.0|10.0|40|figacita
+Chipá|330|10.0|38.0|15.0|40|chipá
+Grisines|400|12.0|72.0|7.0|7|grisín
+Bizcochitos de grasa|450|7.0|50.0|25.0|12|bizcochito
+Tostadas de arroz|385|8.0|81.0|3.0|9|tostada
+Tostadas de gluten|370|28.0|52.0|5.0|8|tostada
+Galletitas de agua tipo Criollitas|430|10.0|68.0|13.0|6|galletita
+Galletitas de salvado|420|11.0|65.0|13.0|8|galletita
+Galletitas dulces tipo Lincoln / vainillas secas|450|7.0|72.0|15.0|8|galletita
+Galletitas tipo Oreo / rellenas|480|5.0|70.0|20.0|11|galletita
+Galletitas Pepitos|480|6.0|66.0|21.0|12|galletita
+Galletitas de arroz con chocolate|430|5.0|68.0|15.0|15|galletita
+Scones|350|7.0|50.0|14.0|50|scon
+Torta frita|400|6.0|48.0|20.0|45|unidad
+Pan dulce|380|8.0|58.0|13.0|80|porción
+Budín de pan|250|6.0|40.0|8.0|120|porción
+# ---- Facturas ----
+Medialuna de manteca (panadería)|390|7.0|52.0|17.0|45|medialuna
+Medialuna de grasa|370|7.0|52.0|15.0|40|medialuna
+Factura vigilante / cañoncito|400|6.5|55.0|17.0|60|factura
+Factura con dulce de leche|395|6.0|58.0|15.0|60|factura
+Factura con crema pastelera|360|6.5|50.0|15.0|60|factura
+Churro relleno de dulce de leche|420|5.0|55.0|20.0|60|churro
+Churro simple|390|5.0|52.0|18.0|40|churro
+Bola de fraile / berlinesa|380|6.0|50.0|17.0|70|unidad
+Alfajor de maicena|430|5.0|60.0|19.0|40|alfajor
+Alfajor triple de chocolate|470|5.5|62.0|22.0|70|alfajor
+Alfajor simple de chocolate|450|5.0|63.0|20.0|45|alfajor
+Alfajor de fruta / membrillo|380|4.0|70.0|9.0|45|alfajor
+Pastafrola de membrillo|350|5.0|58.0|11.0|100|porción
+Chocotorta|390|5.0|40.0|24.0|120|porción
+Flan casero|150|5.0|25.0|3.5|120|porción
+Flan con dulce de leche|215|5.5|38.0|4.5|150|porción
+Arroz con leche|125|3.5|22.0|2.5|150|porción
+Vigilante (queso y dulce)|300|8.0|45.0|10.0|100|porción
+Dulce de batata|250|0.6|62.0|0.1|40|porción
+Dulce de membrillo|240|0.4|60.0|0.1|40|porción
+Helado de dulce de leche|230|4.0|30.0|10.0|100|bocha
+Helado de agua / sorbete|120|0.5|30.0|0.0|100|bocha
+# ---- Pastas y masas ----
+Ñoquis de papa cocidos|160|4.5|33.0|0.8|250|plato
+Ravioles de ricota y verdura cocidos|180|7.5|28.0|4.5|250|plato
+Ravioles de carne cocidos|195|9.0|27.0|5.5|250|plato
+Sorrentinos de jamón y queso cocidos|230|9.0|30.0|8.5|250|plato
+Tallarines frescos cocidos|160|6.0|30.0|1.5|250|plato
+Canelones de verdura y ricota|140|6.5|12.0|7.5|300|plato
+Lasaña de carne|165|9.0|14.0|8.0|300|porción
+Fideos con tuco|140|5.0|24.0|2.5|300|plato
+Fideos con manteca y queso|190|6.5|27.0|6.5|250|plato
+Salsa bolognesa|120|8.0|6.0|7.0|120|porción
+Salsa blanca|110|3.5|9.0|7.0|60|porción
+Tuco / salsa de tomate casera|60|1.5|7.0|3.0|100|porción
+Salsa cuatro quesos|200|8.0|6.0|16.0|80|porción
+Pizza de muzzarella (porción)|255|11.0|30.0|10.0|130|porción
+Pizza de muzzarella a la piedra|270|12.0|32.0|10.5|90|porción
+Pizza fugazzeta|280|10.0|30.0|13.0|140|porción
+Pizza napolitana|240|11.0|28.0|9.5|140|porción
+Fainá|230|7.5|22.0|12.5|60|porción
+Empanada de carne al horno|260|10.0|26.0|13.0|90|empanada
+Empanada de carne frita|320|9.5|27.0|19.0|90|empanada
+Empanada de jamón y queso|280|11.0|26.0|15.0|85|empanada
+Empanada de pollo|240|11.0|25.0|11.0|85|empanada
+Empanada de humita|230|6.0|28.0|11.0|85|empanada
+Empanada de verdura|215|7.0|26.0|9.5|85|empanada
+Tarta de jamón y queso|250|11.0|18.0|15.0|180|porción
+Tarta de verdura (acelga)|190|8.0|16.0|11.0|180|porción
+Tarta pascualina|210|8.5|17.0|12.5|180|porción
+Tarta de zapallitos|180|7.0|15.0|10.5|180|porción
+Tapa de tarta (masa)|320|6.0|45.0|13.0|100|tapa
+Tapa de empanada|300|7.0|50.0|8.0|30|tapa
+Sándwich de miga jamón y queso (simple)|250|11.0|30.0|9.5|60|triple
+Sándwich de miga triple|260|11.0|30.0|10.5|90|triple
+Choripán|300|12.0|25.0|17.0|200|unidad
+Pancho (salchicha con pan)|280|10.0|30.0|13.0|150|unidad
+Hamburguesa completa (pan, carne, queso)|260|13.0|24.0|12.0|220|unidad
+Lomito completo|230|15.0|20.0|10.0|350|unidad
+Milanesa de carne al horno|210|19.0|14.0|9.0|150|milanesa
+Milanesa de carne frita|270|18.0|15.0|16.0|150|milanesa
+Milanesa de pollo al horno|200|20.0|14.0|7.0|150|milanesa
+Milanesa de pollo frita|255|19.0|15.0|14.0|150|milanesa
+Milanesa napolitana|235|17.0|12.0|13.0|220|milanesa
+Milanesa de soja|210|10.0|20.0|10.0|90|milanesa
+Milanesa de berenjena|160|5.0|14.0|9.5|80|milanesa
+Suprema de pollo rellena|215|20.0|9.0|11.0|200|unidad
+Pollo al horno con papas|175|14.0|12.0|8.0|300|plato
+Carne al horno magra|190|28.0|0.0|8.5|150|porción
+Asado de tira a la parrilla|290|23.0|0.0|22.0|200|porción
+Vacío a la parrilla|230|25.0|0.0|14.0|200|porción
+Matambre a la pizza|250|20.0|5.0|17.0|200|porción
+Matambre arrollado|210|22.0|3.0|12.0|80|porción
+Bife de costilla a la plancha|215|27.0|0.0|12.0|200|bife
+Bondiola a la parrilla|280|24.0|0.0|20.0|200|porción
+Cuadril a la plancha|185|28.0|0.0|8.0|150|bife
+Nalga a la plancha|165|30.0|0.0|5.0|150|bife
+Carne picada cocida (para relleno)|240|24.0|0.0|16.0|100|porción
+Albóndigas con salsa|200|13.0|10.0|12.0|200|porción
+Pastel de papa|150|9.0|14.0|7.0|300|porción
+Guiso de lentejas|120|7.0|16.0|3.0|350|plato
+Guiso de arroz con pollo|130|8.0|17.0|3.5|350|plato
+Locro|140|8.0|14.0|6.0|350|plato
+Carbonada|95|7.0|11.0|3.0|350|plato
+Puchero (carne, papa, zapallo, choclo)|110|9.0|10.0|4.0|400|plato
+Estofado de carne con papas|125|11.0|9.0|5.0|350|plato
+Sopa de verduras casera|35|1.5|6.0|0.8|300|plato
+Sopa crema de calabaza|60|1.8|8.0|2.5|300|plato
+Sopa de fideos con caldo|50|2.0|9.0|0.8|300|plato
+Caldo de verduras (cubito)|5|0.3|0.7|0.1|250|taza
+Humita en chala|160|4.0|22.0|7.0|150|unidad
+Tamal|180|7.0|20.0|8.0|150|unidad
+Provoleta a la parrilla|350|25.0|2.0|27.0|100|porción
+Chinchulines a la parrilla|290|15.0|0.0|25.0|100|porción
+Mollejas a la parrilla|260|18.0|0.0|21.0|100|porción
+Morcilla a la parrilla|330|14.0|3.0|29.0|90|morcilla
+Chimichurri|190|1.5|4.0|19.0|15|cda
+Salsa criolla|60|0.8|5.0|4.5|30|cda
+Mayonesa casera|700|1.5|1.0|77.0|15|cda
+Queso cremoso|300|20.0|2.0|24.0|30|porción
+Queso fresco / port salut light|220|24.0|2.0|13.0|30|feta
+Queso sardo|400|30.0|1.0|30.0|20|porción
+Queso de rallar (reggianito)|420|35.0|1.0|30.0|10|cda
+Queso untable entero (tipo Casancrem)|250|6.0|4.0|24.0|20|cda
+Queso untable light|150|9.0|5.0|11.0|20|cda
+Queso por salut|300|23.0|1.0|23.0|30|feta
+Jamón crudo|240|28.0|0.5|14.0|15|feta
+Jamón cocido feteado|110|18.0|1.5|3.5|20|feta
+Paleta cocida|120|15.0|2.5|5.5|20|feta
+Salame milán|400|25.0|1.0|33.0|10|feta
+Salamín|420|24.0|1.0|36.0|20|porción
+Leberwurst|330|14.0|3.0|29.0|20|cda
+Mortadela con pistachos|310|14.0|3.0|27.0|20|feta
+Longaniza|450|22.0|1.0|40.0|30|porción
+Panceta ahumada cruda|420|13.0|0.5|41.0|20|feta
+Yogur bebible entero|80|3.0|13.0|2.0|200|vaso
+Yogur bebible descremado|45|3.2|7.0|0.1|200|vaso
+Yogur firme con frutas|90|3.5|15.0|2.0|120|pote
+Yogur descremado con cereales|95|4.0|17.0|1.0|160|pote
+Yogur proteico (tipo Ser Protein / YoPro)|60|9.0|4.5|0.2|160|pote
+Leche cultivada / Actimel|75|3.0|12.0|1.5|100|botellita
+Postrecito de vainilla (tipo Serenito)|120|3.0|20.0|3.0|100|pote
+Leche chocolatada en polvo (tipo Nesquik, preparada con leche)|85|3.5|13.0|2.0|200|vaso
+Mate cocido|2|0.1|0.3|0.0|200|taza
+Mate cocido con leche|50|2.5|7.0|1.5|200|taza
+Mate cebado (con azúcar)|10|0.0|2.5|0.0|250|mate
+Mate cebado (sin azúcar)|2|0.0|0.3|0.0|250|mate
+Café con leche|45|2.5|5.0|1.8|200|taza
+Café cortado|25|1.5|2.5|1.0|100|taza
+Té con leche|30|1.5|3.5|1.0|200|taza
+Submarino|90|3.5|12.0|3.5|250|taza
+Licuado de banana con leche|85|3.0|15.0|1.5|300|vaso
+Licuado de frutilla con leche|70|3.0|11.0|1.5|300|vaso
+Licuado de frutas con agua|40|0.5|10.0|0.1|300|vaso
+Jugo exprimido de pomelo|40|0.5|9.5|0.1|200|vaso
+Agua saborizada|20|0.0|5.0|0.0|500|botella
+Agua saborizada cero|1|0.0|0.2|0.0|500|botella
+Gaseosa naranja / pomelo|42|0.0|10.5|0.0|350|lata
+Fernet con cola|90|0.0|8.0|0.0|250|vaso
+Vino tinto en copa|85|0.1|2.6|0.0|150|copa
+Cerveza artesanal IPA|55|0.5|4.5|0.0|500|pinta
+Aperitivo tipo Campari con naranja|100|0.3|12.0|0.0|250|vaso
+Sidra|45|0.1|4.5|0.0|150|copa
+Champagne / espumante|75|0.2|1.5|0.0|120|copa
+# ---- Snacks y otros ----
+Palitos salados|390|9.0|75.0|6.0|30|porción
+Maní con chocolate|500|12.0|50.0|30.0|30|puñado
+Garrapiñadas|480|11.0|58.0|24.0|30|porción
+Turrón de maní (tipo Arcor)|450|10.0|62.0|18.0|25|turrón
+Barra de cereal con chocolate|420|6.0|65.0|15.0|23|barrita
+Barra proteica|370|30.0|35.0|12.0|50|barra
+Semillas de girasol tostadas saladas|580|19.0|20.0|50.0|20|puñado
+Mix de frutos secos|560|18.0|22.0|46.0|30|puñado
+Chocolate con leche con maní (tipo Shot)|520|10.0|52.0|30.0|35|unidad
+Bombón / bocadito de chocolate|530|6.0|55.0|32.0|15|unidad
+Caramelos|390|0.0|97.0|0.0|5|caramelo
+Chicle sin azúcar|160|0.0|65.0|0.0|2|chicle
+Miel de caña|300|0.1|75.0|0.0|20|cda
+Edulcorante líquido|0|0.0|0.0|0.0|1|chorrito
+Stevia en polvo|0|0.0|0.0|0.0|1|sobre
+Levadura nutricional|330|45.0|35.0|5.0|10|cda
+Proteína en polvo (whey, promedio)|390|75.0|8.0|6.0|30|scoop
+Creatina|0|0.0|0.0|0.0|5|scoop
+Aceite en spray (rocío vegetal)|800|0.0|0.0|90.0|1|disparo
+Huevo de codorniz|160|13.0|0.4|11.0|10|huevo
+Tortilla de acelga|150|7.0|8.0|10.0|150|porción
+Revuelto de zapallitos|110|6.0|6.0|7.0|200|porción
+Zapallitos rellenos|130|7.0|9.0|7.5|200|unidad
+Berenjenas en escabeche|120|1.5|6.0|10.0|50|porción
+Morrones asados en aceite|90|1.2|6.0|7.0|50|porción
+Ensalada mixta (lechuga, tomate, cebolla) con aceite|50|1.0|4.0|3.5|200|plato
+Ensalada caprese|160|9.0|4.0|12.0|200|plato
+Ensalada de rúcula y parmesano|120|6.0|3.0|9.5|150|plato
+Ensalada César con pollo|150|12.0|6.0|9.0|300|plato
+Wok de verduras|70|2.5|8.0|3.0|250|plato
+Wok de pollo y verduras|110|12.0|7.0|4.0|300|plato
+Sushi (roll promedio)|180|7.0|28.0|4.0|35|pieza
+Pollo al curry con arroz|150|11.0|17.0|4.5|350|plato

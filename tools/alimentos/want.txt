@@ -1,0 +1,381 @@
+# regex USDA | nombre español | unitG | unitName
+# ---- Carnes vacunas ----
+^Beef, ground, 80% lean meat / 20% fat, raw|Carne picada común (cruda)
+^Beef, ground, 80% lean meat / 20% fat, patty, cooked, broiled|Hamburguesa casera cocida|110|hamburguesa
+^Beef, ground, 95% lean meat / 5% fat, raw|Carne picada magra (cruda)
+^Beef, ground, 95% lean meat / 5% fat, patty, cooked, broiled|Hamburguesa magra cocida|100|hamburguesa
+^Beef, round, eye of round, roast, separable lean only, trimmed to 1/8" fat, choice, cooked, roasted|Peceto al horno|120|porción
+^Beef, round, eye of round, roast, separable lean only, trimmed to 1/8" fat, choice, raw|Peceto (crudo)
+^Beef, tenderloin, steak, separable lean only, trimmed to 1/8" fat, all grades, cooked, broiled|Lomo a la plancha|150|bife
+^Beef, tenderloin, steak, separable lean only, trimmed to 1/8" fat, all grades, raw|Lomo (crudo)
+^Beef, short loin, top loin, steak, separable lean only, trimmed to 1/8" fat, choice, cooked, broiled|Bife de chorizo magro a la plancha|200|bife
+^Beef, short loin, top loin, separable lean and fat, trimmed to 1/8" fat, prime, cooked, broiled|Bife de chorizo con grasa a la plancha|200|bife
+^Beef, rib, eye, small end \(ribs 10-12\), separable lean only, trimmed to 0" fat, choice, cooked|Ojo de bife a la plancha|200|bife
+^Beef, chuck, arm pot roast, separable lean only, trimmed to 0" fat, choice, cooked, braised|Carne de paleta estofada|120|porción
+^Beef, brisket, flat half, separable lean only, trimmed to 0" fat, all grades, cooked, braised|Tapa de asado magra cocida|120|porción
+^Beef, plate, inside skirt steak, separable lean only, trimmed to 0" fat, all grades, cooked, broiled|Entraña a la parrilla|180|porción
+^Beef, flank, steak, separable lean only, trimmed to 0" fat, all grades, cooked, broiled|Vacío magro a la parrilla|180|porción
+^Beef, short loin, t-bone steak, separable lean and fat, trimmed to 0" fat, all grades, cooked|Bife con hueso a la parrilla|250|bife
+^Beef, rib, whole \(ribs 6-12\), separable lean and fat, trimmed to 1/8" fat, all grades, cooked, roasted|Costillar / asado con grasa|200|porción
+^Beef, variety meats and by-products, liver, cooked, braised|Hígado vacuno cocido|100|porción
+^Beef, variety meats and by-products, kidneys, cooked, simmered|Riñón vacuno cocido|100|porción
+^Beef, variety meats and by-products, tongue, cooked, simmered|Lengua a la vinagreta|80|porción
+^Beef, cured, corned beef, canned|Corned beef en lata|60|porción
+# ---- Cerdo ----
+^Pork, fresh, loin, tenderloin, separable lean only, cooked, roasted|Solomillo de cerdo al horno|120|porción
+^Pork, fresh, loin, center loin \(chops\), bone-in, separable lean only, cooked, broiled|Costeleta de cerdo a la plancha|150|costeleta
+^Pork, fresh, shoulder, whole, separable lean and fat, cooked, roasted|Bondiola al horno|120|porción
+^Pork, cured, bacon, cooked, broiled, pan-fried or roasted|Panceta frita|10|feta
+^Pork, cured, ham, boneless, extra lean and regular, roasted|Jamón cocido natural|30|feta
+^Pork, fresh, spareribs, separable lean and fat, cooked, braised|Costillas de cerdo|150|porción
+^Sausage, Italian, pork, mild, cooked, pan-fried|Chorizo de cerdo cocido|90|chorizo
+^Sausage, pork, chorizo, link or ground, raw|Chorizo colorado frito|70|unidad
+^Pork sausage, link/patty, cooked, pan-fried|Salchicha parrillera cocida|50|unidad
+^Frankfurter, meat$|Salchicha de viena|45|salchicha
+^Blood sausage|Morcilla|90|morcilla
+^Salami, dry or hard, pork, beef|Salame|15|feta
+^Mortadella, beef, pork|Mortadela|20|feta
+^Bologna, beef and pork|Fiambre tipo paleta|20|feta
+^Pate, liver, not specified, canned|Paté de hígado|20|cda
+# ---- Pollo y pavo ----
+^Chicken, broilers or fryers, breast, meat only, cooked, roasted|Pechuga de pollo cocida|150|pechuga
+^Chicken, broiler or fryers, breast, skinless, boneless, meat only, raw|Pechuga de pollo (cruda)
+^Chicken, broilers or fryers, thigh, meat only, cooked, roasted|Muslo de pollo sin piel cocido|80|muslo
+^Chicken, broilers or fryers, thigh, meat and skin, cooked, roasted|Muslo de pollo con piel cocido|90|muslo
+^Chicken, broilers or fryers, dark meat, drumstick, meat only, cooked, roasted|Pata de pollo sin piel cocida|50|pata
+^Chicken, broilers or fryers, wing, meat and skin, cooked, roasted|Ala de pollo cocida|35|ala
+^Chicken, broilers or fryers, meat and skin, cooked, roasted|Pollo entero al horno con piel|150|porción
+^Chicken, broilers or fryers, leg, meat and skin, cooked, roasted|Pata-muslo con piel|150|unidad
+^Chicken, broilers or fryers, meat only, cooked, stewed|Pollo hervido sin piel|120|porción
+^Turkey, whole, breast, meat only, cooked, roasted|Pechuga de pavo cocida|100|porción
+^Turkey, whole, meat only, cooked, roasted|Pavo cocido|100|porción
+^Chicken, liver, all classes, cooked, simmered|Hígado de pollo cocido|50|porción
+# ---- Pescados y mariscos ----
+^Fish, salmon, Atlantic, farmed, cooked, dry heat|Salmón cocido|150|porción
+^Fish, salmon, Atlantic, farmed, raw|Salmón (crudo)
+^Fish, tuna, light, canned in water, drained solids|Atún al natural (lata)|120|lata
+^Fish, tuna, light, canned in oil, drained solids|Atún en aceite (lata)|120|lata
+^Fish, tuna, yellowfin, fresh, cooked, dry heat|Atún fresco cocido|150|porción
+^Fish, cod, Atlantic, cooked, dry heat|Bacalao / merluza negra cocida|150|filet
+^Fish, whiting, mixed species, cooked, dry heat|Merluza cocida|150|filet
+^Fish, whiting, mixed species, raw|Merluza (cruda)
+^Fish, tilapia, cooked, dry heat|Tilapia cocida|150|filet
+^Fish, sardine, Atlantic, canned in oil, drained solids with bone|Sardinas en aceite|25|sardina
+^Fish, anchovy, european, canned in oil, drained solids|Anchoas en aceite|4|filet
+^Fish, mackerel, Atlantic, cooked, dry heat|Caballa cocida|120|porción
+^Fish, trout, rainbow, farmed, cooked, dry heat|Trucha cocida|150|filet
+^Fish, swordfish, cooked, dry heat|Pez espada cocido|150|porción
+^Fish, flatfish \(flounder and sole species\), raw|Lenguado (crudo)
+^Fish, flatfish \(flounder and sole species\), cooked, dry heat|Lenguado cocido|150|filet
+^Crustaceans, shrimp, mixed species, cooked, moist heat|Langostinos / camarones cocidos|15|unidad
+^Mollusks, squid, mixed species, cooked, fried|Rabas fritas|100|porción
+^Mollusks, mussel, blue, cooked, moist heat|Mejillones cocidos|10|unidad
+^Mollusks, octopus, common, cooked, moist heat|Pulpo cocido|100|porción
+^Fish, surimi|Kanikama (surimi)|15|bastón
+# ---- Huevos y lácteos ----
+^Egg, whole, cooked, hard-boiled|Huevo duro|50|huevo
+^Egg, whole, cooked, fried|Huevo frito|46|huevo
+^Egg, whole, cooked, scrambled|Huevo revuelto|60|huevo
+^Egg, white, raw, fresh|Clara de huevo|33|clara
+^Egg, yolk, raw, fresh|Yema de huevo|17|yema
+^Egg, whole, raw, fresh|Huevo crudo|50|huevo
+^Milk, whole, 3.25% milkfat, with added vitamin D|Leche entera|200|vaso
+^Milk, reduced fat, fluid, 2% milkfat, with added vitamin A and vitamin D|Leche parcialmente descremada|200|vaso
+^Milk, nonfat, fluid, with added vitamin A and vitamin D \(fat free or skim\)|Leche descremada|200|vaso
+^Milk, chocolate, fluid, commercial, whole, with added vitamin A and vitamin D|Leche chocolatada|200|vaso
+^Milk, dry, whole, with added vitamin D|Leche en polvo entera|10|cda
+^Milk, canned, condensed, sweetened|Leche condensada|20|cda
+^Cream, fluid, heavy whipping|Crema de leche|15|cda
+^Cream, sour, cultured|Crema agria|15|cda
+^Yogurt, plain, whole milk$|Yogur natural entero|125|pote
+^Yogurt, plain, low fat$|Yogur natural descremado|125|pote
+^Yogurt, Greek, plain, nonfat|Yogur griego descremado|150|pote
+^Yogurt, Greek, plain, whole milk|Yogur griego entero|150|pote
+^Yogurt, fruit, low fat, 10 grams protein per 8 ounce|Yogur de frutas descremado|125|pote
+^Cheese, mozzarella, whole milk|Muzzarella|30|porción
+^Cheese, mozzarella, part skim milk|Muzzarella semidescremada|30|porción
+^Cheese, cream|Queso crema|20|cda
+^Cheese, ricotta, whole milk|Ricota entera|50|porción
+^Cheese, ricotta, part skim milk|Ricota magra|50|porción
+^Cheese, parmesan, grated|Queso rallado|10|cda
+^Cheese, parmesan, hard|Queso parmesano / reggianito|30|porción
+^Cheese, provolone|Provoleta|60|porción
+^Cheese, port de salut|Queso port salut|30|feta
+^Cheese, gouda|Queso gouda|30|feta
+^Cheese, cheddar|Queso cheddar|30|feta
+^Cheese, swiss|Queso gruyere / pategrás|30|feta
+^Cheese, blue|Queso azul / roquefort|30|porción
+^Cheese, brie|Queso brie|30|porción
+^Cheese, feta|Queso feta|30|porción
+^Cheese, cottage, lowfat, 2% milkfat|Queso cottage|100|porción
+^Cheese, pasteurized process, american, fortified with vitamin D|Queso fundido en fetas|20|feta
+^Cheese, cream, fat free|Queso untable descremado|20|cda
+^Butter, salted|Manteca|10|cdita
+^Butter, without salt|Manteca sin sal|10|cdita
+^Milk, buttermilk, fluid, whole|Suero de leche|200|vaso
+^Ice creams, vanilla|Helado de vanilla / crema|100|bocha
+^Ice creams, chocolate|Helado de chocolate|100|bocha
+^Dulce de leche|Dulce de leche|20|cda
+# ---- Cereales, panes y pastas ----
+^Bread, white, commercially prepared|Pan blanco común|50|mignón
+^Bread, french or vienna \(includes sourdough\)|Pan francés / baguette|60|porción
+^Bread, whole-wheat, commercially prepared|Pan integral|30|rebanada
+^Bread, multi-grain|Pan multicereal|30|rebanada
+^Bread, rye|Pan de centeno|30|rebanada
+^Bread, pita, white, enriched|Pan árabe (pita)|60|unidad
+^Rolls, hamburger or hotdog, plain|Pan de pancho|45|unidad
+^Bread, crumbs, dry, grated, plain|Pan rallado|10|cda
+^Crackers, saltines \(includes oyster, soda, soup\)|Galletitas de agua|6|galletita
+^Crackers, whole-wheat|Galletitas integrales|7|galletita
+^Crackers, rusk toast|Tostadas / bizcochos secos|8|tostada
+^Bread, white, commercially prepared, toasted|Tostada de pan blanco|25|tostada
+^Tortillas, ready-to-bake or -fry, flour|Tortilla de harina / rapidita|45|unidad
+^Tortillas, ready-to-bake or -fry, corn|Tortilla de maíz|25|unidad
+^Rice, white, long-grain, regular, cooked|Arroz blanco cocido|150|taza
+^Rice, white, long-grain, regular, raw|Arroz blanco (crudo)
+^Rice, brown, long-grain, cooked|Arroz integral cocido|150|taza
+^Rice, white, short-grain, cooked|Arroz doble carolina cocido|150|taza
+^Pasta, cooked, enriched, without added salt|Fideos cocidos|200|plato
+^Pasta, dry, enriched|Fideos secos (crudos)|80|porción
+^Pasta, whole-wheat, cooked|Fideos integrales cocidos|200|plato
+^Pasta, fresh-refrigerated, plain, cooked|Pasta fresca cocida|200|plato
+^Noodles, egg, cooked, enriched|Fideos al huevo cocidos|200|plato
+^Couscous, cooked|Cuscús cocido|150|taza
+^Quinoa, cooked|Quinoa cocida|150|taza
+^Bulgur, cooked|Trigo burgol cocido|150|taza
+^Barley, pearled, cooked|Cebada perlada cocida|150|taza
+^Oats|Avena arrollada|30|porción
+^Cereals, oats, regular and quick, unenriched, cooked with water \(includes|Avena cocida con agua|200|taza
+^Cereals ready-to-eat, granola, homemade|Granola casera|30|porción
+^Cereals ready-to-eat, RALSTON Corn Flakes|Copos de maíz|30|porción
+^Cornstarch|Maicena / almidón de maíz|10|cda
+^Wheat flour, white, all-purpose, enriched, bleached|Harina de trigo 000|10|cda
+^Wheat flour, whole-grain|Harina integral|10|cda
+^Cornmeal, whole-grain, yellow|Harina de maíz / polenta (cruda)|40|porción
+^Semolina, enriched|Sémola|30|porción
+^Wheat germ, crude|Germen de trigo|10|cda
+^Wheat bran, crude|Salvado de trigo|10|cda
+^Oat bran, raw|Salvado de avena|10|cda
+^Snacks, popcorn, air-popped$|Pochoclo sin aceite|10|taza
+^Snacks, popcorn, oil-popped, microwave, regular flavor|Pochoclo con manteca|30|porción
+^Snacks, rice cakes, brown rice, plain|Galleta de arroz|9|galleta
+^Seeds, chia seeds, dried|Semillas de chía|10|cda
+^Seeds, flaxseed|Semillas de lino|10|cda
+^Seeds, sunflower seed kernels, dried|Semillas de girasol|10|cda
+^Seeds, pumpkin and squash seed kernels, dried|Semillas de zapallo|10|cda
+^Seeds, sesame seeds, whole, dried|Semillas de sésamo|10|cda
+# ---- Legumbres ----
+^Lentils, mature seeds, cooked, boiled, without salt|Lentejas cocidas|150|taza
+^Lentils, raw|Lentejas (crudas)
+^Chickpeas \(garbanzo beans, bengal gram\), mature seeds, cooked, boiled, without salt|Garbanzos cocidos|150|taza
+^Chickpeas \(garbanzo beans, bengal gram\), mature seeds, canned, drained solids|Garbanzos en lata|120|porción
+^Beans, kidney, all types, mature seeds, cooked, boiled, without salt|Porotos colorados cocidos|150|taza
+^Beans, black, mature seeds, cooked, boiled, without salt|Porotos negros cocidos|150|taza
+^Beans, white, mature seeds, cooked, boiled, without salt|Porotos blancos / alubias cocidos|150|taza
+^Soybeans, mature cooked, boiled, without salt|Porotos de soja cocidos|150|taza
+^Peas, split, mature seeds, cooked, boiled, without salt|Arvejas secas partidas cocidas|150|taza
+^Peas, green, canned, no salt added, drained solids|Arvejas en lata|80|porción
+^Peas, green, raw|Arvejas frescas|80|porción
+^Beans, snap, green, cooked, boiled, drained, without salt|Chauchas cocidas|100|porción
+^Hummus, commercial|Hummus|30|cda
+^Tofu, firm, prepared with calcium sulfate and magnesium chloride \(nigari\)|Tofu firme|100|porción
+^Beverages, almond milk, sweetened, vanilla flavor|Leche de almendras saborizada|200|vaso
+^Beverages, almond milk, unsweetened, shelf stable|Leche de almendras sin azúcar|200|vaso
+^Soy flour, full-fat, raw|Harina de soja|10|cda
+^Lupins, mature seeds, cooked, boiled, without salt|Lupines cocidos|50|porción
+# ---- Verduras ----
+^Potatoes, boiled, cooked without skin, flesh, without salt|Papa hervida|150|papa
+^Potatoes, baked, flesh and skin, without salt|Papa al horno con cáscara|150|papa
+^Potatoes, mashed, home-prepared, whole milk and butter added|Puré de papa con leche y manteca|200|porción
+^Potatoes, french fried, all types, salt not added in processing, frozen, oven-heated|Papas fritas al horno (congeladas)|100|porción
+^Fast foods, potato, french fried in vegetable oil|Papas fritas de sartén (congeladas)|100|porción
+^Potatoes, raw, skin|Papa (cruda) con cáscara
+^Sweet potato, cooked, boiled, without skin|Batata hervida sin cáscara|150|batata
+^Sweet potato, cooked, baked in skin, flesh, without salt|Batata al horno|150|batata
+^Sweet potato, raw, unprepared|Batata (cruda)
+^Cassava, raw|Mandioca (cruda)|100|porción
+^Squash, winter, butternut, cooked, baked, without salt|Zapallo anco / calabaza al horno|150|porción
+^Squash, winter, all varieties, cooked, baked, without salt|Zapallo al horno|150|porción
+^Squash, summer, zucchini, includes skin, cooked, boiled, drained, without salt|Zapallito / zucchini cocido|120|porción
+^Squash, summer, zucchini, includes skin, raw|Zucchini (crudo)|200|unidad
+^Carrots, raw|Zanahoria cruda|70|zanahoria
+^Carrots, cooked, boiled, drained, without salt|Zanahoria cocida|80|porción
+^Onions, raw|Cebolla cruda|110|cebolla
+^Onions, cooked, boiled, drained, without salt|Cebolla cocida|80|porción
+^Onions, spring or scallions \(includes tops and bulb\), raw|Cebolla de verdeo|15|unidad
+^Garlic, raw|Ajo|3|diente
+^Tomatoes, red, ripe, raw, year round average|Tomate|120|tomate
+^Tomatoes, red, ripe, canned, packed in tomato juice|Tomate perita en lata|120|porción
+^Tomato products, canned, sauce|Salsa de tomate|60|porción
+^Tomato products, canned, paste, without salt added|Extracto de tomate|15|cda
+^Tomatoes, sun-dried|Tomates secos|5|unidad
+^Lettuce, iceberg \(includes crisphead types\), raw|Lechuga criolla / repollada|50|porción
+^Lettuce, green leaf, raw|Lechuga mantecosa|50|porción
+^Lettuce, cos or romaine, raw|Lechuga romana|50|porción
+^Arugula, raw|Rúcula|20|porción
+^Spinach, raw|Espinaca cruda|30|porción
+^Spinach, cooked, boiled, drained, without salt|Espinaca cocida|100|porción
+^Chard, swiss, cooked, boiled, drained, without salt|Acelga cocida|100|porción
+^Chard, swiss, raw|Acelga cruda|50|porción
+^Broccoli, cooked, boiled, drained, without salt|Brócoli cocido|100|porción
+^Broccoli, raw|Brócoli crudo|100|porción
+^Cauliflower, cooked, boiled, drained, without salt|Coliflor cocida|100|porción
+^Cabbage, raw|Repollo crudo|70|porción
+^Cabbage, red, raw|Repollo colorado|70|porción
+^Brussels sprouts, cooked, boiled, drained, without salt|Repollitos de Bruselas cocidos|80|porción
+^Cucumber, with peel, raw|Pepino|100|porción
+^Peppers, sweet, red, raw|Morrón rojo|120|morrón
+^Peppers, sweet, green, raw|Morrón verde|120|morrón
+^Eggplant, cooked, boiled, drained, without salt|Berenjena cocida|100|porción
+^Eggplant, raw|Berenjena cruda|250|unidad
+^Mushrooms, white, raw|Champiñones crudos|20|unidad
+^Mushrooms, white, cooked, boiled, drained, without salt|Champiñones cocidos|80|porción
+^Mushrooms, portabella, raw|Portobello|85|unidad
+^Asparagus, cooked, boiled, drained|Espárragos cocidos|60|porción
+^Beets, cooked, boiled, drained|Remolacha cocida|80|porción
+^Celery, raw|Apio|40|tallo
+^Leeks, \(bulb and lower leaf-portion\), raw|Puerro|90|unidad
+^Corn, sweet, yellow, cooked, boiled, drained, without salt|Choclo cocido|150|choclo
+^Corn, sweet, yellow, canned, whole kernel, drained solids|Choclo en lata|80|porción
+^Artichokes, \(globe or french\), cooked, boiled, drained, without salt|Alcaucil cocido|120|unidad
+^Radishes, raw|Rabanito|10|unidad
+^Avocados, raw, all commercial varieties|Palta|140|palta
+^Olives, ripe, canned \(small-extra large\)|Aceitunas negras|4|aceituna
+^Pickles, cucumber, dill or kosher dill|Pepinillos en vinagre|30|unidad
+^Pumpkin, cooked, boiled, drained, without salt|Zapallo hervido|150|porción
+^Kale, raw|Kale|30|porción
+^Turnips, cooked, boiled, drained, without salt|Nabo cocido|80|porción
+^Fennel, bulb, raw|Hinojo|100|porción
+^Seaweed, spirulina, dried|Espirulina|5|cdita
+^Sauerkraut, canned, solids and liquids|Chucrut|50|porción
+# ---- Frutas ----
+^Apples, raw, with skin|Manzana|180|manzana
+^Bananas, raw|Banana|120|banana
+^Oranges, raw, all commercial varieties|Naranja|150|naranja
+^Tangerines, \(mandarin oranges\), raw|Mandarina|90|mandarina
+^Grapefruit, raw, pink and red, all areas|Pomelo rosado|200|pomelo
+^Lemons, raw, without peel|Limón|60|limón
+^Pears, raw|Pera|170|pera
+^Peaches, yellow, raw|Durazno|150|durazno
+^Nectarines, raw|Pelón|140|pelón
+^Plums, raw|Ciruela|65|ciruela
+^Apricots, raw|Damasco|35|damasco
+^Cherries, sweet, raw|Cerezas|8|cereza
+^Grapes, red or green \(European type, such as Thompson seedless\), raw|Uvas|100|racimo chico
+^Strawberries, raw|Frutillas|15|frutilla
+^Blueberries, raw|Arándanos|75|porción
+^Raspberries, raw|Frambuesas|60|porción
+^Kiwifruit, green, raw|Kiwi|75|kiwi
+^Pineapple, raw, all varieties|Ananá|150|porción
+^Melons, cantaloupe, raw|Melón|150|porción
+^Watermelon, raw|Sandía|280|porción
+^Mangos, raw|Mango|200|mango
+^Papayas, raw|Papaya|150|porción
+^Figs, raw|Higo|50|higo
+^Pomegranates, raw|Granada|150|granada
+^Persimmons, japanese, raw|Caqui|170|caqui
+^Quinces, raw|Membrillo crudo|90|membrillo
+^Nuts, coconut meat, raw|Coco fresco|45|porción
+^Dates, medjool|Dátiles|24|dátil
+^Raisins, dark, seedless|Pasas de uva|15|cda
+^Plums, dried \(prunes\), uncooked|Ciruelas pasas|10|ciruela
+^Apricots, dried, sulfured, uncooked|Orejones de damasco|8|orejón
+^Figs, dried, uncooked|Higos secos|20|higo
+^Applesauce, canned, unsweetened, without added ascorbic acid|Compota de manzana|120|porción
+^Peaches, canned, heavy syrup pack, solids and liquids|Duraznos en almíbar|120|porción
+^Fruit cocktail, \(peach and pineapple and pear and grape and cherry\), canned, heavy syrup, solids and liquids|Ensalada de frutas en almíbar|120|porción
+^Orange juice, raw|Jugo de naranja exprimido|200|vaso
+^Apple juice, canned or bottled, unsweetened, without added ascorbic acid|Jugo de manzana|200|vaso
+# ---- Frutos secos ----
+^Nuts, almonds|Almendras|12|puñado chico
+^Nuts, walnuts, english|Nueces|15|puñado chico
+^Peanuts, all types, dry-roasted, without salt|Maní tostado sin sal|20|puñado
+^Peanuts, all types, oil-roasted, with salt|Maní salado|20|puñado
+^Nuts, cashew nuts, dry roasted, without salt added|Castañas de cajú|15|puñado chico
+^Nuts, hazelnuts or filberts|Avellanas|15|puñado chico
+^Nuts, pistachio nuts, dry roasted, without salt added|Pistachos|15|puñado chico
+^Nuts, brazilnuts, dried, unblanched|Nueces de Brasil|5|nuez
+^Nuts, pecans|Nueces pecán|15|puñado chico
+^Nuts, macadamia nuts, raw|Macadamias|12|puñado chico
+^Peanut butter, smooth style, with salt|Mantequilla de maní|16|cda
+^Nuts, almond butter, plain, without salt added|Mantequilla de almendras|16|cda
+^Nuts, chestnuts, european, roasted|Castañas asadas|10|castaña
+# ---- Grasas, aceites, condimentos ----
+^Oil, olive, salad or cooking|Aceite de oliva|5|cdita
+^Oil, sunflower, linoleic, \(approx. 65%\)|Aceite de girasol|5|cdita
+^Oil, corn, industrial and retail, all purpose salad or cooking|Aceite de maíz|5|cdita
+^Oil, coconut|Aceite de coco|5|cdita
+^Oil, canola|Aceite de canola|5|cdita
+^Salad dressing, mayonnaise, regular|Mayonesa|15|cda
+^Salad dressing, mayonnaise, light|Mayonesa light|15|cda
+^Catsup|Ketchup|15|cda
+^Mustard, prepared, yellow|Mostaza|5|cdita
+^Sauce, barbecue|Salsa barbacoa|15|cda
+^Soy sauce made from soy and wheat \(shoyu\)|Salsa de soja|15|cda
+^Vinegar, red wine|Vinagre de vino|5|cdita
+^Vinegar, balsamic|Aceto balsámico|5|cdita
+^Sauce, pesto, ready-to-serve, refrigerated|Pesto|30|cda
+^Sauce, salsa, ready-to-serve|Salsa criolla / salsa de tomate fresca|30|cda
+^Sauce, worcestershire|Salsa inglesa|5|cdita
+^Honey|Miel|21|cda
+^Sugars, granulated|Azúcar|5|cdita
+^Sugars, brown|Azúcar mascabo / rubia|5|cdita
+^Sweetener, syrup, agave|Jarabe de agave|7|cdita
+^Syrups, maple|Jarabe de arce|20|cda
+^Jams and preserves|Mermelada|20|cda
+^Jams, preserves, marmalades, sweetened with fruit juice|Mermelada sin azúcar agregada|20|cda
+^Cocoa, dry powder, unsweetened|Cacao amargo en polvo|5|cdita
+^Chocolate, dark, 70-85% cacao solids|Chocolate amargo 70%|20|porción
+^Chocolate, dark, 45- 59% cacao solids|Chocolate semiamargo|20|porción
+^Candies, milk chocolate|Chocolate con leche|20|porción
+^Candies, white chocolate|Chocolate blanco|20|porción
+^Gelatin desserts, dry mix, prepared with water|Gelatina común preparada|120|porción
+^Gelatin desserts, dry mix, reduced calorie, with aspartame, prepared with water|Gelatina light preparada|120|porción
+^Puddings, chocolate, ready-to-eat|Postre de chocolate (tipo Serenito)|100|pote
+^Puddings, vanilla, ready-to-eat|Flan / postre de vainilla|100|pote
+^Snacks, potato chips, plain, salted|Papas fritas de paquete|30|porción
+^Snacks, corn-based, extruded, puffs or twists, cheese-flavor|Palitos de maíz con queso|30|porción
+^Snacks, tortilla chips, plain, white corn, salted|Nachos|30|porción
+^Snacks, pretzels, hard, plain, salted|Pretzels|30|porción
+^Cookies, vanilla wafers, higher fat|Vainillas|6|vainilla
+^Cookies, chocolate chip, commercially prepared, regular, higher fat, enriched|Galletitas con chips de chocolate|12|galletita
+^Cookies, oatmeal, commercially prepared, regular|Galletitas de avena|15|galletita
+^Cookies, butter, commercially prepared, enriched|Galletitas de manteca|8|galletita
+^Cookies, chocolate sandwich, with creme filling, regular|Galletitas rellenas de chocolate (tipo Oreo)|11|galletita
+^Cookies, graham crackers, plain or honey \(includes cinnamon\)|Galletitas dulces tipo Lincoln|7|galletita
+^Cake, sponge, commercially prepared|Bizcochuelo|60|porción
+^Cake, chocolate, commercially prepared with chocolate frosting|Torta de chocolate|90|porción
+^Cake, pound, commercially prepared, butter \(includes fresh and frozen\)|Budín de manteca|60|porción
+^Cake, cheesecake, commercially prepared|Cheesecake|100|porción
+^Pie, apple, commercially prepared, enriched flour|Tarta de manzana|120|porción
+^Muffins, blueberry, commercially prepared \(Includes mini-muffins\)|Muffin de arándanos|60|muffin
+^Croissants, butter|Medialuna de manteca|40|medialuna
+^Doughnuts, yeast-leavened, glazed, enriched \(includes honey buns\)|Dona / bola de fraile|60|unidad
+^Pancakes, plain, prepared from recipe|Panqueque|40|panqueque
+^Waffles, plain, prepared from recipe|Waffle|75|waffle
+^Snacks, granola bars, hard, plain|Barrita de cereal|25|barrita
+^Cereals ready-to-eat, granola, homemade|Granola|30|porción
+# ---- Bebidas ----
+^Beverages, coffee, brewed, prepared with tap water|Café negro|150|taza
+^Beverages, coffee, instant, regular, prepared with water|Café instantáneo|150|taza
+^Beverages, tea, black, brewed, prepared with tap water|Té negro|200|taza
+^Beverages, tea, green, brewed, regular|Té verde|200|taza
+^Beverages, carbonated, cola, regular|Gaseosa cola|350|lata
+^Beverages, carbonated, low calorie, cola or pepper-type, with aspartame, without caffeine|Gaseosa cola light / zero|350|lata
+^Beverages, carbonated, lemon-lime soda, no caffeine|Gaseosa lima-limón|350|lata
+^Beverages, Energy drink, RED BULL|Bebida energética|250|lata
+^Beverages, water, tap, drinking|Agua|250|vaso
+^Alcoholic beverage, beer, regular, all|Cerveza|350|lata
+^Alcoholic beverage, beer, light|Cerveza light|350|lata
+^Alcoholic beverage, wine, table, red|Vino tinto|150|copa
+^Alcoholic beverage, wine, table, white|Vino blanco|150|copa
+^Alcoholic beverage, distilled, all \(gin, rum, vodka, whiskey\) 80 proof|Destilados (gin, vodka, whisky, ron)|45|medida
+^Alcoholic beverage, whiskey sour|Trago (whisky sour)|100|trago
+^Beverages, fruit punch drink, with added nutrients, canned|Jugo en polvo preparado|200|vaso
+^Beverages, Orange-flavor drink, breakfast type, powder, prepared with water|Jugo de naranja en polvo|200|vaso
+^Beverages, rich chocolate, powder|Cacao en polvo azucarado (tipo Nesquik)|15|cda
+^Beverages, coffee, brewed, espresso, restaurant-prepared|Café espresso|30|pocillo
+^Beverages, Protein powder whey based|Proteína en polvo (whey)|30|scoop
+^Beverages, nutritional shake mix, high protein, powder|Batido proteico en polvo|30|scoop
+^Beverages, Energy drink, Monster|Bebida energética (otra)|473|lata
+^Beverages, coconut water|Agua de coco|250|vaso
