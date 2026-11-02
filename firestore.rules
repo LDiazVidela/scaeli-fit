@@ -27,6 +27,27 @@ service cloud.firestore {
         allow delete: if request.auth != null && (request.auth.uid == uid
                       || get(/databases/$(database)/documents/grupos/$(gid)).data.creador == request.auth.uid);
       }
+      // Muro del grupo (Daily 1.9): mensajes cortos entre los miembros. Cada uno crea los suyos (u = su uid,
+      // texto de hasta 140 letras); todos pueden sumar un «amén» (a.{uid}) o reportar (rep.{uid}) tocando SOLO su
+      // propia clave; borra el autor o el creador del grupo. Fit puede ignorar esta colección.
+      match /mensajes/{mid} {
+        allow read: if request.auth != null
+                    && exists(/databases/$(database)/documents/grupos/$(gid)/miembros/$(request.auth.uid));
+        allow create: if request.auth != null
+                      && exists(/databases/$(database)/documents/grupos/$(gid)/miembros/$(request.auth.uid))
+                      && request.resource.data.u == request.auth.uid
+                      && request.resource.data.tx is string && request.resource.data.tx.size() <= 140
+                      && request.resource.data.n is string && request.resource.data.n.size() <= 24;
+        allow update: if request.auth != null
+                      && exists(/databases/$(database)/documents/grupos/$(gid)/miembros/$(request.auth.uid))
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['a', 'rep'])
+                      && (!('a' in request.resource.data) || !('a' in resource.data)
+                          || request.resource.data.a.diff(resource.data.a).affectedKeys().hasOnly([request.auth.uid]))
+                      && (!('rep' in request.resource.data) || !('rep' in resource.data)
+                          || request.resource.data.rep.diff(resource.data.rep).affectedKeys().hasOnly([request.auth.uid]));
+        allow delete: if request.auth != null && (resource.data.u == request.auth.uid
+                      || get(/databases/$(database)/documents/grupos/$(gid)).data.creador == request.auth.uid);
+      }
     }
 
     // Códigos de Scaeli+ (compartidos por las dos apps): cualquier usuario con sesión puede leerlos y sumar un uso.
