@@ -1,6 +1,6 @@
 // Conexión con Firebase (proyecto "scaeli"). La configuración es pública por diseño: la seguridad está en las reglas.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, onSnapshot, setDoc, deleteDoc, getDoc, getDocs, writeBatch, increment, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
@@ -24,16 +24,23 @@ export const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 const standalone = () => window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 
-export async function login() {
+function proveedor(quien) {
+  if (quien === "apple") { const p = new OAuthProvider("apple.com"); p.addScope("email"); p.addScope("name"); p.setCustomParameters({ locale: "es" }); return p; }
+  return provider;
+}
+export async function login(quien) {
   // Ventana emergente siempre: la redirección pierde el resultado en Safari/Chrome móvil cuando authDomain
   // es otro dominio. En la app instalada (pantalla de inicio) la emergente no abre: lo informamos.
-  try { return await signInWithPopup(auth, provider); }
+  const nombre = quien === "apple" ? "Apple" : "Google";
+  try { return await signInWithPopup(auth, proveedor(quien)); }
   catch (e) {
     const code = (e && e.code) || "";
-    if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") throw Object.assign(new Error("Cerraste la ventana de Google antes de terminar."), { code });
+    if (code === "auth/operation-not-allowed") throw Object.assign(new Error("Falta activar el ingreso con " + nombre + " en Firebase → Authentication → Sign-in method."), { code });
+    if (code === "auth/account-exists-with-different-credential") throw Object.assign(new Error("Ese email ya entró con " + (quien === "apple" ? "Google" : "Apple") + ": usá ese botón."), { code });
+    if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") throw Object.assign(new Error("Cerraste la ventana de " + nombre + " antes de terminar."), { code });
     if (code === "auth/unauthorized-domain") throw Object.assign(new Error("Este dominio no está autorizado en Firebase: agregá " + location.hostname + " en Authentication → Dominios autorizados."), { code });
     if (standalone() || code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment")
-      throw Object.assign(new Error("Acá no se puede abrir la ventana de Google. Entrá desde Safari o Chrome (no desde el ícono de inicio) y después volvé."), { code });
+      throw Object.assign(new Error("Acá no se puede abrir la ventana de " + nombre + ". Entrá desde Safari o Chrome (no desde el ícono de inicio) y después volvé."), { code });
     throw e;
   }
 }

@@ -1,6 +1,7 @@
 import { login, logout, watchAuth, finishRedirect, userBackend, localBackend } from "./firebase.js";
 import * as PJ from "./personaje.js";
 import { ORACIONES, MISTERIOS, ROS_MED, ROS_FATIMA, ROS_DIAS_N } from "../data/rosario.js";
+const LOGO_APPLE='<svg class="logo-a" viewBox="0 0 814 1000" aria-hidden="true"><path fill="currentColor" d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105.6-57-155.5-127C46.7 790.7 0 663 0 541.8c0-194.4 126.4-297.5 250.8-297.5 66.1 0 121.2 43.4 162.7 43.4 39.5 0 101.1-46 176.3-46 28.5 0 130.9 2.6 198.3 99.2zm-234-181.5c31.1-36.9 53.1-88.1 53.1-139.3 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 83.6-55.1 135.5 0 7.8 1.3 15.6 1.9 18.1 3.2.6 8.4 1.3 13.6 1.3 45.4 0 102.5-30.4 135.5-71.3z"/></svg>';
 const LOGO_GOOGLE='<svg class="logo-g" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
 const DAILY_URL="https://ldiazvidela.github.io/scaeli-daily/";
 /* Scaeli+ compartido con Daily (docs/SCAELI_PLUS_COMPARTIDO.md): equipo con acceso completo, y "ver como gratis" para probar. */
@@ -58,6 +59,39 @@ const DEFAULT_ROUTINES=[
   ["hipthrust","Hip thrust en máquina",3,10,12,5,180],["seatcurl","Curl femoral sentado",3,12,15,2.5,90],["hack","Sentadilla hack",3,10,12,5,180],
   ["abd","Abductores en máquina",3,15,15,2.5,90],["calfstand","Gemelos de pie",3,15,15,5,90],["cableab","Abdominales en polea",3,15,15,2.5,90]]}
 ].map(r=>({...r,ex:r.ex.map(e=>({id:e[0],name:e[1],sets:e[2],lo:e[3],hi:e[4],step:e[5],rest:e[6]}))}));
+
+
+/* ---------- Biblioteca de programas: rutinas preseteadas armadas con el catálogo ---------- */
+function exDeCatalogo(cid,sets,lo,hi){const c=CATALOGO.find(x=>x.id===cid)||{};const tiempo=/plancha|bicho|farmer|soga|mountain/.test(cid);
+  const e={id:cid,name:c.nombre||cid,sets:sets||3,lo:lo||(tiempo?30:10),hi:hi||(tiempo?30:12),step:tiempo?0:(c.equipo==="peso-corporal"?0:(c.paso!=null?c.paso:2.5)),rest:c.rest||90};if(tiempo)e.tiempo=true;return e}
+const prog=(id,nombre,desc,nivel,lugar,rutinas)=>({id,nombre,desc,nivel,lugar,rutinas:rutinas.map(([rid,name,day,goal,ex])=>({id:rid,name,day,goal,ex:ex.map(e=>Array.isArray(e)?exDeCatalogo(...e):exDeCatalogo(e))}))});
+const PROGRAMAS=[
+ {id:"ul4",nombre:"Upper / Lower · 4 días",desc:"El plan base de Scaeli Fit: empuje, piernas, tracción y posterior, en máquinas.",nivel:"Intermedio",lugar:"Gym",rutinas:DEFAULT_ROUTINES},
+ prog("fb3","Full body · 3 días","Todo el cuerpo tres veces por semana. Lo mejor para empezar en el gym.","Principiante","Gym",[
+  ["fbA","Full body A",1,"Todo el cuerpo",[["sentadilla-goblet",3,8,12],["chest-press-maquina",3,8,12],["remo-maquina",3,10,12],["press-hombros-maquina",3,10,12],["curl-biceps-maquina",2,12,15],["plancha",3,30,30]]],
+  ["fbB","Full body B",3,"Todo el cuerpo",[["prensa-45",3,10,12],["jalon-al-pecho",3,10,12],["press-inclinado-maquina",3,10,12],["curl-femoral-sentado",3,12,15],["triceps-polea-soga",2,12,15],["abdominales-polea",3,12,15]]],
+  ["fbC","Full body C",5,"Todo el cuerpo",[["peso-muerto-rumano",3,8,10],["remo-polea-baja",3,10,12],["press-militar-mancuernas",3,10,12],["extension-cuadriceps",3,12,15],["elevaciones-laterales",3,12,15],["elevacion-piernas-piso",3,12,15]]]]),
+ prog("ppl","Push / Pull / Legs","Empuje, tracción y piernas. Tres días, o seis repitiendo la vuelta.","Intermedio","Gym",[
+  ["push","Push",1,"Pecho, hombros y tríceps",[["press-banca",4,6,10],["press-inclinado-mancuernas",3,8,12],["press-hombros-maquina",3,10,12],["elevaciones-laterales",3,12,15],["triceps-polea-soga",3,12,15],["extension-triceps-polea",2,12,15]]],
+  ["pull","Pull",3,"Espalda y bíceps",[["jalon-al-pecho",4,8,12],["remo-barra",3,8,10],["remo-polea-baja",3,10,12],["face-pull",3,15,15],["curl-biceps-barra",3,10,12],["curl-martillo",2,12,15]]],
+  ["legs","Legs",5,"Piernas y glúteo",[["sentadilla-barra",4,6,10],["peso-muerto-rumano",3,8,10],["prensa-45",3,10,12],["curl-femoral-sentado",3,12,15],["gemelos-de-pie",4,12,15],["plancha",3,40,40]]]]),
+ prog("casa","En casa · sin equipo","Peso corporal, 25 minutos. Para los días sin gym o para empezar desde cero.","Principiante","Casa",[
+  ["casaA","Casa A",1,"Piernas y empuje",[["sentadilla-sin-peso",3,12,15],["flexiones",3,8,12],["zancadas",3,10,12],["puente-gluteo",3,12,15],["plancha",3,30,30]]],
+  ["casaB","Casa B",3,"Core y tracción",[["remo-invertido",3,8,12],["flexiones-rodillas",3,10,15],["bicho-muerto",3,10,12],["sentadilla-salto",3,10,10],["plancha-lateral",3,20,20]]],
+  ["casaC","Casa C",5,"Completo",[["burpees",3,8,10],["saltos-tijera",3,30,30],["mountain-climbers",3,30,30],["abdominales-piso",3,15,20],["sentadilla-sin-peso",3,15,20]]]]),
+ prog("gl3","Glúteos y piernas · 3 días","Tren inferior con un día de tren superior liviano.","Intermedio","Gym",[
+  ["glA","Glúteo A",1,"Glúteo y posterior",[["hip-thrust-maquina",4,8,12],["peso-muerto-rumano",3,8,12],["abductores-maquina",3,15,20],["patada-gluteo-polea",3,12,15],["curl-femoral-acostado",3,12,15]]],
+  ["glB","Superior",3,"Tren superior",[["jalon-al-pecho",3,10,12],["chest-press-maquina",3,10,12],["press-hombros-maquina",3,10,12],["remo-polea-baja",3,12,12],["triceps-polea-soga",2,12,15]]],
+  ["glC","Piernas B",5,"Cuádriceps y glúteo",[["sentadilla-hack",4,8,12],["sentadilla-bulgara",3,10,12],["prensa-45",3,10,12],["extension-cuadriceps",3,12,15],["gemelos-en-prensa",4,12,15]]]]),
+ prog("maq","Principiante en máquinas · 3 días","Solo máquinas, fáciles de aprender. Para la primera vez en un gym.","Principiante","Gym",[
+  ["mqA","Máquinas A",1,"Empuje y piernas",[["prensa-45",3,10,12],["chest-press-maquina",3,10,12],["press-hombros-maquina",3,10,12],["extension-cuadriceps",3,12,15],["abdominales-maquina",3,12,15]]],
+  ["mqB","Máquinas B",3,"Tracción y posterior",[["jalon-al-pecho",3,10,12],["remo-maquina",3,10,12],["curl-femoral-sentado",3,12,15],["curl-biceps-maquina",3,12,15],["gemelos-sentado",3,12,15]]],
+  ["mqC","Máquinas C",5,"Completo",[["sentadilla-hack",3,10,12],["press-inclinado-maquina",3,10,12],["remo-polea-baja",3,12,12],["pec-deck",3,12,15],["posterior-hombro-pec-deck",3,15,15]]]])
+];
+const GRUPOS=[["pecho","Pecho"],["espalda","Espalda"],["hombros","Hombros"],["piernas","Piernas"],["gluteos","Glúteos"],["brazos","Brazos"],["core","Core"],["completo","Completo"]];
+let rutDraft={name:"",day:-1,ex:[]},rosMini=false,lastRestEx=null;
+function usarRutina(id){routineSel=id;if(workout&&workout.routineId!==id){saveWorkout(w=>{w.routineId=id;w.sets={};w.done=false;w.offered=false;w.intention=""})}else render();window.scrollTo(0,0)}
+function saveRoutines(msg){write(backend.setDoc("settings/routines",{list:routines}),msg)}
 
 /* Oraciones breves para ofrecer el entrenamiento (rotan por día). */
 const PRAYERS=[
@@ -153,13 +187,14 @@ function entryFor(f,q,unit,meal){const grams=unit?q*f.unitG:q;const m=macrosFor(
 let wUnsub=null;
 function openWorkout(d){wcur=d;workout=null;offerSkip=false;render();if(!backend)return;if(wUnsub)wUnsub();wUnsub=backend.watchDoc("workouts/"+d,v=>{if(wcur===d){workout=v;render()}})}
 function routineFor(d){const w=parse(d).getDay();return routines.find(r=>r.day===w)||null}
-function curRoutine(){const id=(workout&&workout.routineId)||routineSel||(routineFor(wcur)||{}).id;return routines.find(r=>r.id===id)||null}
+function curRoutine(){const ids=[workout&&workout.routineId,routineSel,(routineFor(wcur)||{}).id];for(const id of ids){const r=id&&routines.find(x=>x.id===id);if(r)return r}return null}
 function wsets(exId){return (workout&&workout.sets&&workout.sets[exId])||[]}
 function restOf(ex){return ex.rest>0?ex.rest:(ex.step>=5?180:90)}
 function saveWorkout(mut,msg,quiet){const r=curRoutine();if(!r)return;
   const w={date:wcur,routineId:r.id,sets:JSON.parse(JSON.stringify((workout&&workout.sets)||{})),done:!!(workout&&workout.done),intention:(workout&&workout.intention)||"",offered:!!(workout&&workout.offered)};
   mut(w);workout=w;if(!quiet)render();write(backend.setDoc("workouts/"+wcur,w),msg)}
-function suggest(ex){const L=loads[ex.id];if(!L||!(L.w>0))return{w:null,why:"Primera vez: elegí un peso que te deje 2 reps en el tanque."};
+const esTiempo=ex=>!!(ex.tiempo||(ex.step===0&&/plancha|seg|hollow|farmer|soga|escalador|mountain/i.test(ex.name)));
+function suggest(ex){const L=loads[ex.id];if(!L||!(L.w>0))return{w:null,why:esTiempo(ex)?"Anotá los segundos que aguantaste con buena forma.":ex.step===0?"Peso corporal: anotá las reps; si agregás lastre, cargalo en kg.":"Primera vez: elegí un peso que te deje 2 reps en el tanque."};
   if(ex.step===0)return{w:L.w,why:"Último registro: "+L.w+"."};
   if(L.hard)return{w:L.w,why:"Mantener "+f1(L.w)+" kg: la última vez una serie costó.",hold:true};
   if(L.top)return{w:r1(L.w+ex.step),why:"Subís +"+f1(ex.step)+" kg: cumpliste el rango con RIR ≥ 2."};
@@ -186,15 +221,29 @@ function award(kind,date,extra){const p=JSON.parse(JSON.stringify(progress));p.c
 
 /* ---------- Temporizador de descanso ---------- */
 let timer=null,timerTick=null;
-function startTimer(ex){stopTimer(false);const total=restOf(ex);timer={end:Date.now()+total*1000,total,name:ex.name,exId:ex.id};timerTick=setInterval(tick,500);tick();if(view==="entreno")render()}
+function startTimer(ex){stopTimer(false);lastRestEx=ex;const total=restOf(ex);timer={end:Date.now()+total*1000,total,name:ex.name,exId:ex.id};timerTick=setInterval(tick,500);tick();if(view==="entreno"&&!typing())render()}
 function stopTimer(rerender=true){if(timerTick)clearInterval(timerTick);timerTick=null;const had=!!timer;timer=null;$("#timerpill").hidden=true;if(rerender&&view==="entreno"){paintTimer();if(had&&!typing())render()}}
 function tick(){if(!timer)return;const left=Math.ceil((timer.end-Date.now())/1000);
   if(left<=0){const n=timer.name;stopTimer();try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}toast("Descanso listo · "+n);return}
   paintTimer(left)}
 function paintTimer(left){if(timer&&left==null)left=Math.ceil((timer.end-Date.now())/1000);
-  const ring=$("#restRing");if(ring){const t=ring.querySelector("b"),c=ring.querySelector("circle.p"),l=$(".rl");
+  const ring=$("#ringBtn");if(ring){const t=ring.querySelector("b"),c=ring.querySelector("circle.p"),l=$(".rl");
     if(timer){t.textContent=mmss(left);c.style.strokeDashoffset=(182*(1-left/timer.total)).toFixed(1);if(l)l.textContent="Descanso"}else{t.textContent=mmss(0);c.style.strokeDashoffset=182;if(l)l.textContent="Listo"}}
-  const pill=$("#timerpill");if(timer&&view!=="entreno"){pill.hidden=false;pill.innerHTML=ic("today")+mmss(left)+" · "+esc(timer.name)}else pill.hidden=true}
+  const big=$("#restBig");if(big&&timer)big.textContent=mmss(left);
+  const pill=$("#timerpill");if(timer&&(view!=="entreno"||window.scrollY>150)){pill.hidden=false;pill.innerHTML=ic("today")+mmss(left)+" · "+esc(timer.name)}else pill.hidden=true}
+window.addEventListener("scroll",()=>{if(timer)paintTimer()},{passive:true});
+function restCard(){if(!timer)return "";return `<section class="card restcard"><div class="l"><span class="eyebrow">${timer.name==="Descanso"?"Descanso":"Descanso · "+esc(timer.name)}</span><b class="big" id="restBig">${mmss(Math.ceil((timer.end-Date.now())/1000))}</b></div><div class="acts"><button class="chip off" id="rest30">+30 s</button><button class="chip off" id="restSkip">Saltar</button></div></section>`}
+/* Rosario compacto para rezar entre series: usa el mismo avance compartido con Daily. */
+function rosMiniHTML(){const act=rosario&&rosario.f===today()?rosario:null;const hk=misteriosHoy();const hecho=(progress.done||{})["rosary:"+today()];
+  if(!act||act.fase==="intro"||act.fase==="fin")return `<section class="card rosmini"><img class="cv" src="${ilu(hk)}" alt=""><div class="n"><span class="eyebrow">Santo Rosario</span><b>${esc(MISTERIOS[hk].n)}</b><small>${hecho?"Hoy ya lo rezaste. Podés rezarlo de nuevo.":"Una cuenta por descanso: tocá para pasarla."}</small></div><div class="acts"><button class="iconbtn acc" data-rosempezar="${hk}" aria-label="Empezar">${ic("play")}</button><button class="sm" id="rosMiniX" aria-label="Cerrar">${ic("x")}</button></div></section>`;
+  const r=act,M=MISTERIOS[r.set],i=r.mis,mis=M.m[i],fin=r.fase==="salve"||r.fase==="papa";let ora,n=0,c=0;
+  if(r.fase==="anuncio")ora="Contemplá el misterio";else if(r.fase==="salve")ora="Salve";
+  else if(r.fase==="papa"){ora=r.c===0?"Padrenuestro":r.c<=3?"Avemaría":"Gloria";n=3;c=r.c>=1&&r.c<=3?r.c:(r.c>3?3:0)}
+  else{ora=r.fase==="padre"?"Padrenuestro":r.fase==="ave"?"Avemaría":"Gloria";n=10;c=r.fase==="ave"?r.c:r.fase==="gloria"?10:0}
+  const beads=n?`<span class="beads">${Array.from({length:n},(_,k)=>`<i class="${k<c?"on":""}"></i>`).join("")}</span>`:"";
+  const txt=r.fase==="anuncio"?((ROS_MED[r.set]||[])[i]||[mis[1]])[0]:oraTxt(ora);
+  return `<section class="card rosmini on"><button class="tap" data-rosav="1"><span class="n"><span class="eyebrow">${fin?"Para terminar":"Misterio "+(i+1)+" de 5 · "+esc(mis[0])}</span><b>${esc(ora)}${n?` <small>${c} de ${n}</small>`:""}</b>${beads}<small class="txt">${esc(txt)}</small></span><span class="go">${ic("right")}</span></button>
+    <div class="acts"><button class="sm" data-rosatras="1" aria-label="Atrás">${ic("left")}</button><button class="sm" data-rosario="1" aria-label="Pantalla completa">${ic("up")}</button><button class="sm" id="rosMiniX" aria-label="Cerrar">${ic("x")}</button></div></section>`}
 
 /* ---------- Render ---------- */
 const typing=()=>{const a=document.activeElement;return !!(a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"))};
@@ -219,11 +268,12 @@ function renderHoy(){
   const eyebrow=dateLabel(cur)+(L.season!=="Tiempo Ordinario"?" · "+L.season:"")+(planDay>=1&&planDay<=90?" · día "+planDay+" de 90":"");
   const chips=(L.ayuno?`<span class="chip">Ayuno</span>`:L.abstinencia?`<span class="chip">Abstinencia</span>`:L.domingo?`<span class="chip muted">${ic("sun")}Día del Señor</span>`:"");
   const M=[["Prot","p","var(--accent)",true],["Carb","c","var(--carb)"],["Grasa","g","var(--fat)"]];
+  const titulo=cur===today()?"Hoy":cur===addDays(today(),-1)?"Ayer":cur===addDays(today(),1)?"Mañana":DOW[parse(cur).getDay()].replace(/^./,c=>c.toUpperCase());
   return `
-  <div class="top"><div class="l"><span class="eyebrow">${esc(eyebrow)}</span><h1 class="title">Hoy</h1>${chips?`<div class="r" style="margin-top:6px">${chips}</div>`:""}</div>
+  <div class="top"><div class="l"><span class="eyebrow">${esc(eyebrow)}</span><h1 class="title">${esc(titulo)}</h1>${chips?`<div class="r" style="margin-top:6px">${chips}</div>`:""}</div>
     <div class="r" style="flex:none">${candleChip()}<button class="chip off" id="tType" aria-label="Tipo de día">${type==="gym"?"Gym":"Descanso"}</button></div></div>
   <section class="card" aria-label="Resumen del día">
-    <div class="kcal"><div class="stat"><span class="eyebrow">${left>=0?"Restantes":"Te pasaste"}</span><span class="big${left<0?" over":""}">${fmt(Math.abs(left))}</span><small class="d">de ${fmt(t.kcal)} kcal · consumidas ${fmt(tot.kcal)}</small></div>
+    <div class="kcal"><div class="stat"><span class="eyebrow">${esc(parse(cur).toLocaleDateString("es-AR",{day:"numeric",month:"short"}))} · ${type==="gym"?"gym":"descanso"} · ${left>=0?"restantes":"te pasaste"}</span><span class="big${left<0?" over":""}">${fmt(Math.abs(left))}</span><small class="d">de ${fmt(t.kcal)} kcal · consumidas ${fmt(tot.kcal)}</small></div>
       <div class="r"><button class="iconbtn inset" id="prev" aria-label="Día anterior">${ic("left")}</button><button class="iconbtn inset" id="next" aria-label="Día siguiente">${ic("right")}</button>${cur!==today()?`<button class="iconbtn inset" id="todayBtn" aria-label="Ir a hoy">${ic("today")}</button>`:""}</div></div>
     <div class="bar${left<0?" over":""}" style="margin-top:16px"><i style="width:${Math.min(100,tot.kcal/t.kcal*100)}%"></i></div>
     <div class="macros">${M.map(([n,k,col,isP])=>{const v=tot[k],tg=t[k],over=!isP&&v>tg*1.08;
@@ -249,39 +299,50 @@ function charCard(){const L=levelOf(progress.xp||0);const nb=Object.keys(progres
     <span class="n"><span class="lvl">Nivel ${L.i+1} · ${esc(L.name)}</span><b>${fmt(progress.xp||0)} XP${L.to?` <small style="font-weight:400">· ${fmt(L.to-(progress.xp||0))} para ${esc(LEVELS[L.i+1][0])}</small>`:""}</b><span class="xp"><i style="width:${L.pct}%"></i></span><small>${nb} ${nb===1?"insignia":"insignias"} · ${progress.counts&&progress.counts.workouts||0} entrenos</small></span>${ic("right")}</button>`}
 /* Ayuno (Plus): plan con ventana de alimentación; el eclesiástico sigue el calendario litúrgico. */
 function fastState(){if(!fast||!fast.start)return null;const h=FAST_PLANS.find(p=>p[0]===fast.plan)||FAST_PLANS[0];const goal=h[1]*3600e3;const el=Date.now()-fast.start;return{plan:h[0],goalMs:goal,elapsed:el,done:goal>0&&el>=goal,endAt:fast.start+goal}}
-function hms(ms){ms=Math.max(0,ms);const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4);return h+":"+pad(m)}
+function hms(ms){ms=Math.max(0,ms);const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4),se=Math.floor(ms%6e4/1e3);return h+":"+pad(m)+":"+pad(se)}
+const hora=t=>new Date(t).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false});
+const FAST_DESC={"16:8":"16 h de ayuno · 8 h para comer","18:6":"18 h de ayuno · 6 h para comer","20:4":"20 h de ayuno · 4 h para comer","OMAD":"Una comida al día","Eclesiástico":"Una comida fuerte y dos ligeras"};
+const FAST_R=70,FAST_C=2*Math.PI*FAST_R;
 function fastCard(){
   if(!isPlus())return `<button class="card lockcard" id="openPlus" style="text-align:left;width:100%"><span class="ic">${ic("fast")}</span><span class="n" style="flex:1"><b style="font-weight:600">Ayuno</b><br><small class="hint">Planes 16:8, 18:6, 20:4, OMAD y el ayuno eclesiástico, con tu ventana de comida.</small></span><span class="plus">Plus</span></button>`;
-  const st=fastState();const L=liturgy(cur);
-  if(!st)return `<section class="card fast"><div class="top" style="align-items:center"><span class="eyebrow">Ayuno</span><span class="plus">Plus</span></div>
-    <div class="chips">${FAST_PLANS.map(([n])=>`<button data-fplan="${n}" aria-pressed="${(fast&&fast.plan||"16:8")===n}">${n}</button>`).join("")}</div>
-    <p class="hint">${(fast&&fast.plan)==="Eclesiástico"?"Una comida fuerte y dos ligeras que no sumen otra; sin comer entre horas. Hoy "+(L.ayuno?"es día de ayuno obligatorio.":"no es obligatorio; podés ofrecerlo igual."):"Empezá cuando termines de comer; la app te avisa cuándo se abre la ventana."}</p>
-    <button class="primary ink" id="fastStart">${ic("fast")}Empezar</button></section>`;
-  const pct=st.goalMs?Math.min(100,st.elapsed/st.goalMs*100):0;
-  return `<section class="card fast"><div class="top" style="align-items:center"><span class="eyebrow">Ayuno ${esc(st.plan)}</span><span class="plus">Plus</span></div>
-    <div class="top" style="align-items:flex-end"><span class="t${st.done?" on":""}" id="fastT">${hms(st.elapsed)}</span><span class="win">${st.goalMs?(st.done?"Ventana abierta desde las "+new Date(st.endAt).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false}):"Se abre a las "+new Date(st.endAt).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false})):"Hasta la comida fuerte"}</span></div>
-    ${st.goalMs?`<div class="bar"><i style="width:${pct}%"></i></div>`:""}
+  const st=fastState();const L=liturgy(cur);const plan=(fast&&fast.plan)||"16:8";
+  if(!st){const last=fast&&fast.last;
+    return `<section class="card fast"><div class="top" style="align-items:center"><div class="l"><span class="eyebrow">Ayuno</span><b style="font-size:18px;font-weight:500">Elegí tu plan</b></div><span class="plus">Plus</span></div>
+    <div class="fplanes">${FAST_PLANS.map(([n,h])=>`<button class="fplan" data-fplan="${n}" aria-pressed="${plan===n}"><b>${n}</b><small>${FAST_DESC[n]}</small></button>`).join("")}</div>
+    <p class="hint">${plan==="Eclesiástico"?"Sin comer entre horas. Hoy "+(L.ayuno?"es día de ayuno obligatorio.":"no es obligatorio; podés ofrecerlo igual."):"Empezá cuando termines de comer: la app cuenta las horas y te muestra cuándo se abre la ventana."}${last&&last.ms?" Último ayuno: "+hms(last.ms).slice(0,-3)+" h.":""}</p>
+    <button class="primary ink" id="fastStart">${ic("fast")}Empezar</button></section>`}
+  const pct=st.goalMs?Math.min(1,st.elapsed/st.goalMs):0;const h=st.goalMs/36e5;
+  return `<section class="card fast${st.done?" done":""}"><div class="top" style="align-items:center"><div class="l"><span class="eyebrow">Ayuno ${esc(st.plan)}</span><b style="font-size:18px;font-weight:500">${st.done?"Ventana abierta":"Ayunando"}</b></div><span class="plus">Plus</span></div>
+    <div class="fring"><div class="fr"><svg viewBox="0 0 160 160" aria-hidden="true"><circle cx="80" cy="80" r="${FAST_R}" class="t"/><circle cx="80" cy="80" r="${FAST_R}" class="p" stroke-dasharray="${FAST_C.toFixed(1)}" stroke-dashoffset="${(FAST_C*(1-pct)).toFixed(1)}"/></svg><div class="c"><b id="fastT">${hms(st.elapsed)}</b><small>${st.goalMs?"de "+h+" h":"hasta la comida fuerte"}</small></div></div>
+      <div class="fside"><div><span class="eyebrow">Empezó</span><b>${hora(fast.start)}</b></div>${st.goalMs?`<div><span class="eyebrow">${st.done?"Abierta desde":"Se abre"}</span><b>${hora(st.endAt)}</b></div><div><span class="eyebrow">${st.done?"Para comer":"Faltan"}</span><b id="fastLeft">${st.done?(24-h)+" h":hms(st.goalMs-st.elapsed).slice(0,-3)}</b></div>`:`<div><span class="eyebrow">Hoy</span><b>${L.ayuno?"Ayuno obligatorio":"Ofrecido"}</b></div>`}</div></div>
     <button class="primary${st.done?"":" ink"}" id="fastStop">${ic("check")}${st.done?"Comer":"Cortar"}</button></section>`}
+function fastTick(){const t=$("#fastT");if(!t)return;const st=fastState();if(!st)return;t.textContent=hms(st.elapsed);
+  const c=document.querySelector(".fast .fr circle.p");if(c&&st.goalMs)c.style.strokeDashoffset=(FAST_C*(1-Math.min(1,st.elapsed/st.goalMs))).toFixed(1);
+  const l=$("#fastLeft");if(l&&!st.done)l.textContent=hms(st.goalMs-st.elapsed).slice(0,-3);
+  if(st.done&&!document.querySelector(".fast.done")&&!typing())render()}
 
 function renderEntreno(){
   const r=curRoutine();const weekNo=Math.min(13,Math.max(1,Math.floor(daysBetween(PLAN_START,wcur)/7)+1));
-  const rt=`<div class="rtabs" role="group" aria-label="Rutina">${routines.map(x=>`<button data-rsel="${x.id}" aria-pressed="${!!(r&&r.id===x.id)}">${esc(x.name)}</button>`).join("")}</div>`;
+  const rt=`<div class="rtabs" role="group" aria-label="Rutina">${routines.map(x=>`<button data-rsel="${x.id}" aria-pressed="${!!(r&&r.id===x.id)}">${esc(x.name)}</button>`).join("")}<button class="more" id="openRutinas" aria-label="Biblioteca de rutinas">${ic("plus")}</button></div>`;
   const nav=`<div class="r"><button class="iconbtn inset" id="wprev" aria-label="Día anterior">${ic("left")}</button><button class="iconbtn inset" id="wnext" aria-label="Día siguiente">${ic("right")}</button>${wcur!==today()?`<button class="iconbtn inset" id="wtoday" aria-label="Ir a hoy">${ic("today")}</button>`:""}</div>`;
-  if(!r)return `<div class="top"><div class="l"><span class="eyebrow">${esc(dateLabel(wcur))} · semana ${weekNo} de 13</span><h1 class="title">Descanso</h1></div>${nav}</div><p class="hint">Hoy no hay rutina asignada. Elegí una si querés entrenar igual.</p>${rt}`;
+  const rezar=`<button class="chip ${rosMini?"":"off"}" id="rosMiniT" aria-pressed="${rosMini}">${ic("rosary")}Rezar</button>`;
+  if(!r)return `<div class="top"><div class="l"><span class="eyebrow">${esc(dateLabel(wcur))} · semana ${weekNo} de 13</span><h1 class="title">Descanso</h1></div>${nav}</div><p class="hint">Hoy no hay rutina asignada. Elegí una si querés entrenar igual, o armá la tuya con el +.</p>${rt}<div class="wacts">${rezar}</div>${rosMini?rosMiniHTML():""}`;
   if(needsOffer()){const pr=PRAYERS[daysBetween(PLAN_START,wcur)%PRAYERS.length];
     return `<div class="hero"><div class="offer"><div class="top"><span class="eyebrow">${esc(DOW[parse(wcur).getDay()])} · ${esc(r.name)}</span><button class="iconbtn ghost" id="offerSkip" aria-label="Saltar">${ic("x")}</button></div>
       <div style="display:flex;flex-direction:column;gap:28px"><span class="dot"></span><p class="pr">${esc(pr)}</p><p class="sub">Ordenar el cuerpo desde la templanza, no desde la vanagloria.</p></div>
       <div style="display:flex;flex-direction:column;gap:12px"><label for="intencion" class="eyebrow">Lo ofrezco por</label><input id="intencion" type="text" placeholder="una persona, una intención…" autocomplete="off">
         ${intents.length?`<div class="chips">${intents.slice(0,6).map(i=>`<button data-intent="${esc(i)}">${esc(i)}</button>`).join("")}</div>`:""}
-        <button class="primary" id="offer" style="margin-top:8px">${ic("cross")}Ofrecer</button></div></div></div>`}
-  const done=!!(workout&&workout.done);const intention=workout&&workout.intention;
+        <button class="primary" id="offer" style="margin-top:8px">${ic("cross")}Ofrecer</button><button class="lnk" id="openRutinas" style="margin:4px auto 0">Elegir otra rutina</button></div></div></div>`}
+  const done=!!(workout&&workout.done);const intention=workout&&workout.intention;const enCurso=!done&&Object.keys((workout&&workout.sets)||{}).length>0;
   const cur_track=tracks[trackIdx];
   return `
   <div class="top"><div class="l"><span class="eyebrow">${intention?"Ofrecido por "+esc(intention):esc(DOW[parse(wcur).getDay()])} · semana ${weekNo}</span><h1 class="title">${esc(r.name)}</h1><small class="hint">${esc(r.goal)} · RIR 2</small></div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="ring" id="restRing"><svg viewBox="0 0 68 68" aria-hidden="true"><circle cx="34" cy="34" r="29" fill="none" stroke="var(--track)" stroke-width="5"/><circle class="p" cx="34" cy="34" r="29" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="182" stroke-dashoffset="182"/></svg><b>0:00</b></div><span class="eyebrow rl" style="font-size:10px">Listo</span></div></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><button class="ring" id="ringBtn" aria-label="${timer?"Parar el descanso":"Empezar un descanso"}"><svg viewBox="0 0 68 68" aria-hidden="true"><circle cx="34" cy="34" r="29" fill="none" stroke="var(--track)" stroke-width="5"/><circle class="p" cx="34" cy="34" r="29" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="182" stroke-dashoffset="182"/></svg><b>0:00</b></button><span class="eyebrow rl" style="font-size:10px">Listo</span></div></div>
   <div class="top" style="align-items:center">${rt}${nav}</div>
+  <div class="wacts"><button class="chip off" id="wlater">${ic("out")}${enCurso?"Seguir después":"Salir"}</button><button class="chip off" id="openRutinas">${ic("edit")}Cambiar</button>${rezar}</div>
+  ${restCard()}${rosMini?rosMiniHTML():""}
   ${r.ex.map(ex=>{const ss=wsets(ex.id);const sg=suggest(ex);const L=loads[ex.id];const rows=[];
-    for(let i=0;i<Math.max(ex.sets,ss.length);i++){const s=ss[i]||{};const prev=ss[i-1]||{};const w=s.w!=null?s.w:(prev.w!=null?prev.w:(sg.w!=null?sg.w:""));const done=s.w>0&&s.r>0;
+    for(let i=0;i<Math.max(ex.sets,ss.length);i++){const s=ss[i]||{};const prev=ss[i-1]||{};const w=s.w!=null?s.w:(prev.w!=null?prev.w:(sg.w!=null?sg.w:""));const done=s.r>0;
       rows.push(`<span class="no">${i+1}</span>
         <input type="number" inputmode="decimal" step="any" class="${done?"":"empty"}" data-set="${ex.id}" data-i="${i}" data-k="w" value="${esc(s.w!=null?s.w:"")}" placeholder="${esc(w)}" aria-label="Peso serie ${i+1}">
         <input type="number" inputmode="numeric" class="${done?"":"empty"}" data-set="${ex.id}" data-i="${i}" data-k="r" value="${esc(s.r!=null?s.r:"")}" placeholder="${ex.lo}" aria-label="Reps serie ${i+1}">
@@ -289,15 +350,14 @@ function renderEntreno(){
         <button class="mini hard" data-hard="${ex.id}" data-i="${i}" aria-pressed="${!!s.hard}" aria-label="Me costó">${ic("flame")}</button>
         <button class="mini ok" data-ok="${ex.id}" data-i="${i}" aria-pressed="${done}" aria-label="Serie lista">${ic("check")}</button>`)}
     const sp=spriteFor(ex);const live=!!(timer&&timer.exId===ex.id&&sp);
-    return `<section class="ex"><div class="hd"><div class="ttl">${sp?`<button class="exthumb${live?" live":""}" data-ficha="${ex.id}" aria-label="Ver ${esc(ex.name)}"><canvas data-sprite="${sp}" data-live="${live?1:0}"></canvas></button>`:""}<div><b>${esc(ex.name)}</b><small>${ex.sets} × ${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}${ex.step===0?" s":""} · descanso ${mmss(restOf(ex))}</small></div></div>
-      <div class="sug${sg.hold?" hold":""}"><span class="eyebrow">Sugerido</span><span class="v">${sg.w!=null?f1(sg.w):"—"}<small> ${ex.step===0?"s":"kg"}</small></span></div></div>
-      <div class="sets"><span></span><span class="th">${ex.step===0?"seg":"kg"}</span><span class="th">reps</span><span class="th">rir</span><span></span><span></span>${rows.join("")}</div>
+    return `<section class="ex"><div class="hd"><div class="ttl">${sp?`<button class="exthumb${live?" live":""}" data-ficha="${ex.id}" aria-label="Ver ${esc(ex.name)}"><canvas data-sprite="${sp}" data-live="${live?1:0}"></canvas></button>`:""}<div><b>${esc(ex.name)}</b><small>${ex.sets} × ${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}${esTiempo(ex)?" s":""} · descanso ${mmss(restOf(ex))}</small></div></div>
+      <div class="sug${sg.hold?" hold":""}"><span class="eyebrow">Sugerido</span><span class="v">${sg.w!=null?f1(sg.w):"—"}<small> ${esTiempo(ex)?"s":"kg"}</small></span></div></div>
+      <div class="sets"><span></span><span class="th">${esTiempo(ex)?"seg":"kg"}</span><span class="th">reps</span><span class="th">rir</span><span></span><span></span>${rows.join("")}</div>
       <div class="next">${esc(sg.why)}${L?" Última: "+f1(L.w)+" × "+(L.reps||[]).join("/")+".":""}</div></section>`}).join("")}
   <button class="primary" id="finish" ${done?"disabled":""}>${ic("flag")}${done?"Ofrecido":"Terminar"}</button>
   <button class="nowbar" id="openListen" style="text-align:left;width:100%"><div class="n"><b>${cur_track?esc(cur_track.name):"Escuchar"}</b><small>${cur_track?(playing?"Sonando":"En pausa")+" · música "+(trackIdx+1)+" de "+tracks.length:"Música y rosario para el entreno"}</small></div>
     <div class="acts">${cur_track?`<span class="iconbtn ink" data-pp="1" role="button" aria-label="${playing?"Pausar":"Reproducir"}" style="width:36px;height:36px">${ic(playing?"pause":"play")}</span>`:""}<span class="iconbtn" style="width:36px;height:36px;color:var(--muted)" aria-hidden="true">${ic("rosary")}</span></div></button>`;
 }
-
 function weekAvgs(){const by={};bodyRows.forEach(r=>{if(r.weight>0)by[r.date]=r.weight});const out=[];
   for(let w=0;w<13;w++){let s=0,n=0;for(let i=0;i<7;i++){const d=addDays(PLAN_START,w*7+i);if(by[d]){s+=by[d];n++}}out.push(n?s/n:null)}return out}
 function renderCuerpo(){
@@ -354,7 +414,7 @@ function renderMas(){
     <p class="hint" style="margin:8px 0 0">Entreno terminado ${XP.workout} XP (+${XP.offered} ofrecido) · Rosario ${XP.rosary} · tres comidas en el día ${XP.meals} · pesaje ${XP.body}.</p></div>
   <div class="card"><div class="eyebrow" style="margin-bottom:10px">Tus insignias</div><div class="logros">${BADGES.map(([id,name,icon])=>`<span class="logro${progress.badges&&progress.badges[id]?" on":""}">${ic(icon)}<b>${esc(name)}</b></span>`).join("")}</div></div>
   <div class="card"><div class="eyebrow" style="margin-bottom:12px">Tu camino</div><div class="grid2">${[["Racha",st.n],["Mejor racha",progress.best||0],["Entrenos",c.workouts||0],["Rosarios",c.rosaries||0]].map(([n,v])=>`<div class="stat"><div class="v">${v}</div><small class="d">${n}</small></div>`).join("")}</div></div>
-  <button class="card plusmas" id="openPlus" style="text-align:left;width:100%"><span class="plus-tag">Scaeli<b>+</b></span><span class="n"><b>${isPlus()?"Scaeli+ activo":"Scaeli+"}</b><small>${isPlus()?"Ayuno con planes, y todo lo de Daily":"Ayuno con planes y rutinas por objetivo · vale para Daily y Fit · desde USD 1,67 por mes"}</small></span>${ic("right")}</button>
+  <button class="card plusmas" id="openPlus" style="text-align:left;width:100%"><span class="plus-tag">Scaeli<b>+</b></span><span class="n"><b>${isPlus()?"Scaeli+ activo":"Scaeli+"}</b><small>${isPlus()?"Ayuno con planes, y todo lo de Daily":"Ayuno con planes y rutinas por objetivo · vale para Daily y Fit · desde USD 1,67 por mes"}</small></span></button>
   <div class="sect" style="margin-top:8px">Ajustes</div>
   <section class="card tight list"><div class="row"><div class="n"><b>${local?"Sin cuenta":esc(user&&(user.displayName||user.email)||"Tu cuenta")}</b><small>${local?"Guardado solo en este dispositivo":"Guardado en tu cuenta de Google"}</small></div><div class="acts"><button class="chip off" id="theme">${light?"Oscuro":"Claro"}</button>${local?`<button class="ghost" id="login">${LOGO_GOOGLE}Entrar</button>`:`<button class="ghost g" id="logout">${ic("out")}Salir</button>`}</div></div></section>
   <section class="card tight list"><div class="row"><span class="eyebrow">Recetas (${recipes.length})</span><button class="ghost" id="newRecipe" style="height:32px;font-size:12px">${ic("plus")}Nueva</button></div>
@@ -368,8 +428,8 @@ function renderMas(){
     <div class="r"><button class="ghost" type="submit">${ic("check")}Guardar</button><button class="ghost g" type="button" id="recalc">${ic("scale")}Recalcular</button></div></form></section>
   <section class="card tight list"><div class="row"><span class="eyebrow">Favoritos (${combos.length})</span></div>
     ${combos.length?combos.map(c=>`<div class="row"><div class="n"><b>${esc(c.name)}</b><small>${MEALS.find(m=>m[0]===c.meal)[1]} · ${c.items.length} ítems · ${fmt(totals(c.items).kcal)} kcal</small></div><button class="sm" data-delcombo="${c.id}" aria-label="Borrar favorito">${ic("trash")}</button></div>`).join(""):`<p class="empty">Guardá una comida con la estrella en Hoy.</p>`}</section>
-  <section class="card tight list"><div class="row"><span class="eyebrow">Rutinas</span><button class="ghost g" id="resetR" style="height:32px;font-size:12px">${ic("copy")}Restaurar</button></div>
-    ${routines.map(r=>`<div class="row" style="flex-direction:column;align-items:stretch;gap:0"><div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0 8px"><b style="font-weight:600">${esc(r.name)}</b><small class="hint">${DOWS[r.day]} · ${esc(r.goal)}</small></div>
+  <section class="card tight list"><div class="row"><span class="eyebrow">Rutinas</span><button class="ghost" id="openRutinas" style="height:32px;font-size:12px">${ic("plus")}Biblioteca</button></div>
+    ${routines.map(r=>`<div class="row" style="flex-direction:column;align-items:stretch;gap:0"><div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0 8px"><b style="font-weight:600">${esc(r.name)}</b><small class="hint">${r.day>=0?DOWS[r.day]:"libre"} · ${esc(r.goal)}</small></div>
       ${r.ex.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)"><div class="n"><b style="font-weight:500;font-size:14px">${esc(e.name)}</b><small>${e.sets} × ${e.lo}${e.hi!==e.lo?"–"+e.hi:""} · +${f1(e.step)} kg · ${mmss(restOf(e))}</small></div><button class="sm" data-edex="${r.id}/${e.id}" aria-label="Editar ${esc(e.name)}">${ic("edit")}</button></div>`).join("")}</div>`).join("")}</section>
   <section class="card tight list"><div class="row"><span class="eyebrow">Intenciones recientes</span></div>${intents.length?intents.map(i=>`<div class="row"><b style="font-weight:500">${esc(i)}</b><button class="sm" data-delint="${esc(i)}" aria-label="Borrar">${ic("x")}</button></div>`).join(""):`<p class="empty">Aparecen al ofrecer un entrenamiento.</p>`}</section>
   <section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Tus datos</span>
@@ -394,7 +454,7 @@ let sheet=null;
 function openSheet(s){sheet=s;$("#scrim").hidden=false;const sh=$("#sheet");sh.hidden=false;sh.classList.toggle("short",!!s.short);renderSheetNow()}
 function closeSheet(){sheet=null;$("#scrim").hidden=true;const sh=$("#sheet");sh.hidden=true;sh.classList.remove("full");$("#sheetIn").innerHTML=""}
 const X=`<button class="iconbtn ghost" id="x" aria-label="Cerrar">${ic("x")}</button>`;
-function renderSheetNow(){renderSheetBody();if(sheet&&sheet.view==="ficha")mountSprites($("#sheetIn"));pintarPersonajes();$("#sheet").classList.toggle("full",!!(sheet&&sheet.full))}
+function renderSheetNow(){renderSheetBody();if(sheet&&(sheet.view==="ficha"||sheet.view==="rutinas"))mountSprites($("#sheetIn"));pintarPersonajes();$("#sheet").classList.toggle("full",!!(sheet&&sheet.full))}
 function renderSheetBody(){
   const el=$("#sheetIn");if(!sheet)return;const mealName=sheet.meal?MEALS.find(m=>m[0]===sheet.meal)[1]:"";
   if(sheet.view==="search"){const L=liturgy(cur);const list=searchFoods(sheet.q||"");const favs=(sheet.q||sheet.target)?[]:combos.filter(c=>c.meal===sheet.meal);const title=sheet.target==="recipe"?"Ingrediente":mealName;
@@ -476,7 +536,7 @@ function renderSheetBody(){
   else if(sheet.view==="ficha"){const ex=sheet.ex;const sp=spriteFor(ex)||sheet.sp;const c=CATALOGO.find(x=>x.id===sp)||{};const L=loads[ex.id];
     el.innerHTML=`<h3>${esc(ex.name)}${X}</h3><div class="scroll" style="display:flex;flex-direction:column;gap:14px">
       <div class="ficha"><canvas data-sprite="${sp}" data-live="1" data-scale="2"></canvas><small>${esc((c.musc||[]).join(" · ")||"técnica")}</small></div>
-      <div class="preview"><div><b>${ex.sets}</b><span>series</span></div><div><b>${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}</b><span>${ex.step===0?"seg":"reps"}</span></div><div><b>${mmss(restOf(ex))}</b><span>descanso</span></div><div><b>${L?f1(L.w):"—"}</b><span>última kg</span></div></div>
+      <div class="preview"><div><b>${ex.sets}</b><span>series</span></div><div><b>${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}</b><span>${esTiempo(ex)?"seg":"reps"}</span></div><div><b>${mmss(restOf(ex))}</b><span>descanso</span></div><div><b>${L?f1(L.w):"—"}</b><span>última kg</span></div></div>
       <p class="hint">${esc(suggest(ex).why)} Dejá 2 repeticiones en el tanque; si una serie costó, marcá la llama y la app no te sube el peso.</p></div>`;
   } else if(sheet.view==="plus"){const activo=isPlus(),eq=delEquipo(),comoGratis=lsGet("fit_plus_como_gratis")==="1";
     const ben=[["Ayuno con planes","16:8, 18:6, 20:4, OMAD y el ayuno eclesiástico, con tu ventana de comida y aviso cuando se abre."],["Rutinas por objetivo","Elegís objetivo, días y equipo, y la app te arma la rutina con el personaje."],["Comidas por foto","Sacás la foto del plato o de la etiqueta y la app la carga por vos (próximamente)."],["Todo lo de Scaeli Daily","Tu progreso y tus virtudes, los caminos guiados y tu año con Dios. Una sola suscripción para las dos apps."],["Sostenés Scaeli","Un proyecto para acercar a los jóvenes a Dios, sin publicidad."]];
@@ -488,6 +548,8 @@ function renderSheetBody(){
       ${eq?`<button class="lnk" id="plusComoGratis" style="display:block;margin:12px auto 0">${comoGratis?"Volver a ver Scaeli+":"Ver la app como usuario gratis"}</button>`:""}
       <p class="legal">La suscripción se renueva sola al final de cada período, al mismo precio, salvo que la canceles al menos 24 horas antes desde tu cuenta de Google Play o del App Store. El pago se cobra en tu cuenta de la tienda. <a href="terminos.html" target="_blank" rel="noopener">Términos de uso</a> · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a></p>
       </div><button class="primary ink" id="x">${activo?"Volver":"Ahora no"}</button>`;
+  } else if(sheet.view==="rutinas"){el.innerHTML=shRutinas();const q=$("#rq");if(q){q.oninput=e=>{sheet.q=e.target.value;const pos=e.target.selectionStart;renderSheetNow();const n=$("#rq");n.focus();try{n.setSelectionRange(pos,pos)}catch(x){}}}
+    const nm=$("#rutName");if(nm)nm.oninput=e=>{rutDraft.name=e.target.value;const sv=$("#rutSave");if(sv)sv.disabled=!(rutDraft.name.trim()&&rutDraft.ex.length)};
   } else if(sheet.view==="levelup"){
     el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:12px 0 6px"><span class="eyebrow">Subiste de nivel</span><span class="bignum" style="font-size:64px">${esc(sheet.name)}</span><span class="av" style="width:112px;height:112px;background:var(--paper);border-radius:24px;display:grid;place-items:center">${personajeHTML("",96)}</span><p class="hint" style="max-width:30ch">No para mirarte vos: para servir mejor. Seguí.</p><button class="primary" id="x" style="max-width:240px">${ic("check")}Amén</button></div>`;
   } else if(sheet.view==="char"){const L=levelOf(progress.xp||0);const st=streakOf(progress.days||[],today());const c=progress.counts||{};
@@ -500,6 +562,31 @@ function renderSheetBody(){
       <p class="hint">Entreno terminado ${XP.workout} XP (+${XP.offered} si lo ofreciste) · rosario completo ${XP.rosary} · tres comidas cargadas en el día ${XP.meals} · pesaje ${XP.body}. Los niveles: ${LEVELS.map(l=>l[0]+" "+l[1]).join(" · ")}.</p></div>`;
   }
 }
+
+
+/* ---------- Rutinas: las mías, la biblioteca y armar una propia con el catálogo ---------- */
+function exTxt(e){return e.sets+" × "+e.lo+(e.hi!==e.lo?"–"+e.hi:"")+(esTiempo(e)?" s":"")+" · "+mmss(restOf(e))}
+function shRutinas(){const tab=sheet.tab||"mias";const target=sheet.target?routines.find(x=>x.id===sheet.target):null;
+  const tabs=`<div class="seg" style="margin-bottom:12px"><button data-rtab="mias" aria-pressed="${tab==="mias"}">Mis rutinas</button><button data-rtab="bib" aria-pressed="${tab==="bib"}">Biblioteca</button><button data-rtab="nueva" aria-pressed="${tab==="nueva"||tab==="pick"}">${tab==="pick"?"Agregar":"Nueva"}</button></div>`;
+  let body="";
+  if(tab==="mias"){const cr=curRoutine();
+    body=`<section class="card tight list">${routines.map(x=>`<div class="row" style="flex-direction:column;align-items:stretch;gap:0"><div class="row" style="padding:4px 0 6px"><button class="food" data-ruse="${x.id}" style="border:0;padding:0;flex:1"><b style="${cr&&cr.id===x.id?"color:var(--accent)":""}">${esc(x.name)}</b><small>${x.day>=0&&x.day!=null?DOWS[x.day]:"sin día"} · ${esc(x.goal||"")} · ${x.ex.length} ejercicios</small></button><div class="acts"><button class="sm" data-addex="${x.id}" aria-label="Agregar ejercicio">${ic("plus")}</button><button class="sm" data-rdelr="${x.id}" aria-label="Borrar rutina">${sheet.confirm==="r:"+x.id?ic("check"):ic("trash")}</button></div></div>
+      ${x.ex.map(e=>`<div class="exrow"><div class="n"><b>${esc(e.name)}</b><small>${exTxt(e)}</small></div><button class="sm" data-edex="${x.id}/${e.id}" aria-label="Editar">${ic("edit")}</button><button class="sm" data-delex="${x.id}/${e.id}" aria-label="Quitar">${sheet.confirm==="e:"+x.id+"/"+e.id?ic("check"):ic("x")}</button></div>`).join("")}</div>`).join("")||`<p class="empty">No tenés rutinas. Elegí un programa de la biblioteca o armá una nueva.</p>`}</section>
+      <p class="hint">Tocá el nombre para entrenarla hoy. El día asignado es el que aparece solo al abrir Entreno.</p><button class="ghost g" id="resetR">${ic("copy")}Restaurar las rutinas base</button>`}
+  else if(tab==="bib"){body=`<p class="hint">Un programa reemplaza tus rutinas actuales (las cargas registradas se conservan).</p><div class="progs">${PROGRAMAS.map(p=>`<div class="card prog"><div class="n"><b>${esc(p.nombre)}</b><small>${esc(p.desc)}</small><span class="r" style="margin-top:6px"><span class="chip muted" style="height:24px;font-size:11px">${p.nivel}</span><span class="chip muted" style="height:24px;font-size:11px">${p.lugar}</span><span class="chip muted" style="height:24px;font-size:11px">${p.rutinas.length} días</span></span></div>
+      <details><summary class="hint">Ver ejercicios</summary>${p.rutinas.map(x=>`<p class="hint" style="margin:6px 0 0"><b style="color:var(--ink);font-weight:600">${esc(x.name)}</b> · ${x.ex.map(e=>esc(e.name)).join(", ")}</p>`).join("")}</details>
+      <button class="primary ink" data-puse="${p.id}">${sheet.confirm==="p:"+p.id?ic("check")+"Confirmar":ic("check")+"Usar"}</button></div>`).join("")}</div>`}
+  else{const d=rutDraft;const q=norm(sheet.q||"");const g=sheet.g||"";
+    const list=CATALOGO.filter(c=>(!g||c.grupo===g)&&(!q||q.split(/\s+/).every(w=>norm(c.nombre).includes(w))));
+    const head=tab==="pick"?`<p class="hint">Agregás a <b style="color:var(--ink)">${esc(target?target.name:"")}</b>. Tocá un ejercicio y queda guardado.</p>`:
+      `<label class="f" for="rutName">Nombre<input class="inset" type="text" id="rutName" value="${esc(d.name)}" placeholder="Pecho y brazos" autocomplete="off"></label>
+      <span class="eyebrow">Día</span><div class="chips">${[[-1,"Libre"],[1,"Lun"],[2,"Mar"],[3,"Mié"],[4,"Jue"],[5,"Vie"],[6,"Sáb"],[0,"Dom"]].map(([v,l])=>`<button data-rday="${v}" aria-pressed="${d.day===v}">${l}</button>`).join("")}</div>
+      <section class="card tight list"><div class="row"><span class="eyebrow">Ejercicios (${d.ex.length})</span></div>${d.ex.map((e,k)=>`<div class="exrow"><div class="n"><b>${esc(e.name)}</b><small>${exTxt(e)}</small></div><button class="sm" data-rrm="${k}" aria-label="Quitar">${ic("x")}</button></div>`).join("")||`<p class="empty">Elegí abajo los ejercicios. Después podés ajustar series y descanso con el lápiz.</p>`}</section>
+      <button class="primary" id="rutSave" ${d.name.trim()&&d.ex.length?"":"disabled"}>${ic("check")}Guardar rutina</button>`;
+    body=head+`<span class="eyebrow">Catálogo (${list.length})</span><input type="search" id="rq" placeholder="Buscar ejercicio…" value="${esc(sheet.q||"")}" autocomplete="off">
+      <div class="chips"><button data-rg="" aria-pressed="${!g}">Todos</button>${GRUPOS.map(([k,n])=>`<button data-rg="${k}" aria-pressed="${g===k}">${n}</button>`).join("")}</div>
+      <div class="list">${list.map(c=>{const sp=SPRITE_BY_APP[c.id];return `<button class="food" data-radd="${c.id}">${sp?`<canvas class="mini" data-sprite="${sp}" data-live="0"></canvas>`:`<span class="mini"></span>`}<span><b>${esc(c.nombre)}</b><small>${esc(GRUPOS.find(x=>x[0]===c.grupo)[1])} · ${esc(c.equipo.replace("-"," "))}</small></span>${ic("plus")}</button>`}).join("")}</div>`}
+  return `<h3>Rutinas${X}</h3>${tabs}<div class="scroll" style="display:flex;flex-direction:column;gap:12px">${body}</div>`}
 
 /* ---------- Escuchar: música y rosario ---------- */
 let trackIdx=0,playing=false,listenTab="musica",rosaryStep=0;
@@ -547,7 +634,7 @@ const intHTML=()=>intents.length?'<p class="hint">Por: '+intents.map(esc).join("
 const ORD_M=["1.er","2.º","3.er","4.º","5.º"],ADJ={gozosos:"gozoso",luminosos:"luminoso",dolorosos:"doloroso",gloriosos:"glorioso"};
 const diasMist=k=>MISTERIOS[k].d.map(w=>ROS_DIAS_N[w]).join(" y ");
 function rosNuevo(set){return{set:set||misteriosHoy(),mis:0,fase:"intro",c:0,f:today()}}
-async function rosGuardar(r){rosario=r;renderSheetNow();await backend.setDoc("daily_settings/rosario",r)}
+async function rosGuardar(r){rosario=r;if(sheet)renderSheetNow();if(view==="entreno"&&rosMini&&!typing())renderNow();await backend.setDoc("daily_settings/rosario",r)}
 function rosIntro(act){const hk=misteriosHoy(),sel=sheet.rset||(act&&act.fase==="intro"&&MISTERIOS[act.set]?act.set:hk);const n=(progress.done||{})["rosary:"+today()]?1:0;
   return '<div class="ftop"><button class="iconbtn ghost g" id="x" aria-label="Salir">'+ic("x")+'</button><span style="flex:1"></span><span class="ft">'+(n?"Hoy ya rezaste el Rosario":"Santo Rosario")+'</span></div>'+
    '<div class="scroll fcuerpo rosin"><div class="fla">Santo Rosario</div><h2 class="fh">¿Qué misterios querés rezar?</h2><p class="fhint">Los de hoy, '+ROS_DIAS_N[new Date().getDay()]+', son los '+esc(MISTERIOS[hk].n.replace("Misterios ","").toLowerCase())+'. Podés rezarlo entre series, con la música de fondo.</p>'+
@@ -559,7 +646,7 @@ function rosAnillo(n,hechos,actual,padre,centro,sub){const R=104,c=130,pos=k=>{c
   let s='<svg class="anillo" viewBox="0 0 260 260" aria-hidden="true"><circle cx="130" cy="130" r="'+R+'" class="hilo"/>';
   for(let k=0;k<n;k++){const[x,y]=pos(k),st=k<hechos?"ya":k===actual?"on":"";s+=(st==="on"?'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="17" class="halo"/>':'')+'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(st==="on"?10:8)+'" class="cu '+st+'"/>'}
   s+='<rect x="119" y="'+(c-R-11)+'" width="22" height="22" rx="6" class="cu p '+padre+'"/>'+(padre==="on"?'<rect x="111" y="'+(c-R-19)+'" width="38" height="38" rx="12" class="halo"/>':'');
-  return s+'</svg><div class="acentro"><b>'+centro+'</b><span>'+sub+'</span></div>'}
+  return s+'</svg><div class="acentro'+(centro?"":" solo")+'"><b>'+centro+'</b><span>'+sub+'</span></div>'}
 function shRosario(){const act=rosario&&rosario.f===today()?rosario:null,r=act&&act.fase!=="fin"&&act.fase!=="intro"?act:null;if(!r)return rosIntro(act);
   const M=MISTERIOS[r.set],i=r.mis,mis=M.m[i],med=(ROS_MED[r.set]||[])[i],solo=!!(dprofile&&dprofile.rosSolo),fin=r.fase==="salve"||r.fase==="papa";
   const etiqueta=fin?"Para terminar":ORD_M[i]+" misterio "+(ADJ[r.set]||"");
@@ -570,9 +657,9 @@ function shRosario(){const act=rosario&&rosario.f===today()?rosario:null,r=act&&
      pie('<button class="primary" data-rosav="1">Comenzar la decena</button>');
   if(r.fase==="salve")return top+'<div class="scroll fcuerpo ros2"><div class="fla">Para terminar</div><h2 class="fh">Dios te salve, Reina y Madre</h2><p class="rora">'+esc(oraTxt("Salve"))+'</p></div>'+pie('<button class="primary" data-rosav="1">Amén</button>');
   let ora,anillo;
-  if(r.fase==="papa"){const c=r.c;ora=c===0?"Padrenuestro":c<=3?"Avemaría":"Gloria";anillo=rosAnillo(3,c===0?0:Math.min(3,c-1+(c>3?1:0)),c>=1&&c<=3?c-1:-1,c===0?"on":"ya",c>=1&&c<=3?String(c):ora==="Padrenuestro"?"✝":"✦",c>=1&&c<=3?"de 3 · Avemaría":ora)}
+  if(r.fase==="papa"){const c=r.c;ora=c===0?"Padrenuestro":c<=3?"Avemaría":"Gloria";anillo=rosAnillo(3,c===0?0:Math.min(3,c-1+(c>3?1:0)),c>=1&&c<=3?c-1:-1,c===0?"on":"ya",c>=1&&c<=3?String(c):"",c>=1&&c<=3?"de 3 · Avemaría":ora)}
   else{ora=r.fase==="padre"?"Padrenuestro":r.fase==="ave"?"Avemaría":"Gloria";
-    anillo=rosAnillo(10,r.fase==="ave"?r.c-1:r.fase==="gloria"?10:0,r.fase==="ave"?r.c-1:-1,r.fase==="padre"?"on":"ya",r.fase==="ave"?String(r.c):r.fase==="padre"?"✝":"✦",r.fase==="ave"?"de 10 · Avemaría":ora)}
+    anillo=rosAnillo(10,r.fase==="ave"?r.c-1:r.fase==="gloria"?10:0,r.fase==="ave"?r.c-1:-1,r.fase==="padre"?"on":"ya",r.fase==="ave"?String(r.c):"",r.fase==="ave"?"de 10 · Avemaría":ora)}
   const texto=solo?'':'<p class="rora">'+esc(oraTxt(ora))+'</p>'+(ora==="Gloria"&&r.fase==="gloria"?'<p class="rora jac">'+esc(ROS_FATIMA)+'</p>':'');
   return top+'<div class="scroll fcuerpo ros2"><div class="rcab">'+(r.fase==="papa"?'Por el Papa y la Iglesia':esc(mis[0]))+'</div>'+
     '<button class="rtap'+(solo?" solo":"")+'" data-rosav="1" aria-label="Pasar la cuenta">'+anillo+'</button><p class="rhint">Tocá el rosario para pasar la cuenta</p>'+texto+
@@ -586,8 +673,8 @@ async function rosAvanzar(){let r={...(rosario||rosNuevo())};if(r.f!==today())r=
   else if(r.fase==="gloria"){if(r.mis<4){r.mis++;r.fase="anuncio";r.c=0}else{r.fase="salve"}}
   else if(r.fase==="salve"){r.fase="papa";r.c=0}
   else if(r.fase==="papa"){if(r.c<4)r.c++;else{r.fase="fin";toast("Rezaste el Santo Rosario");award("rosary",today())}}
-  await rosGuardar(r);if(r.fase==="fin")closeSheet()}
-async function rosAtras(){let r={...rosario};if(r.fase==="papa"){if(r.c>0)r.c--;else r.fase="salve"}else if(r.fase==="salve"){r.fase="gloria";r.mis=4}else if(r.fase==="ave"){if(r.c>1)r.c--;else r.fase="padre"}else if(r.fase==="gloria"){r.fase="ave";r.c=10}else if(r.fase==="padre"){r.fase="anuncio"}else if(r.fase==="anuncio"&&r.mis>0){r.mis--;r.fase="gloria"}else if(r.fase==="anuncio"){r.fase="intro";sheet.rset=r.set}await rosGuardar(r)}
+  await rosGuardar(r);if(r.fase==="fin"&&sheet&&sheet.view==="rosario")closeSheet()}
+async function rosAtras(){let r={...rosario};if(r.fase==="papa"){if(r.c>0)r.c--;else r.fase="salve"}else if(r.fase==="salve"){r.fase="gloria";r.mis=4}else if(r.fase==="ave"){if(r.c>1)r.c--;else r.fase="padre"}else if(r.fase==="gloria"){r.fase="ave";r.c=10}else if(r.fase==="padre"){r.fase="anuncio"}else if(r.fase==="anuncio"&&r.mis>0){r.mis--;r.fase="gloria"}else if(r.fase==="anuncio"){r.fase="intro";if(sheet)sheet.rset=r.set}await rosGuardar(r)}
 
 function mysteriesFor(d){const w=parse(d).getDay();return w===1||w===6?"gozosos":w===2||w===5?"dolorosos":w===4?"luminosos":"gloriosos"}
 const PN="Padre nuestro, que estás en el cielo, santificado sea tu Nombre; venga a nosotros tu Reino; hágase tu voluntad en la tierra como en el cielo. Danos hoy nuestro pan de cada día; perdona nuestras ofensas, como también nosotros perdonamos a los que nos ofenden; no nos dejes caer en la tentación, y líbranos del mal. Amén.";
@@ -627,13 +714,31 @@ async function uploadTrack(file){if(!backend)return;toast("Subiendo "+file.name+
 
 /* ---------- Eventos ---------- */
 function setInput(exId,i,k,val){saveWorkout(w=>{const arr=w.sets[exId]=w.sets[exId]||[];while(arr.length<=i)arr.push({});const s=arr[i];if(k==="hard"){s.hard=!s.hard}else{const n=parseFloat(String(val).replace(",","."));s[k]=isNaN(n)?null:n}},null,k!=="hard");
-  if(k!=="hard"){const s=wsets(exId)[i]||{};const ok=document.querySelector(`button[data-ok="${exId}"][data-i="${i}"]`);if(ok)ok.setAttribute("aria-pressed",!!(s.w>0&&s.r>0))}}
+  if(k!=="hard"){const s=wsets(exId)[i]||{};const ok=document.querySelector(`button[data-ok="${exId}"][data-i="${i}"]`);if(ok)ok.setAttribute("aria-pressed",!!(s.r>0))}}
 function saveIntents(list){intents=list.slice(0,12);write(backend.setDoc("settings/intents",{list:intents}))}
 document.addEventListener("click",e=>{
   const b=e.target.closest("button,[role=button]");if(!b)return;const d=b.dataset;
   if(d.view==="escuchar"){if(sheet&&sheet.view==="listen")closeSheet();else openSheet({view:"listen"});return}
   if(d.view){view=d.view;closeSheet();if(view==="entreno"&&!workout)openWorkout(wcur);else render();return}
   if(d.rosario){openSheet({view:"rosario",full:true});return}
+  if(b.id==="rosMiniT"){rosMini=!rosMini;render();return}
+  if(b.id==="rosMiniX"){rosMini=false;render();return}
+  if(b.id==="ringBtn"){if(timer)stopTimer();else startTimer(lastRestEx||{id:"",name:"Descanso",rest:90,step:1});return}
+  if(b.id==="rest30"){if(timer){timer.end+=30000;timer.total+=30;paintTimer()}return}
+  if(b.id==="restSkip"){stopTimer();return}
+  if(b.id==="wlater"){const enCurso=!!(workout&&!workout.done&&Object.keys(workout.sets||{}).length);view="hoy";closeSheet();render();window.scrollTo(0,0);if(enCurso)toast("Guardado: seguís después");return}
+  if(b.id==="openRutinas"){rutDraft={name:"",day:-1,ex:[]};openSheet({view:"rutinas",tab:"mias"});return}
+  if(d.rtab){sheet.tab=d.rtab;sheet.target=null;sheet.confirm=null;renderSheetNow();return}
+  if(d.ruse){closeSheet();usarRutina(d.ruse);return}
+  if(d.rdelr){if(sheet.confirm==="r:"+d.rdelr){sheet.confirm=null;routines=routines.filter(x=>x.id!==d.rdelr);if(routineSel===d.rdelr)routineSel=null;saveRoutines("Rutina borrada");renderSheetNow();render()}else{sheet.confirm="r:"+d.rdelr;renderSheetNow()}return}
+  if(d.delex){if(sheet.confirm==="e:"+d.delex){sheet.confirm=null;const[rid,eid]=d.delex.split("/");const rr=routines.find(x=>x.id===rid);if(rr){rr.ex=rr.ex.filter(x=>x.id!==eid);saveRoutines("Quitado")}renderSheetNow();render()}else{sheet.confirm="e:"+d.delex;renderSheetNow()}return}
+  if(d.addex){sheet.tab="pick";sheet.target=d.addex;sheet.q="";renderSheetNow();return}
+  if(d.puse){if(sheet.confirm==="p:"+d.puse){sheet.confirm=null;const p=PROGRAMAS.find(x=>x.id===d.puse);routines=JSON.parse(JSON.stringify(p.rutinas));saveRoutines("Programa cargado: "+p.nombre);closeSheet();usarRutina(((routineFor(wcur)||routines[0])||{}).id)}else{sheet.confirm="p:"+d.puse;renderSheetNow()}return}
+  if(d.rg!==undefined&&sheet&&sheet.view==="rutinas"){sheet.g=d.rg;renderSheetNow();return}
+  if(d.rday){rutDraft.day=+d.rday;renderSheetNow();return}
+  if(d.rrm){rutDraft.ex.splice(+d.rrm,1);renderSheetNow();return}
+  if(d.radd){const e=exDeCatalogo(d.radd);if(sheet.tab==="pick"){const rr=routines.find(x=>x.id===sheet.target);if(rr){if(rr.ex.some(x=>x.id===e.id))return toast("Ya está en la rutina");rr.ex.push(e);saveRoutines("Agregado: "+e.name);render()}}else{if(rutDraft.ex.some(x=>x.id===e.id))return toast("Ya está en la lista");rutDraft.ex.push(e);toast("Agregado: "+e.name);renderSheetNow()}return}
+  if(b.id==="rutSave"){const d2=rutDraft;if(!(d2.name.trim()&&d2.ex.length))return;const id=newId("r");routines.push({id,name:d2.name.trim(),day:d2.day,goal:"Propia",ex:d2.ex});saveRoutines("Rutina guardada");closeSheet();usarRutina(id);return}
   if(d.roselegir){sheet.rset=d.roselegir;renderSheetNow();return}
   if(d.rosempezar){const r=rosNuevo(d.rosempezar);r.fase="anuncio";rosGuardar(r);return}
   if(d.rosav){rosAvanzar();return}
@@ -686,8 +791,7 @@ document.addEventListener("click",e=>{
   else if(d.delint){saveIntents(intents.filter(x=>x!==d.delint));render()}
   else if(d.hard){setInput(d.hard,+d.i,"hard")}
   else if(d.ok){const ex=curRoutine().ex.find(x=>x.id===d.ok);const ss=wsets(d.ok);const i=+d.i;const s=ss[i]||{};const prev=ss[i-1]||{};const sg=suggest(ex);
-    if(!(s.w>0)&&!(prev.w>0)&&!(sg.w>0)&&!(s.r>0)){const inp=document.querySelector(`input[data-set="${d.ok}"][data-i="${i}"][data-k="w"]`);if(inp){inp.focus();toast("Cargá el peso primero")}return}
-    let completed=false;saveWorkout(w=>{const arr=w.sets[d.ok]=w.sets[d.ok]||[];while(arr.length<=i)arr.push({});const t=arr[i];if(t.w>0&&t.r>0){arr[i]={}}else{t.w=s.w>0?s.w:(prev.w>0?prev.w:sg.w);t.r=s.r>0?s.r:ex.lo;if(t.rir==null)t.rir=2;completed=true}});
+    let completed=false;saveWorkout(w=>{const arr=w.sets[d.ok]=w.sets[d.ok]||[];while(arr.length<=i)arr.push({});const t=arr[i];if(t.r>0){arr[i]={}}else{const pw=s.w>0?s.w:(prev.w>0?prev.w:sg.w);if(pw>0)t.w=pw;t.r=s.r>0?s.r:ex.lo;if(t.rir==null)t.rir=2;completed=true}});
     if(completed)startTimer(ex);else stopTimer()}
   else if(b.id==="finish")finishWorkout();
   else if(b.id==="openListen"&&!e.target.closest("[data-pp]")){openSheet({view:"listen"})}
@@ -719,10 +823,10 @@ document.addEventListener("click",e=>{
   else if(b.id==="saveBody"){const w=parseFloat(($("#bw").value||"").replace(",","."));const wa=parseFloat(($("#bwa").value||"").replace(",","."));if(!(w>0)&&!(wa>0))return;const rec={date:today()};if(w>0)rec.weight=r1(w);if(wa>0)rec.waist=r1(wa);write(backend.setDoc("body/"+today(),rec),"Guardado");if(w>0)award("body",today())}
   else if(d.delbody){write(backend.delDoc("body/"+d.delbody),"Borrado")}
   /* Más */
-  else if(d.edex){const[rid,eid]=d.edex.split("/");openSheet({view:"edex",rid,eid,short:true})}
+  else if(d.edex){const[rid,eid]=d.edex.split("/");const back=!!(sheet&&sheet.view==="rutinas");openSheet({view:"edex",rid,eid,short:!back,back})}
   else if(b.id==="exSave"){const r=routines.find(x=>x.id===sheet.rid);const ex=r.ex.find(x=>x.id===sheet.eid);ex.name=$("#exn").value.trim()||ex.name;ex.sets=parseInt($("#exs").value)||ex.sets;ex.lo=parseInt($("#exlo").value)||ex.lo;ex.hi=Math.max(ex.lo,parseInt($("#exhi").value)||ex.lo);ex.step=parseFloat($("#exst").value)||0;ex.rest=parseInt($("#exrest").value)||restOf(ex);
-    closeSheet();write(backend.setDoc("settings/routines",{list:routines}),"Rutina guardada")}
-  else if(b.id==="resetR"){routines=JSON.parse(JSON.stringify(DEFAULT_ROUTINES));write(backend.setDoc("settings/routines",{list:routines}),"Rutinas restauradas")}
+    if(sheet.back){sheet={view:"rutinas",tab:"mias"};renderSheetNow()}else closeSheet();saveRoutines("Guardado");render()}
+  else if(b.id==="resetR"){routines=JSON.parse(JSON.stringify(DEFAULT_ROUTINES));routineSel=null;saveRoutines("Rutinas restauradas");if(sheet)renderSheetNow();render()}
 });
 document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.set){setInput(t.dataset.set,+t.dataset.i,t.dataset.k,t.value)}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheet)closeSheet();if(e.key==="Enter"&&e.target.id==="intencion"){e.preventDefault();$("#offer").click()}});
@@ -738,7 +842,7 @@ function renderLogin(){
   $("#nav").hidden=true;
   $("#app").innerHTML=`<div class="login"><h1 class="logo"><img src="icons/fit-logo.png" alt="Scaeli Fit" style="border-radius:40px"></h1><p class="hint" style="font-size:15px;margin-top:-10px">Ordenar el cuerpo.</p>
     <p style="margin:0;font-size:19px;font-weight:300;line-height:1.4;max-width:30ch">Comidas, entrenamiento ofrecido y descanso. Tu cuerpo al servicio de tu fe, guardado en tu cuenta.</p>
-    <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px"><button class="entrar google" id="login" data-q="google">${LOGO_GOOGLE}<span>Continuar con Google</span></button><button class="ghost g" id="invitado" style="justify-content:center;height:48px;margin-top:4px">Probar sin cuenta</button></div>
+    <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px"><button class="entrar apple" id="loginApple" data-q="apple">${LOGO_APPLE}<span>Continuar con Apple</span></button><button class="entrar google" id="login" data-q="google">${LOGO_GOOGLE}<span>Continuar con Google</span></button><button class="ghost g" id="invitado" style="justify-content:center;height:48px;margin-top:4px">Probar sin cuenta</button></div>
     <p class="hint" id="status">${esc(statusTxt||"La misma cuenta que Scaeli Daily y el juego. Nada es público.")}</p><p class="hint"><a href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a></p></div>`;
 }
 function startSession(u,local){
@@ -767,13 +871,13 @@ function startSession(u,local){
   if(!local&&delEquipo()&&!(plus&&plus.active))backend.setDoc("settings/plus",plusDoc({source:"team"}));
   ready=true;render();openDay(cur);openWorkout(wcur);
 }
-function endSession(){user=null;backend=null;ready=false;unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];profile=null;progress={xp:0,counts:{},days:[],best:0,badges:{}};plus=null;fast=null;dprofile=null;rosario=null;anims.forEach(a=>a.stop());anims=[];foods=[];userFoods=[];combos=[];recipes=[];bodyRows=[];tracks=[];loads={};intents=[];day=null;workout=null;targets=DEFAULT_TARGETS;routines=DEFAULT_ROUTINES;closeSheet();renderLogin()}
+function endSession(){user=null;backend=null;ready=false;unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];profile=null;progress={xp:0,counts:{},days:[],best:0,badges:{}};plus=null;fast=null;dprofile=null;rosario=null;rosMini=false;lastRestEx=null;anims.forEach(a=>a.stop());anims=[];foods=[];userFoods=[];combos=[];recipes=[];bodyRows=[];tracks=[];loads={};intents=[];day=null;workout=null;targets=DEFAULT_TARGETS;routines=DEFAULT_ROUTINES;closeSheet();renderLogin()}
 document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
-  if(b.id==="login"){b.disabled=true;setStatus("Abriendo Google…");try{localStorage.removeItem("fit_local")}catch(e){}login().then(()=>setStatus("Entrando…")).catch(err=>{setStatus(err&&err.message||"No se pudo entrar. Probá de nuevo.",true);b.disabled=false})}
+  if(b.id==="login"||b.id==="loginApple"){const q=b.dataset.q||"google";b.disabled=true;setStatus("Abriendo "+(q==="apple"?"Apple":"Google")+"…");try{localStorage.removeItem("fit_local")}catch(e){}login(q).then(()=>setStatus("Entrando…")).catch(err=>{setStatus(err&&err.message||"No se pudo entrar. Probá de nuevo.",true);b.disabled=false})}
   else if(b.id==="invitado"){startSession({uid:"local",displayName:""},true)}
   else if(b.id==="logout"){try{localStorage.removeItem("fit_local")}catch(e){}if(backend&&backend.mode==="local"){endSession()}else logout()}});
 try{if(localStorage.getItem("balanza_theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}
-setInterval(()=>{const t=$("#fastT");const st=fastState();if(t&&st){t.textContent=hms(st.elapsed);if(st.done&&!t.classList.contains("on")&&!typing())render()}},30000);
+setInterval(fastTick,1000);
 Promise.all([fetch("data/foods.json").then(r=>r.json()),fetch("data/foods_extra.json").then(r=>r.ok?r.json():[]).catch(()=>[])])
   .then(([a,b])=>{const ids=new Set(a.map(f=>f.id));BASE=a.concat(b.filter(f=>!ids.has(f.id)).map(f=>({id:f.id,name:f.name,kcal:f.kcal,p:f.p,c:f.c,g:f.f!=null?f.f:(f.g||0),unitG:f.unitG,unitName:f.unitName,src:f.src})));mergeFoods()})
   .catch(()=>setStatus("No se pudo cargar la base de alimentos.",true));

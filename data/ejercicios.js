@@ -7,14 +7,13 @@
 //   espejar  : true si el sprite mira a la izquierda y hay que darlo vuelta
 //   quieto   : cuadro para miniaturas/fichas (por defecto = inicio)
 //   vista    : dirección exportada en PixelLab, informativa
+// Provisorios retirados (chest-press-maquina, curl-femoral-sentado, curl-martillo): quedan los archivos en assets/ejercicios/
+// hasta regenerarlos en PixelLab; se vuelven a registrar acá.
 export const EJERCICIOS = {
   "abductores-maquina": { nombre: "Abductores en máquina", fps: 8, inicio: 1, espejar: false, quieto: 1, vista: "south" },
-  "chest-press-maquina": { nombre: "Chest press en máquina (provisorio)", fps: 8, inicio: 0, espejar: false, quieto: 0, vista: "south-east" },
   "curl-biceps-barra": { nombre: "Curl de bíceps con barra", fps: 8, inicio: 1, espejar: false, quieto: 1, vista: "east" },
   "curl-biceps-mancuernas": { nombre: "Curl con mancuernas", fps: 8, inicio: 1, espejar: false, quieto: 1, vista: "east" },
   "curl-biceps-maquina": { nombre: "Curl de bíceps en máquina", fps: 8, inicio: 1, espejar: false, quieto: 1, vista: "east" },
-  "curl-femoral-sentado": { nombre: "Curl femoral sentado (provisorio)", fps: 8, inicio: 1, espejar: false, quieto: 1, vista: "east" },
-  "curl-martillo": { nombre: "Curl martillo (provisorio)", fps: 8, inicio: 2, espejar: false, quieto: 2, vista: "east" },
   "elevaciones-frontales": { nombre: "Elevaciones frontales", fps: 8, inicio: 1, espejar: false, quieto: 1, vista: "east" },
   "elevaciones-laterales": { nombre: "Elevaciones laterales", fps: 8, inicio: 1, espejar: false, quieto: 1, vista: "south" },
   "extension-cuadriceps": { nombre: "Extensión de cuádriceps", fps: 8, inicio: 1, espejar: false, quieto: 1, vista: "east" },

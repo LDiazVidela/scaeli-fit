@@ -96,3 +96,11 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - `firestore.rules`: reglas únicas del proyecto (users, grupos, codes). Idénticas en los dos repos.
 - `js/personaje.js`, `assets/avatar/`, `data/rosario.js`, `assets/ilus/`, `css/daily.css`: copiados de Daily sin cambios; se actualizan desde Daily.
 - El avatar se edita en Daily (`users/{uid}/daily_settings/profile`); Fit solo lo lee. El avance del Rosario también se comparte (`daily_settings/rosario`).
+
+## Rutinas: biblioteca y propias (2026-11-02)
+- En Entreno, el **+** junto a las rutinas abre *Rutinas*: **Mis rutinas** (usar hoy, agregar/quitar ejercicios, borrar), **Biblioteca** (programas preseteados en `PROGRAMAS`, armados con ids del catálogo) y **Nueva** (nombre, día y ejercicios del catálogo con filtro por grupo).
+- Un programa reemplaza `settings/routines`; las cargas (`settings/loads`) se conservan por id de ejercicio.
+- Ejercicios de tiempo llevan `tiempo:true` (plancha, etc.); `step:0` sin `tiempo` es peso corporal por reps.
+- Descanso: el anillo del encabezado se toca para empezar/parar; tarjeta de descanso con +30 s y Saltar; «Rezar» abre el rosario compacto (mismo avance que Daily, `daily_settings/rosario`).
+- Login con Apple: requiere activar Apple en Firebase → Authentication → Sign-in method (cuenta Apple Developer). Hasta entonces el botón informa el error.
+- Ícono iOS: `icons/fit-ios-180.png` (arte con margen, como Daily). Caché `scaeli-fit-v8`.
