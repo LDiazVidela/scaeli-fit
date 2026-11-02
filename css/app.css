@@ -183,10 +183,9 @@ form{display:flex;flex-direction:column;gap:10px}
 @media (max-width:380px){ .kcal .big{font-size:56px} .sets{grid-template-columns:20px 1fr 1fr 1fr 36px 36px;gap:6px} .title{font-size:32px} }
 
 /* ---- Scaeli · unificación con Daily ---- */
-.hero{position:relative;margin:calc(-16px - env(safe-area-inset-top,0px)) -20px 0;padding:calc(24px + env(safe-area-inset-top,0px)) 20px 24px;background:linear-gradient(180deg,var(--bordo) 0%,var(--bordo2) 55%,var(--bg) 100%)}
+.hero{position:relative;margin:calc(-16px - env(safe-area-inset-top,0px)) -20px 0;padding:calc(24px + env(safe-area-inset-top,0px)) 20px 24px;background:linear-gradient(180deg,rgba(64,14,30,.42) 0%,rgba(26,20,32,.5) 50%,var(--bg) 100%)}
 .hero .offer{min-height:calc(100vh - 110px)}
-.logo{width:96px;height:96px;border-radius:26px;display:block}
-.logo.lg{width:160px;height:160px;border-radius:40px}
+a{color:var(--accent)}
 @media (prefers-reduced-motion:no-preference){ .wrap>*{animation:in .18s ease both} @keyframes in{from{opacity:0;transform:translateY(14px)}} .candle .fl{transform-origin:50% 100%;animation:flk 1.6s ease-in-out infinite} .candle.risk .fl{animation-duration:.5s} @keyframes flk{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.86) translateX(.4px)}} }
 /* Vela de racha */
 .candle{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px 0 8px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);font-size:13px;font-weight:600;color:var(--ink)}
@@ -228,3 +227,10 @@ form{display:flex;flex-direction:column;gap:10px}
 .lockcard .ic{width:44px;height:44px;border-radius:14px;background:var(--inset);display:grid;place-items:center;color:var(--muted);flex:none}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+.plusmas{background:var(--surface);border:1px solid var(--accent-line);border-radius:24px;cursor:pointer}
+.plusrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px 16px;color:var(--ink);font:inherit;letter-spacing:inherit;cursor:pointer}
+.plusrow .n{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}.plusrow .n b{font-weight:600;font-size:15px}.plusrow .n small{font-size:12px;color:var(--muted)}
+.plusrow>svg.i{color:var(--muted);flex:none}
+.logro b{display:block}
+.plusmas .n{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}.plusmas .n b{font-weight:600;font-size:15px}.plusmas .n small{color:var(--muted);font-size:12px}.plusmas .plus-tag{flex:none}

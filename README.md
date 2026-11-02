@@ -89,3 +89,10 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 ## Modo demo
 
 `index.html?demo=1` abre la app con una sesión en memoria, sin Google ni Firestore (nada se guarda). El código Plus del demo es `DEMO`.
+
+## Compartido con Scaeli Daily
+
+- `docs/SCAELI_PLUS_COMPARTIDO.md`: contrato de Scaeli+ (una suscripción para las dos apps), códigos, grupos y avatar.
+- `firestore.rules`: reglas únicas del proyecto (users, grupos, codes). Idénticas en los dos repos.
+- `js/personaje.js`, `assets/avatar/`, `data/rosario.js`, `assets/ilus/`, `css/daily.css`: copiados de Daily sin cambios; se actualizan desde Daily.
+- El avatar se edita en Daily (`users/{uid}/daily_settings/profile`); Fit solo lo lee. El avance del Rosario también se comparte (`daily_settings/rosario`).

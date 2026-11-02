@@ -1,4 +1,15 @@
-import { login, logout, watchAuth, finishRedirect, userBackend } from "./firebase.js";
+import { login, logout, watchAuth, finishRedirect, userBackend, localBackend } from "./firebase.js";
+import * as PJ from "./personaje.js";
+import { ORACIONES, MISTERIOS, ROS_MED, ROS_FATIMA, ROS_DIAS_N } from "../data/rosario.js";
+const LOGO_GOOGLE='<svg class="logo-g" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+const DAILY_URL="https://ldiazvidela.github.io/scaeli-daily/";
+/* Scaeli+ compartido con Daily (docs/SCAELI_PLUS_COMPARTIDO.md): equipo con acceso completo, y "ver como gratis" para probar. */
+const PLUS_EQUIPO=["lorenzodiazvidela@gmail.com"];
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+let dprofile=null;   // el personaje, editado en Daily (users/{uid}/daily_settings/profile)
+function personajeHTML(cls,tam){return '<canvas class="pj '+(cls||"")+'" data-pj="south" data-tam="'+(tam||160)+'" width="128" height="128" aria-label="Tu personaje"></canvas>'}
+function pintarPersonajes(){if(!PJ.cargado())return;document.querySelectorAll("canvas[data-pj]").forEach(cv=>{const t=+cv.dataset.tam||160;PJ.pintar(cv,dprofile||{},"south",t);if(t<128){cv.style.width=t+"px";cv.style.height=t+"px"}})}
+
 import { loadSprite, SpriteAnim, EJERCICIOS } from "./sprite.js";
 import { CATALOGO } from "../data/catalogo.js";
 
@@ -18,7 +29,9 @@ const FAST_PLANS=[["16:8",16],["18:6",18],["20:4",20],["OMAD",23],["Eclesiástic
 let progress={xp:0,counts:{workouts:0,offered:0,rosaries:0,meals:0,body:0},days:[],best:0,badges:{}},plus=null,fast=null;
 function levelOf(xp){let i=0;LEVELS.forEach((l,k)=>{if(xp>=l[1])i=k});const cur=LEVELS[i],next=LEVELS[i+1];return{i,name:cur[0],from:cur[1],to:next?next[1]:null,pct:next?Math.min(100,(xp-cur[1])/(next[1]-cur[1])*100):100}}
 function streakOf(days,ref){const set=new Set(days);let n=0,d=ref;if(!set.has(d)){d=addDays(d,-1);if(!set.has(d))return{n:0,today:false}}while(set.has(d)){n++;d=addDays(d,-1)}return{n,today:set.has(ref)}}
-const isPlus=()=>!!(plus&&plus.active&&(!plus.until||plus.until>=today()));
+const delEquipo=()=>!!(user&&user.email&&PLUS_EQUIPO.includes(String(user.email).toLowerCase()));
+const isPlus=()=>{if(lsGet("fit_plus_como_gratis")==="1")return false;return delEquipo()||!!(plus&&plus.active&&(!plus.until||plus.until>=today()))};
+function plusDoc(extra){return{active:true,since:today(),until:null,plan:null,code:null,source:"code",app:"fit",updated:Date.now(),...extra}}
 
 const ic=n=>`<svg class="i" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const MEALS=[["desayuno","Desayuno"],["almuerzo","Almuerzo"],["merienda","Merienda"],["cena","Cena"],["extra","Extra"]];
@@ -232,7 +245,7 @@ function candleChip(){const st=streakOf(progress.days||[],today());const cls=st.
   const flame=st.n?`<g class="fl"><ellipse cx="8" cy="4.5" rx="3.6" ry="4.5" fill="var(--accent)" opacity=".25"/><path d="M8 1c1.2 1.6 2.2 3 2.2 4.4A2.2 2.2 0 0 1 5.8 5.4C5.8 4 6.8 2.6 8 1z" fill="var(--accent)"/></g>`:`<path d="M8 1c.6 1 .2 2-.4 3s-.4 2 .4 3" fill="none" stroke="var(--muted)" stroke-width="1" stroke-linecap="round"/>`;
   return `<span class="candle ${cls}" title="Racha de días activos" aria-label="Racha: ${st.n} días"><svg viewBox="0 0 16 22" aria-hidden="true">${flame}<rect x="5" y="9" width="6" height="12" rx="1.2" fill="${st.n?"var(--ink)":"var(--muted)"}" opacity="${st.n?1:.5}"/></svg>${st.n}</span>`}
 function charCard(){const L=levelOf(progress.xp||0);const nb=Object.keys(progress.badges||{}).length;
-  return `<button class="hero-char" id="openChar" style="text-align:left;width:100%"><span class="av"><img src="assets/personaje/south.png" alt=""></span>
+  return `<button class="hero-char" id="openChar" style="text-align:left;width:100%"><span class="av">${personajeHTML("",56)}</span>
     <span class="n"><span class="lvl">Nivel ${L.i+1} · ${esc(L.name)}</span><b>${fmt(progress.xp||0)} XP${L.to?` <small style="font-weight:400">· ${fmt(L.to-(progress.xp||0))} para ${esc(LEVELS[L.i+1][0])}</small>`:""}</b><span class="xp"><i style="width:${L.pct}%"></i></span><small>${nb} ${nb===1?"insignia":"insignias"} · ${progress.counts&&progress.counts.workouts||0} entrenos</small></span>${ic("right")}</button>`}
 /* Ayuno (Plus): plan con ventana de alimentación; el eclesiástico sigue el calendario litúrgico. */
 function fastState(){if(!fast||!fast.start)return null;const h=FAST_PLANS.find(p=>p[0]===fast.plan)||FAST_PLANS[0];const goal=h[1]*3600e3;const el=Date.now()-fast.start;return{plan:h[0],goalMs:goal,elapsed:el,done:goal>0&&el>=goal,endAt:fast.start+goal}}
@@ -328,12 +341,22 @@ function renderMas(){
   const t=targets||DEFAULT_TARGETS;
   const light=document.documentElement.getAttribute("data-theme")==="light";
   const own=userFoods.filter(f=>!f.recipeId).length;
+  const P=PJ.normal(dprofile||{});const nom=(dprofile&&dprofile.nombre)||(user&&user.displayName&&user.displayName.split(" ")[0])||(P.sx==="f"?"Peregrina":"Peregrino");
+  const L=levelOf(progress.xp||0);const st=streakOf(progress.days||[],today());const c=progress.counts||{};const nb=Object.keys(progress.badges||{}).length;
+  const local=backend&&backend.mode==="local";
   return `
-  <div class="top"><div class="l"><span class="eyebrow">${esc(user&&(user.displayName||user.email)||"")}</span><h1 class="title">Más</h1></div><div class="r"><button class="chip off" id="theme">${light?"Oscuro":"Claro"}</button><button class="iconbtn" id="logout" aria-label="Salir">${ic("out")}</button></div></div>
-  ${charCard()}
-  <section class="card pad" style="display:flex;flex-direction:column;gap:10px"><div class="top" style="align-items:center"><span class="eyebrow">Scaeli Fit Plus</span>${isPlus()?`<span class="plus">Activo</span>`:""}</div>
-    <p class="hint">${isPlus()?"Tenés todas las funciones: ayuno con planes, y lo que venga."+(plus.until?" Hasta el "+esc(parse(plus.until).toLocaleDateString("es-AR"))+".":""):"Ayuno con planes y ventanas, y más adelante el escaneo de comidas por foto. Si tenés un código, canjealo acá."}</p>
-    ${isPlus()?"":`<button class="ghost" id="openPlus">${ic("key")}Código</button>`}</section>
+  <div class="top"><div class="l"><span class="eyebrow">Tu personaje</span><h1 class="title">${esc(nom)}</h1></div><div class="r">${candleChip()}</div></div>
+  <div class="card big">${personajeHTML("vivo",256)}</div>
+  <a class="plusrow" href="${DAILY_URL}#yo" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="n"><b>Personalizar en Scaeli Daily</b><small>Ropa, peinado, altura y fondo: es el mismo personaje en las dos apps.</small></span>${ic("right")}</a>
+  <div class="card"><div class="eyebrow" style="margin-bottom:10px">Tu nivel</div>
+    <div class="nivel"><span class="nv"><svg viewBox="0 0 60 60" aria-hidden="true"><circle class="t" cx="30" cy="30" r="26"/><circle class="p" cx="30" cy="30" r="26" stroke-dasharray="163.4" stroke-dashoffset="${(163.4*(1-L.pct/100)).toFixed(1)}"/></svg><b>${L.i+1}</b></span>
+      <span class="nx"><b class="nt">${esc(L.name)} · nivel ${L.i+1}</b><small>${L.to?fmt(progress.xp||0)+" XP · "+fmt(L.to-(progress.xp||0))+" para "+esc(LEVELS[L.i+1][0]):fmt(progress.xp||0)+" XP · nivel máximo"}</small><span class="bar"><i style="width:${L.pct}%"></i></span></span></div>
+    <p class="hint" style="margin:8px 0 0">Entreno terminado ${XP.workout} XP (+${XP.offered} ofrecido) · Rosario ${XP.rosary} · tres comidas en el día ${XP.meals} · pesaje ${XP.body}.</p></div>
+  <div class="card"><div class="eyebrow" style="margin-bottom:10px">Tus insignias</div><div class="logros">${BADGES.map(([id,name,icon])=>`<span class="logro${progress.badges&&progress.badges[id]?" on":""}">${ic(icon)}<b>${esc(name)}</b></span>`).join("")}</div></div>
+  <div class="card"><div class="eyebrow" style="margin-bottom:12px">Tu camino</div><div class="grid2">${[["Racha",st.n],["Mejor racha",progress.best||0],["Entrenos",c.workouts||0],["Rosarios",c.rosaries||0]].map(([n,v])=>`<div class="stat"><div class="v">${v}</div><small class="d">${n}</small></div>`).join("")}</div></div>
+  <button class="card plusmas" id="openPlus" style="text-align:left;width:100%"><span class="plus-tag">Scaeli<b>+</b></span><span class="n"><b>${isPlus()?"Scaeli+ activo":"Scaeli+"}</b><small>${isPlus()?"Ayuno con planes, y todo lo de Daily":"Ayuno con planes y rutinas por objetivo · vale para Daily y Fit · desde USD 1,67 por mes"}</small></span>${ic("right")}</button>
+  <div class="sect" style="margin-top:8px">Ajustes</div>
+  <section class="card tight list"><div class="row"><div class="n"><b>${local?"Sin cuenta":esc(user&&(user.displayName||user.email)||"Tu cuenta")}</b><small>${local?"Guardado solo en este dispositivo":"Guardado en tu cuenta de Google"}</small></div><div class="acts"><button class="chip off" id="theme">${light?"Oscuro":"Claro"}</button>${local?`<button class="ghost" id="login">${LOGO_GOOGLE}Entrar</button>`:`<button class="ghost g" id="logout">${ic("out")}Salir</button>`}</div></div></section>
   <section class="card tight list"><div class="row"><span class="eyebrow">Recetas (${recipes.length})</span><button class="ghost" id="newRecipe" style="height:32px;font-size:12px">${ic("plus")}Nueva</button></div>
     ${recipes.length?recipes.map(r=>`<div class="row"><div class="n"><b>${esc(r.name)}</b><small>${r.items.length} ingredientes · ${r.portions} ${r.portions===1?"porción":"porciones"} · ${fmt(totals(r.items).kcal/(r.portions||1))} kcal c/u${r.lent?" · abstinencia":""}</small></div><div class="acts"><button class="sm" data-edrec="${r.id}" aria-label="Editar receta">${ic("edit")}</button><button class="sm" data-delrec="${r.id}" aria-label="Borrar receta">${ic("trash")}</button></div></div>`).join(""):`<p class="empty">Tus comidas caseras con sus macros exactos: cargás los ingredientes y cuántas porciones salen.</p>`}</section>
   <section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Alimentos</span>
@@ -354,13 +377,12 @@ function renderMas(){
     <div class="r"><button class="ghost g" id="exportData">${ic("db")}Exportar</button><label class="ghost g" for="importFile">${ic("upload")}Importar<input id="importFile" type="file" accept="application/json,.json" hidden></label></div>
     <p class="hint" id="status" style="${statusErr?"color:var(--over)":""}">${esc(statusTxt)}</p></section>`;
 }
-
 let anims=[];
 function mountSprites(root){anims.forEach(a=>a.stop());anims=[];
   (root||document).querySelectorAll("canvas[data-sprite]").forEach(cv=>{const id=cv.dataset.sprite;loadSprite(id).then(sp=>{if(!cv.isConnected)return;const live=cv.dataset.live==="1";const scale=+cv.dataset.scale||1;
     const a=new SpriteAnim(cv,sp,{scale,crop:true,start:live?undefined:(sp.cfg.quieto??sp.cfg.inicio??0),end:live?undefined:(sp.cfg.quieto??sp.cfg.inicio??0),autoplay:live});if(!live){a.frame=sp.cfg.quieto??sp.cfg.inicio??0;a.draw()}anims.push(a)}).catch(()=>{})})}
 function afterRender(){
-  mountSprites($("#app"));
+  mountSprites($("#app"));pintarPersonajes();
   const imp=$("#importFile");if(imp)imp.onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{const dump=JSON.parse(await f.text());const cols=["days","workouts","body","combos","recipes","foods","tracks","settings"];const clean={};cols.forEach(c=>{if(dump[c]&&typeof dump[c]==="object")clean[c]=dump[c]});
       if(!Object.keys(clean).length)return toast("El archivo no tiene datos de Scaeli Fit");toast("Importando…");const n=await backend.importAll(clean);toast("Importados "+n+" registros")}catch(err){toast("No se pudo importar: "+(err&&err.message||""))}e.target.value=""};
   const tf=$("#tf");if(tf)tf.onsubmit=e=>{e.preventDefault();const nt={};["gym","rest"].forEach(k=>{nt[k]={};["kcal","p","c","g"].forEach(f=>nt[k][f]=parseFloat($("#t_"+k+"_"+f).value)||0)});
@@ -370,9 +392,9 @@ function afterRender(){
 /* ---------- Panel ---------- */
 let sheet=null;
 function openSheet(s){sheet=s;$("#scrim").hidden=false;const sh=$("#sheet");sh.hidden=false;sh.classList.toggle("short",!!s.short);renderSheetNow()}
-function closeSheet(){sheet=null;$("#scrim").hidden=true;$("#sheet").hidden=true;$("#sheetIn").innerHTML=""}
+function closeSheet(){sheet=null;$("#scrim").hidden=true;const sh=$("#sheet");sh.hidden=true;sh.classList.remove("full");$("#sheetIn").innerHTML=""}
 const X=`<button class="iconbtn ghost" id="x" aria-label="Cerrar">${ic("x")}</button>`;
-function renderSheetNow(){renderSheetBody();if(sheet&&sheet.view==="ficha")mountSprites($("#sheetIn"))}
+function renderSheetNow(){renderSheetBody();if(sheet&&sheet.view==="ficha")mountSprites($("#sheetIn"));pintarPersonajes();$("#sheet").classList.toggle("full",!!(sheet&&sheet.full))}
 function renderSheetBody(){
   const el=$("#sheetIn");if(!sheet)return;const mealName=sheet.meal?MEALS.find(m=>m[0]===sheet.meal)[1]:"";
   if(sheet.view==="search"){const L=liturgy(cur);const list=searchFoods(sheet.q||"");const favs=(sheet.q||sheet.target)?[]:combos.filter(c=>c.meal===sheet.meal);const title=sheet.target==="recipe"?"Ingrediente":mealName;
@@ -450,23 +472,27 @@ function renderSheetBody(){
       <button class="primary" id="obSave">${ic("check")}Guardar</button></div>`;
     [["#obAge","age"],["#obH","height"],["#obW","weight"],["#obGW","goalW"]].forEach(([id,k])=>{const n=$(id);n.oninput=e=>{o[k]=parseFloat(e.target.value)||0};n.onchange=()=>renderSheetNow()});
   } else if(sheet.view==="listen"){renderListen(el)}
+  else if(sheet.view==="rosario"){el.innerHTML=shRosario()}
   else if(sheet.view==="ficha"){const ex=sheet.ex;const sp=spriteFor(ex)||sheet.sp;const c=CATALOGO.find(x=>x.id===sp)||{};const L=loads[ex.id];
     el.innerHTML=`<h3>${esc(ex.name)}${X}</h3><div class="scroll" style="display:flex;flex-direction:column;gap:14px">
       <div class="ficha"><canvas data-sprite="${sp}" data-live="1" data-scale="2"></canvas><small>${esc((c.musc||[]).join(" · ")||"técnica")}</small></div>
       <div class="preview"><div><b>${ex.sets}</b><span>series</span></div><div><b>${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}</b><span>${ex.step===0?"seg":"reps"}</span></div><div><b>${mmss(restOf(ex))}</b><span>descanso</span></div><div><b>${L?f1(L.w):"—"}</b><span>última kg</span></div></div>
       <p class="hint">${esc(suggest(ex).why)} Dejá 2 repeticiones en el tanque; si una serie costó, marcá la llama y la app no te sube el peso.</p></div>`;
-  } else if(sheet.view==="plus"){
-    el.innerHTML=`<h3>Scaeli Fit Plus${X}</h3><div class="scroll" style="display:flex;flex-direction:column;gap:14px">
-      <div class="hero" style="margin:0;border-radius:22px;padding:22px 20px"><span class="eyebrow" style="color:rgba(243,241,236,.7)">Incluye</span><p class="pr" style="margin:8px 0 0;font-size:22px;font-weight:300;line-height:1.3;color:#F3F1EC">Ayuno con planes y ventanas de comida. Más adelante, el escaneo de comidas por foto.</p></div>
-      <p class="hint">La suscripción llega pronto. Si tenés un código de acceso, canjealo acá.</p>
-      <div class="r"><input type="text" id="plusCode" placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters" style="flex:1;text-transform:uppercase;letter-spacing:.1em"><button class="iconbtn acc" id="plusRedeem" style="width:52px;height:52px" aria-label="Canjear">${ic("check")}</button></div>
-      <p class="hint" id="plusMsg"></p></div>`;
-    setTimeout(()=>{const n=$("#plusCode");n&&n.focus()},50);
+  } else if(sheet.view==="plus"){const activo=isPlus(),eq=delEquipo(),comoGratis=lsGet("fit_plus_como_gratis")==="1";
+    const ben=[["Ayuno con planes","16:8, 18:6, 20:4, OMAD y el ayuno eclesiástico, con tu ventana de comida y aviso cuando se abre."],["Rutinas por objetivo","Elegís objetivo, días y equipo, y la app te arma la rutina con el personaje."],["Comidas por foto","Sacás la foto del plato o de la etiqueta y la app la carga por vos (próximamente)."],["Todo lo de Scaeli Daily","Tu progreso y tus virtudes, los caminos guiados y tu año con Dios. Una sola suscripción para las dos apps."],["Sostenés Scaeli","Un proyecto para acercar a los jóvenes a Dios, sin publicidad."]];
+    el.innerHTML=`<h3><span>Scaeli+<small class="muted" style="display:block;font-size:12px;font-weight:400;letter-spacing:0">${activo?"Lo tenés activo":"Para ordenar el cuerpo y sostenerlo"}</small></span>${X}</h3><div class="scroll"><div class="plus-hero"><span class="plus-tag">Scaeli<b>+</b></span><p>La oración y el entrenamiento son gratis siempre. Scaeli+ te ayuda a ver tu camino y a sostenerlo, en Daily y en Fit.</p></div>
+      <div class="list">${ben.map(b=>`<div class="benef">${ic("check")}<div><b>${b[0]}</b><small>${b[1]}</small></div></div>`).join("")}</div>
+      ${activo?`<p class="hint" style="text-align:center;margin-top:14px">${eq&&!(plus&&plus.source==="store")?"Acceso del equipo activo.":"Gracias por sostener Scaeli."}</p>`:
+      `<div class="planes"><div class="plan dest"><span class="ah">Ahorrás 44%</span><b>Anual</b><small>USD 19,99 por año</small></div><div class="plan"><b>Mensual</b><small>USD 2,99 por mes</small></div></div><p class="hint" style="text-align:center">Scaeli+ se activa desde la app de Scaeli Daily o Scaeli Fit para Android o iPhone, y vale para las dos.</p>
+      <details class="codigo"><summary class="hint">¿Tenés un código?</summary><div class="r" style="margin-top:8px"><input type="text" id="plusCode" placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters" style="flex:1;text-transform:uppercase;letter-spacing:.1em"><button class="iconbtn acc" id="plusRedeem" style="width:52px;height:52px;flex:none" aria-label="Canjear">${ic("check")}</button></div><p class="hint" id="plusMsg"></p></details>`}
+      ${eq?`<button class="lnk" id="plusComoGratis" style="display:block;margin:12px auto 0">${comoGratis?"Volver a ver Scaeli+":"Ver la app como usuario gratis"}</button>`:""}
+      <p class="legal">La suscripción se renueva sola al final de cada período, al mismo precio, salvo que la canceles al menos 24 horas antes desde tu cuenta de Google Play o del App Store. El pago se cobra en tu cuenta de la tienda. <a href="terminos.html" target="_blank" rel="noopener">Términos de uso</a> · <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a></p>
+      </div><button class="primary ink" id="x">${activo?"Volver":"Ahora no"}</button>`;
   } else if(sheet.view==="levelup"){
-    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:12px 0 6px"><span class="eyebrow">Subiste de nivel</span><span class="bignum" style="font-size:64px">${esc(sheet.name)}</span><img src="assets/personaje/south.png" alt="" style="width:96px;height:96px;image-rendering:pixelated;background:var(--paper);border-radius:24px;padding:8px"><p class="hint" style="max-width:30ch">No para mirarte vos: para servir mejor. Seguí.</p><button class="primary" id="x" style="max-width:240px">${ic("check")}Amén</button></div>`;
+    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:12px 0 6px"><span class="eyebrow">Subiste de nivel</span><span class="bignum" style="font-size:64px">${esc(sheet.name)}</span><span class="av" style="width:112px;height:112px;background:var(--paper);border-radius:24px;display:grid;place-items:center">${personajeHTML("",96)}</span><p class="hint" style="max-width:30ch">No para mirarte vos: para servir mejor. Seguí.</p><button class="primary" id="x" style="max-width:240px">${ic("check")}Amén</button></div>`;
   } else if(sheet.view==="char"){const L=levelOf(progress.xp||0);const st=streakOf(progress.days||[],today());const c=progress.counts||{};
     el.innerHTML=`<h3>Personaje${X}</h3><div class="scroll" style="display:flex;flex-direction:column;gap:14px">
-      <div class="hero-char" style="border:0;background:var(--inset)"><span class="av" style="width:80px;height:80px"><img src="assets/personaje/south.png" alt="" style="width:72px;height:72px"></span><span class="n"><span class="lvl">Nivel ${L.i+1} · ${esc(L.name)}</span><b style="font-size:28px;font-weight:300">${fmt(progress.xp||0)} <small style="font-size:13px;font-weight:400;color:var(--muted)">XP</small></b><span class="xp"><i style="width:${L.pct}%"></i></span><small>${L.to?fmt(L.to-(progress.xp||0))+" XP para "+esc(LEVELS[L.i+1][0]):"Nivel máximo"}</small></span></div>
+      <div class="hero-char" style="border:0;background:var(--inset)"><span class="av" style="width:80px;height:80px">${personajeHTML("",72)}</span><span class="n"><span class="lvl">Nivel ${L.i+1} · ${esc(L.name)}</span><b style="font-size:28px;font-weight:300">${fmt(progress.xp||0)} <small style="font-size:13px;font-weight:400;color:var(--muted)">XP</small></b><span class="xp"><i style="width:${L.pct}%"></i></span><small>${L.to?fmt(L.to-(progress.xp||0))+" XP para "+esc(LEVELS[L.i+1][0]):"Nivel máximo"}</small></span></div>
       <div class="grid4">${[["Racha",st.n],["Mejor",progress.best||0],["Entrenos",c.workouts||0],["Rosarios",c.rosaries||0]].map(([n,v])=>`<div class="stat"><span class="eyebrow">${n}</span><span class="v">${v}</span></div>`).join("")}</div>
       <span class="sect">Insignias</span>
       <div class="badges">${BADGES.map(([id,name,icon])=>`<div class="badge${progress.badges&&progress.badges[id]?" on":""}"><span class="ic">${ic(icon)}</span>${esc(name)}</div>`).join("")}</div>
@@ -512,6 +538,57 @@ const MYST={
   {t:"La Transfiguración",ref:"Mt 17, 1-8",fruit:"Deseo de santidad",med:"Jesús deja ver su gloria un momento. Pedí no quedarte en el monte: bajar y seguir trabajando."},
   {t:"La Institución de la Eucaristía",ref:"Lc 22, 14-20",fruit:"Adoración",med:"Él se hace pan. Que cada comida te recuerde quién te alimenta de verdad."}]
 };
+/* ── Santo Rosario, a pantalla completa, idéntico al de Daily (el avance se guarda en daily_settings/rosario, compartido) ── */
+let rosario=null;
+const ilu=k=>"assets/ilus/daily_"+k+".png";
+const oraTxt=n=>{const o=ORACIONES.find(x=>x.n===n);return o?o.es.join("\n"):""};
+const misteriosHoy=(d)=>{const w=(d||new Date()).getDay();for(const k in MISTERIOS)if(MISTERIOS[k].d.includes(w))return k;return "gozosos"};
+const intHTML=()=>intents.length?'<p class="hint">Por: '+intents.map(esc).join(" · ")+'</p>':'';
+const ORD_M=["1.er","2.º","3.er","4.º","5.º"],ADJ={gozosos:"gozoso",luminosos:"luminoso",dolorosos:"doloroso",gloriosos:"glorioso"};
+const diasMist=k=>MISTERIOS[k].d.map(w=>ROS_DIAS_N[w]).join(" y ");
+function rosNuevo(set){return{set:set||misteriosHoy(),mis:0,fase:"intro",c:0,f:today()}}
+async function rosGuardar(r){rosario=r;renderSheetNow();await backend.setDoc("daily_settings/rosario",r)}
+function rosIntro(act){const hk=misteriosHoy(),sel=sheet.rset||(act&&act.fase==="intro"&&MISTERIOS[act.set]?act.set:hk);const n=(progress.done||{})["rosary:"+today()]?1:0;
+  return '<div class="ftop"><button class="iconbtn ghost g" id="x" aria-label="Salir">'+ic("x")+'</button><span style="flex:1"></span><span class="ft">'+(n?"Hoy ya rezaste el Rosario":"Santo Rosario")+'</span></div>'+
+   '<div class="scroll fcuerpo rosin"><div class="fla">Santo Rosario</div><h2 class="fh">¿Qué misterios querés rezar?</h2><p class="fhint">Los de hoy, '+ROS_DIAS_N[new Date().getDay()]+', son los '+esc(MISTERIOS[hk].n.replace("Misterios ","").toLowerCase())+'. Podés rezarlo entre series, con la música de fondo.</p>'+
+   '<div class="mgrid">'+Object.keys(MISTERIOS).map(k=>'<button class="mcard'+(k===sel?" on":"")+'" data-roselegir="'+k+'" aria-pressed="'+(k===sel)+'"><img src="'+ilu(k)+'" alt="" loading="lazy"><span class="g"></span><span class="c"><b>'+esc(MISTERIOS[k].n.replace("Misterios ",""))+'</b><small>'+(k===hk?"Los de hoy":esc(diasMist(k)))+'</small></span>'+(k===sel?'<span class="ok">'+ic("check")+'</span>':'')+'</button>').join("")+'</div>'+
+   '<ol class="mlist">'+MISTERIOS[sel].m.map(m=>'<li>'+esc(m[0])+'</li>').join("")+'</ol>'+
+   '<details class="rprep"><summary>Para empezar: la señal de la cruz y el acto de contrición</summary><p>'+esc(oraTxt("Señal de la cruz"))+'</p><p>'+esc(oraTxt("Acto de contrición"))+'</p></details>'+intHTML()+'</div>'+
+   '<div class="fpie"><span></span><button class="primary" data-rosempezar="'+sel+'">Empezar</button></div>'}
+function rosAnillo(n,hechos,actual,padre,centro,sub){const R=104,c=130,pos=k=>{const ang=(n===10?-60+k*30:[-30,90,210][k])*Math.PI/180;return[c+R*Math.cos(ang),c+R*Math.sin(ang)]};
+  let s='<svg class="anillo" viewBox="0 0 260 260" aria-hidden="true"><circle cx="130" cy="130" r="'+R+'" class="hilo"/>';
+  for(let k=0;k<n;k++){const[x,y]=pos(k),st=k<hechos?"ya":k===actual?"on":"";s+=(st==="on"?'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="17" class="halo"/>':'')+'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(st==="on"?10:8)+'" class="cu '+st+'"/>'}
+  s+='<rect x="119" y="'+(c-R-11)+'" width="22" height="22" rx="6" class="cu p '+padre+'"/>'+(padre==="on"?'<rect x="111" y="'+(c-R-19)+'" width="38" height="38" rx="12" class="halo"/>':'');
+  return s+'</svg><div class="acentro"><b>'+centro+'</b><span>'+sub+'</span></div>'}
+function shRosario(){const act=rosario&&rosario.f===today()?rosario:null,r=act&&act.fase!=="fin"&&act.fase!=="intro"?act:null;if(!r)return rosIntro(act);
+  const M=MISTERIOS[r.set],i=r.mis,mis=M.m[i],med=(ROS_MED[r.set]||[])[i],solo=!!(dprofile&&dprofile.rosSolo),fin=r.fase==="salve"||r.fase==="papa";
+  const etiqueta=fin?"Para terminar":ORD_M[i]+" misterio "+(ADJ[r.set]||"");
+  const top='<div class="ftop"><button class="iconbtn ghost g" id="x" aria-label="Salir">'+ic("x")+'</button><div class="fprog">'+[0,1,2,3,4].map(k=>'<i class="'+(k<i||fin?"ya":k===i?"on":"")+'"></i>').join("")+'</div><span class="ft">'+(fin?"Para terminar":"Misterio "+(i+1)+" de 5")+'</span></div>';
+  const pie=(der)=>'<div class="fpie"><button class="lnk" data-rosatras="1">'+ic("left")+' Atrás</button>'+der+'</div>';
+  if(r.fase==="anuncio")return top+'<div class="scroll fcuerpo ros2"><div class="rmis"><img src="'+ilu(r.set)+'" alt=""><span class="g"></span><div class="tx"><div class="fla">'+esc(etiqueta)+'</div><h2 class="fh">'+esc(mis[0])+'</h2></div></div>'+
+     (med?'<p class="rmed">«'+esc(med[0].replace(/^«|»$/g,""))+'»</p><p class="rcita">'+esc(med[1])+'</p><p class="rfruto"><span>Fruto</span>'+esc(med[2])+'</p>':'<p class="rcita">'+esc(mis[1])+'</p>')+'<p class="fhint">Contemplá la escena un momento, en silencio, antes de empezar.</p></div>'+
+     pie('<button class="primary" data-rosav="1">Comenzar la decena</button>');
+  if(r.fase==="salve")return top+'<div class="scroll fcuerpo ros2"><div class="fla">Para terminar</div><h2 class="fh">Dios te salve, Reina y Madre</h2><p class="rora">'+esc(oraTxt("Salve"))+'</p></div>'+pie('<button class="primary" data-rosav="1">Amén</button>');
+  let ora,anillo;
+  if(r.fase==="papa"){const c=r.c;ora=c===0?"Padrenuestro":c<=3?"Avemaría":"Gloria";anillo=rosAnillo(3,c===0?0:Math.min(3,c-1+(c>3?1:0)),c>=1&&c<=3?c-1:-1,c===0?"on":"ya",c>=1&&c<=3?String(c):ora==="Padrenuestro"?"✝":"✦",c>=1&&c<=3?"de 3 · Avemaría":ora)}
+  else{ora=r.fase==="padre"?"Padrenuestro":r.fase==="ave"?"Avemaría":"Gloria";
+    anillo=rosAnillo(10,r.fase==="ave"?r.c-1:r.fase==="gloria"?10:0,r.fase==="ave"?r.c-1:-1,r.fase==="padre"?"on":"ya",r.fase==="ave"?String(r.c):r.fase==="padre"?"✝":"✦",r.fase==="ave"?"de 10 · Avemaría":ora)}
+  const texto=solo?'':'<p class="rora">'+esc(oraTxt(ora))+'</p>'+(ora==="Gloria"&&r.fase==="gloria"?'<p class="rora jac">'+esc(ROS_FATIMA)+'</p>':'');
+  return top+'<div class="scroll fcuerpo ros2"><div class="rcab">'+(r.fase==="papa"?'Por el Papa y la Iglesia':esc(mis[0]))+'</div>'+
+    '<button class="rtap'+(solo?" solo":"")+'" data-rosav="1" aria-label="Pasar la cuenta">'+anillo+'</button><p class="rhint">Tocá el rosario para pasar la cuenta</p>'+texto+
+    '<button class="lnk solo-t" data-rossolo="1">'+(solo?"Mostrar las oraciones":"Solo el contador")+'</button></div>'+
+    pie('<button class="lnk" id="x">Seguir después</button>')}
+async function rosAvanzar(){let r={...(rosario||rosNuevo())};if(r.f!==today())r=rosNuevo(r.set);
+  if(r.fase==="intro")r.fase="anuncio";
+  else if(r.fase==="anuncio"){r.fase="padre";r.c=0}
+  else if(r.fase==="padre"){r.fase="ave";r.c=1}
+  else if(r.fase==="ave"){if(r.c<10)r.c++;else r.fase="gloria"}
+  else if(r.fase==="gloria"){if(r.mis<4){r.mis++;r.fase="anuncio";r.c=0}else{r.fase="salve"}}
+  else if(r.fase==="salve"){r.fase="papa";r.c=0}
+  else if(r.fase==="papa"){if(r.c<4)r.c++;else{r.fase="fin";toast("Rezaste el Santo Rosario");award("rosary",today())}}
+  await rosGuardar(r);if(r.fase==="fin")closeSheet()}
+async function rosAtras(){let r={...rosario};if(r.fase==="papa"){if(r.c>0)r.c--;else r.fase="salve"}else if(r.fase==="salve"){r.fase="gloria";r.mis=4}else if(r.fase==="ave"){if(r.c>1)r.c--;else r.fase="padre"}else if(r.fase==="gloria"){r.fase="ave";r.c=10}else if(r.fase==="padre"){r.fase="anuncio"}else if(r.fase==="anuncio"&&r.mis>0){r.mis--;r.fase="gloria"}else if(r.fase==="anuncio"){r.fase="intro";sheet.rset=r.set}await rosGuardar(r)}
+
 function mysteriesFor(d){const w=parse(d).getDay();return w===1||w===6?"gozosos":w===2||w===5?"dolorosos":w===4?"luminosos":"gloriosos"}
 const PN="Padre nuestro, que estás en el cielo, santificado sea tu Nombre; venga a nosotros tu Reino; hágase tu voluntad en la tierra como en el cielo. Danos hoy nuestro pan de cada día; perdona nuestras ofensas, como también nosotros perdonamos a los que nos ofenden; no nos dejes caer en la tentación, y líbranos del mal. Amén.";
 const AM="Dios te salve, María, llena eres de gracia, el Señor es contigo; bendita Tú eres entre todas las mujeres, y bendito es el fruto de tu vientre, Jesús. Santa María, Madre de Dios, ruega por nosotros, pecadores, ahora y en la hora de nuestra muerte. Amén.";
@@ -523,19 +600,20 @@ function rosarySteps(d){const k=mysteriesFor(d);const S=[{t:"Señal de la cruz",
   MYST[k].forEach((m,mi)=>{S.push({t:(mi+1)+"º misterio "+k[0].toUpperCase()+k.slice(1,-1)+"o",x:m.t,sub:"Fruto: "+m.fruit+" · "+m.ref,med:m.med,myst:true});S.push({t:"Padre nuestro",x:PN});for(let i=1;i<=10;i++)S.push({t:"Ave María "+i+" de 10",x:AM,bead:i,of:10});S.push({t:"Gloria",x:GL});S.push({t:"Oh Jesús mío",x:JES})});
   S.push({t:"Salve",x:SALVE});S.push({t:"Fin",x:"Por las intenciones del Santo Padre: Padre nuestro, Ave María y Gloria. En el nombre del Padre, y del Hijo, y del Espíritu Santo. Amén."});return S}
 function renderListen(el){const t=tracks[trackIdx];const canUp=!!backend;
-  const head=`<h3>Escuchar${X}</h3><div class="seg"><button data-ltab="musica" aria-pressed="${listenTab==="musica"}">Música</button><button data-ltab="rosario" aria-pressed="${listenTab==="rosario"}">Rosario</button></div>`;
-  if(listenTab==="musica"){
+  const head=`<h3>Escuchar${X}</h3>`;
+  if(true){
     el.innerHTML=head+`<div class="scroll" style="display:flex;flex-direction:column;gap:12px">
       <section class="card" style="display:flex;flex-direction:column;gap:14px"><div class="top"><div class="l"><span class="eyebrow">${t?(playing?"Sonando":"En pausa"):"Sin pistas"}</span><b style="font-size:22px;font-weight:500;line-height:1.1">${t?esc(t.name):"Agregá tu música"}</b><small class="hint">${t?"Instrumental · pista "+(trackIdx+1)+" de "+tracks.length:"Subí un archivo o pegá un enlace."}</small></div><span class="iconbtn inset" style="border-radius:12px;color:var(--accent)" aria-hidden="true">${ic("music")}</span></div>
         <div class="bar" style="height:4px"><i id="pbar" style="width:${player.duration?player.currentTime/player.duration*100:0}%"></i></div>
         <div style="display:flex;justify-content:center;gap:18px;align-items:center"><button class="iconbtn" data-tprev="1" aria-label="Anterior" ${tracks.length?"":"disabled"}>${ic("prev")}</button><button class="iconbtn acc" data-pp="1" style="width:60px;height:60px" aria-label="${playing?"Pausar":"Reproducir"}" ${tracks.length?"":"disabled"}>${ic(playing?"pause":"play")}</button><button class="iconbtn" data-tnext="1" aria-label="Siguiente" ${tracks.length?"":"disabled"}>${ic("next")}</button></div></section>
       <section class="card tight list">${tracks.map((x,i)=>`<div class="row"><button class="food" data-tsel="${i}" style="border:0;padding:0;flex:1"><b style="${i===trackIdx?"color:var(--accent);font-weight:600":""}">${esc(x.name)}</b></button><button class="sm" data-tdel="${x.id}" aria-label="Borrar pista">${sheet.confirm===x.id?ic("check"):ic("trash")}</button></div>`).join("")}
-        <div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><span class="eyebrow">Agregar pista</span>
-          ${canUp?`<label class="ghost g" for="tfile" style="justify-content:center">${ic("plus")}Subir archivo<input id="tfile" type="file" accept="audio/*,video/mp4,.m4a,.mp3,.wav,.ogg" hidden></label>`:``}
-          <div class="r"><input type="url" class="inset" id="turl" placeholder="https://… enlace a un .mp3" style="flex:1;height:44px;border-radius:12px"><button class="iconbtn" id="taddurl" aria-label="Agregar enlace">${ic("link")}</button></div></div></section>
+        <div class="row" style="flex-direction:column;align-items:stretch;gap:12px;padding:18px 0 16px"><span class="eyebrow">Agregar pista</span>
+          ${canUp?`<label class="ghost g" for="tfile" style="justify-content:center;height:48px">${ic("plus")}Subir archivo<input id="tfile" type="file" accept="audio/*,video/mp4,.m4a,.mp3,.wav,.ogg" hidden></label>`:``}
+          <div class="r" style="gap:10px"><input type="url" class="inset" id="turl" placeholder="https://… enlace a un .mp3" style="flex:1;height:48px;border-radius:14px"><button class="iconbtn" id="taddurl" style="width:48px;height:48px;flex:none" aria-label="Agregar enlace">${ic("link")}</button></div></div></section>
+      <button class="cov w" data-rosario="1"><img src="${ilu(misteriosHoy())}" alt="" loading="lazy"><span class="g"></span><span class="c"><b>Santo Rosario</b><small>${esc(MISTERIOS[misteriosHoy()].n)} · 20 min · entre series, con la música</small></span></button>
       <p class="hint">Probá que siga sonando con la pantalla bloqueada: si se corta, avisame y buscamos otra forma.</p></div>`;
     const tf=$("#tfile");if(tf)tf.onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)uploadTrack(f)};
-  } else {const S=rosarySteps(wcur);rosaryStep=Math.min(rosaryStep,S.length-1);const s=S[rosaryStep];const k=mysteriesFor(wcur);
+  } else if(false){const S=rosarySteps(wcur);rosaryStep=Math.min(rosaryStep,S.length-1);const s=S[rosaryStep];const k=mysteriesFor(wcur);
     el.innerHTML=head+`<div class="scroll rosary"><span class="eyebrow" style="text-align:center">Misterios ${k} · ${esc(DOW[parse(wcur).getDay()])}</span>
       <div style="text-align:center"><b style="font-size:20px;font-weight:600">${esc(s.t)}</b></div>
       ${s.bead?`<div class="beads" aria-label="Cuenta ${s.bead} de ${s.of}">${Array.from({length:s.of},(_,i)=>`<i class="${i<s.bead?"on":""}"></i>`).join("")}</div>`:""}
@@ -555,11 +633,18 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("button,[role=button]");if(!b)return;const d=b.dataset;
   if(d.view==="escuchar"){if(sheet&&sheet.view==="listen")closeSheet();else openSheet({view:"listen"});return}
   if(d.view){view=d.view;closeSheet();if(view==="entreno"&&!workout)openWorkout(wcur);else render();return}
+  if(d.rosario){openSheet({view:"rosario",full:true});return}
+  if(d.roselegir){sheet.rset=d.roselegir;renderSheetNow();return}
+  if(d.rosempezar){const r=rosNuevo(d.rosempezar);r.fase="anuncio";rosGuardar(r);return}
+  if(d.rosav){rosAvanzar();return}
+  if(d.rosatras){rosAtras();return}
+  if(d.rossolo){dprofile={...(dprofile||{}),rosSolo:!(dprofile&&dprofile.rosSolo)};backend.setDoc("daily_settings/profile",dprofile);renderSheetNow();return}
   if(d.ficha){const r=curRoutine();const ex=r&&r.ex.find(x=>x.id===d.ficha);if(ex)openSheet({view:"ficha",ex});return}
-  if(b.id==="openChar"){openSheet({view:"char"});return}
-  if(b.id==="openPlus"){openSheet({view:"plus",short:true});return}
+  if(b.id==="openChar"){view="mas";closeSheet();render();window.scrollTo(0,0);return}
+  if(b.id==="openPlus"){openSheet({view:"plus"});return}
+  if(b.id==="plusComoGratis"){lsSet("fit_plus_como_gratis",lsGet("fit_plus_como_gratis")==="1"?null:"1");renderSheetNow();render();return}
   if(b.id==="plusRedeem"){const code=($("#plusCode").value||"").trim();const msg=$("#plusMsg");if(!code)return;b.disabled=true;msg.textContent="Verificando…";
-    backend.redeemCode(code).then(r=>{if(!r.ok){msg.textContent=r.why;b.disabled=false;return}const until=r.days>0?addDays(today(),r.days):null;plus={active:true,code:r.code,since:today(),until,label:r.label};
+    backend.redeemCode(code).then(r=>{if(!r.ok){msg.textContent=r.why;b.disabled=false;return}const until=r.days>0?addDays(today(),r.days):null;plus=plusDoc({source:"code",code:r.code,until,label:r.label});
       write(backend.setDoc("settings/plus",plus),"Plus activado");closeSheet();render()}).catch(()=>{msg.textContent="No se pudo verificar. Probá de nuevo.";b.disabled=false});return}
   if(d.fplan){fast={...(fast||{}),plan:d.fplan};write(backend.setDoc("settings/fast",fast));render();return}
   if(b.id==="fastStart"){fast={...(fast||{plan:"16:8"}),start:Date.now()};write(backend.setDoc("settings/fast",fast),"Ayuno iniciado");render();return}
@@ -651,16 +736,16 @@ function saveFood(id,f){return backend.setDoc("foods/"+id,f)}
 function deleteFood(id){if(BASE.some(f=>f.id===id)){hidden.add(id);return backend.setDoc("settings/hidden",{list:[...hidden]})}return backend.delDoc("foods/"+id)}
 function renderLogin(){
   $("#nav").hidden=true;
-  $("#app").innerHTML=`<div class="hero" style="min-height:100vh;display:flex;flex-direction:column"><div class="offer" style="justify-content:center;gap:32px;text-align:center;align-items:center;flex:1">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:18px"><img class="logo lg" src="icons/logo.png" alt="Scaeli Fit"><div><h1 class="title" style="font-size:40px">Scaeli Fit</h1><p class="sub" style="font-size:14px;margin-top:8px">Tu fe, a otro nivel. También en el cuerpo.</p></div></div>
-    <p class="pr" style="font-size:19px;max-width:28ch;font-weight:300">Comidas, entrenamiento ofrecido y descanso, guardados en tu cuenta.</p>
-    <button class="primary" id="login" style="max-width:320px">${ic("user")}Entrar</button>
-    <p class="hint" id="status">${esc(statusTxt)}</p></div></div>`;
+  $("#app").innerHTML=`<div class="login"><h1 class="logo"><img src="icons/fit-logo.png" alt="Scaeli Fit" style="border-radius:40px"></h1><p class="hint" style="font-size:15px;margin-top:-10px">Ordenar el cuerpo.</p>
+    <p style="margin:0;font-size:19px;font-weight:300;line-height:1.4;max-width:30ch">Comidas, entrenamiento ofrecido y descanso. Tu cuerpo al servicio de tu fe, guardado en tu cuenta.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px"><button class="entrar google" id="login" data-q="google">${LOGO_GOOGLE}<span>Continuar con Google</span></button><button class="ghost g" id="invitado" style="justify-content:center;height:48px;margin-top:4px">Probar sin cuenta</button></div>
+    <p class="hint" id="status">${esc(statusTxt||"La misma cuenta que Scaeli Daily y el juego. Nada es público.")}</p><p class="hint"><a href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a></p></div>`;
 }
-function startSession(u){
+function startSession(u,local){
   user=u;unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];
-  backend=userBackend(u.uid,e=>{if(e&&e.code==="permission-denied")setStatus(DEFAULT_RULES_MSG,true);else setStatus("Sin conexión: los cambios se guardan y se sincronizan después.",false)});
-  setStatus("Sincronizado · "+(u.displayName||u.email||""));
+  backend=local?localBackend():userBackend(u.uid,e=>{if(e&&e.code==="permission-denied")setStatus(DEFAULT_RULES_MSG,true);else setStatus("Sin conexión: los cambios se guardan y se sincronizan después.",false)});
+  setStatus(local?"Guardado solo en este dispositivo":"Sincronizado · "+(u.displayName||u.email||""));
+  if(local){try{localStorage.setItem("fit_local","1")}catch(e){}}
   $("#nav").hidden=false;
   const w=(fn)=>{const un=fn();if(typeof un==="function")unsubs.push(un)};
   w(()=>backend.watchCol("foods",list=>{userFoods=list;mergeFoods()}));
@@ -677,12 +762,16 @@ function startSession(u){
   w(()=>backend.watchDoc("settings/progress",v=>{if(v)progress={xp:0,counts:{},days:[],best:0,badges:{},done:{},...v};if(view==="hoy"||view==="mas")render()}));
   w(()=>backend.watchDoc("settings/plus",v=>{plus=v||null;if(view==="hoy"||view==="mas")render()}));
   w(()=>backend.watchDoc("settings/fast",v=>{fast=v||null;if(view==="hoy")render()}));
+  w(()=>backend.watchDoc("daily_settings/profile",v=>{dprofile=v||{};pintarPersonajes()}));
+  w(()=>backend.watchDoc("daily_settings/rosario",v=>{rosario=v||null;if(sheet&&sheet.view==="rosario")renderSheetNow()}));
+  if(!local&&delEquipo()&&!(plus&&plus.active))backend.setDoc("settings/plus",plusDoc({source:"team"}));
   ready=true;render();openDay(cur);openWorkout(wcur);
 }
-function endSession(){user=null;backend=null;ready=false;unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];profile=null;progress={xp:0,counts:{},days:[],best:0,badges:{}};plus=null;fast=null;anims.forEach(a=>a.stop());anims=[];foods=[];userFoods=[];combos=[];recipes=[];bodyRows=[];tracks=[];loads={};intents=[];day=null;workout=null;targets=DEFAULT_TARGETS;routines=DEFAULT_ROUTINES;closeSheet();renderLogin()}
+function endSession(){user=null;backend=null;ready=false;unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];profile=null;progress={xp:0,counts:{},days:[],best:0,badges:{}};plus=null;fast=null;dprofile=null;rosario=null;anims.forEach(a=>a.stop());anims=[];foods=[];userFoods=[];combos=[];recipes=[];bodyRows=[];tracks=[];loads={};intents=[];day=null;workout=null;targets=DEFAULT_TARGETS;routines=DEFAULT_ROUTINES;closeSheet();renderLogin()}
 document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
-  if(b.id==="login"){b.disabled=true;setStatus("Abriendo Google…");login().then(()=>setStatus("Entrando…")).catch(err=>{setStatus(err&&err.message||"No se pudo entrar. Probá de nuevo.",true);b.disabled=false})}
-  else if(b.id==="logout"){logout()}});
+  if(b.id==="login"){b.disabled=true;setStatus("Abriendo Google…");try{localStorage.removeItem("fit_local")}catch(e){}login().then(()=>setStatus("Entrando…")).catch(err=>{setStatus(err&&err.message||"No se pudo entrar. Probá de nuevo.",true);b.disabled=false})}
+  else if(b.id==="invitado"){startSession({uid:"local",displayName:""},true)}
+  else if(b.id==="logout"){try{localStorage.removeItem("fit_local")}catch(e){}if(backend&&backend.mode==="local"){endSession()}else logout()}});
 try{if(localStorage.getItem("balanza_theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}
 setInterval(()=>{const t=$("#fastT");const st=fastState();if(t&&st){t.textContent=hms(st.elapsed);if(st.done&&!t.classList.contains("on")&&!typing())render()}},30000);
 Promise.all([fetch("data/foods.json").then(r=>r.json()),fetch("data/foods_extra.json").then(r=>r.ok?r.json():[]).catch(()=>[])])
@@ -698,7 +787,9 @@ function memoryBackend(){const store={};const subs={};const key=p=>p;const col=p
     async setDoc(p,d){store[p]=JSON.parse(JSON.stringify(d));emit(p)},async delDoc(p){delete store[p];emit(p)},async importAll(d){let n=0;for(const c in d)for(const id in d[c]){store[c+"/"+id]=d[c][id];n++;emit(c+"/"+id)}return n},
     async exportAll(cols){const o={};cols.forEach(c=>{o[c]={};Object.keys(store).filter(k=>k.startsWith(c+"/")).forEach(k=>o[c][k.split("/")[1]]=store[k])});return o},
     async uploadTrack(){throw new Error("demo")},deleteTrackFile(){},async redeemCode(code){return String(code).toUpperCase()==="DEMO"?{ok:true,code:"DEMO",days:0,label:"demo"}:{ok:false,why:"En el modo demo el código es DEMO."}}}}
-if(/[?&]demo=1/.test(location.search)){const u={uid:"demo",displayName:"Demo"};user=u;backend=memoryBackend();profile={};const startDemo=()=>{const b=backend;unsubs=[];const w=fn=>{const un=fn();if(typeof un==="function")unsubs.push(un)};
+PJ.cargar("assets/avatar/").then(()=>pintarPersonajes()).catch(()=>{});
+if(/[?&]demo=1/.test(location.search)||lsGet("fit_local")==="1"){startSession({uid:"local",displayName:""},true)}
+else if(false){const u={uid:"demo",displayName:"Demo"};user=u;backend=memoryBackend();profile={};const startDemo=()=>{const b=backend;unsubs=[];const w=fn=>{const un=fn();if(typeof un==="function")unsubs.push(un)};
     w(()=>b.watchCol("foods",l=>{userFoods=l;mergeFoods()}));w(()=>b.watchCol("combos",l=>{combos=l}));w(()=>b.watchCol("recipes",l=>{recipes=l}));w(()=>b.watchCol("body",l=>{bodyRows=l;if(view==="cuerpo")render()}));w(()=>b.watchCol("tracks",l=>{tracks=l}));
     w(()=>b.watchDoc("settings/progress",v=>{if(v)progress={xp:0,counts:{},days:[],best:0,badges:{},done:{},...v};render()}));w(()=>b.watchDoc("settings/plus",v=>{plus=v||null;render()}));w(()=>b.watchDoc("settings/fast",v=>{fast=v||null;render()}));w(()=>b.watchDoc("settings/loads",l=>{loads=l||{}}));
     ready=true;setStatus("Modo demo: nada se guarda.");$("#nav").hidden=false;render();openDay(cur);openWorkout(wcur)};startDemo()}

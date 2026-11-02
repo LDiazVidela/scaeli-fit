@@ -89,3 +89,26 @@ export function userBackend(uid, onError) {
     }
   };
 }
+
+/* Sin cuenta: todo se guarda solo en este dispositivo (igual que en Daily). */
+export function localBackend() {
+  const K = "scaeli-fit-local";
+  let store = {}; try { store = JSON.parse(localStorage.getItem(K) || "{}"); } catch (e) { store = {}; }
+  const save = () => { try { localStorage.setItem(K, JSON.stringify(store)); } catch (e) {} };
+  const subs = [];
+  const listCol = (c) => Object.keys(store).filter((k) => k.startsWith(c + "/")).map((k) => ({ id: k.slice(c.length + 1), ...store[k] }));
+  const emit = () => subs.forEach((s) => { try { s.c ? s.cb(listCol(s.c)) : s.cb(store[s.p] === undefined ? null : store[s.p]); } catch (e) {} });
+  return {
+    mode: "local", uid: "local",
+    watchDoc(p, cb) { const s = { p, cb }; subs.push(s); setTimeout(() => cb(store[p] === undefined ? null : store[p]), 0); return () => { const i = subs.indexOf(s); if (i >= 0) subs.splice(i, 1); }; },
+    watchCol(c, cb) { const s = { c, cb }; subs.push(s); setTimeout(() => cb(listCol(c)), 0); return () => { const i = subs.indexOf(s); if (i >= 0) subs.splice(i, 1); }; },
+    async setDoc(p, data) { store[p] = JSON.parse(JSON.stringify(data)); save(); emit(); },
+    async delDoc(p) { delete store[p]; save(); emit(); },
+    async importAll(dump) { let n = 0; for (const c of Object.keys(dump)) for (const id of Object.keys(dump[c] || {})) { store[c + "/" + id] = dump[c][id]; n++; } save(); emit(); return n; },
+    async exportAll(cols) { const out = {}; for (const c of cols) { out[c] = {}; listCol(c).forEach((d) => { const { id, ...r } = d; out[c][id] = r; }); } return out; },
+    async uploadTrack() { throw Object.assign(new Error("Sin cuenta no se pueden subir archivos."), { code: "local" }); },
+    deleteTrackFile() {},
+    async redeemCode(code) { return { ok: false, why: "Los códigos se canjean con tu cuenta de Google." }; },
+    _borrarTodo() { store = {}; save(); emit(); }
+  };
+}
