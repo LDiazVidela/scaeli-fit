@@ -278,3 +278,32 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .food .mini+span{flex:1;min-width:0;display:flex;flex-direction:column}.food .mini+span small{white-space:normal}
 .food>.i{flex:none;align-self:center;color:var(--accent)}
 .acentro.solo b{display:none}.acentro.solo span{font-size:15px;letter-spacing:.16em;color:var(--ink)}
+
+/* ---- Ronda 3: dibujos, sesión, resumen, récords, ayuno editable, rosario grande ---- */
+.ilu{position:relative;display:block;width:100%;height:100%;color:var(--ink)}
+.ilu i{position:absolute;inset:0;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
+.ilu i.a{animation:iluA 1.6s steps(1) infinite}.ilu i.b{opacity:0;animation:iluB 1.6s steps(1) infinite}
+@keyframes iluA{50%{opacity:0}}@keyframes iluB{50%{opacity:1}}
+.exthumb{width:72px;height:72px;border-radius:18px;background:var(--inset);padding:4px;display:block}
+.exthumb.live{outline:2px solid var(--accent)}
+.ficha .ilu.big{height:220px;color:var(--paper-ink)}
+.food .ilu.mini{width:40px;height:40px;flex:none;padding:3px;box-sizing:border-box;border-radius:10px;background:var(--inset)}
+.prtag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--accent-dim);color:var(--accent);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle}
+.prtag.muted{background:var(--inset);color:var(--muted)}
+.wsession{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px}
+.wsession .l{display:flex;flex-direction:column;gap:2px}.wsession b{font-size:34px;font-weight:200;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.wsession.done{border-color:var(--accent-line)}.wsession.done b{font-size:22px;font-weight:500}
+.resumen{display:flex;flex-direction:column;gap:14px;padding-top:6px}
+.prbox{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;border:1px solid var(--accent-line);background:var(--accent-dim);color:var(--accent)}
+.prbox .i{width:26px;height:26px;flex:none}.prbox b{display:block;font-size:15px}.prbox small{color:var(--ink);font-size:12px}
+.fedit{border:0;background:none;padding:0;text-align:left;color:inherit;font:inherit;display:flex;flex-direction:column;gap:2px;cursor:pointer}
+.fedit .eyebrow{display:inline-flex;align-items:center;gap:4px}.fedit .eyebrow .i{width:12px;height:12px}
+.lnkeb{border:0;background:none;padding:0;color:var(--accent);font:inherit;font-size:11px;letter-spacing:.12em;text-transform:uppercase;display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+.lnkeb .i{width:14px;height:14px}
+.rosmini.on{flex-direction:column;align-items:stretch;gap:12px;padding:18px 20px}
+.rosmini.on .tap{display:flex;flex-direction:column;gap:10px}
+.rosmini.on .n{gap:8px}.rosmini.on .n b{font-size:24px;font-weight:500;letter-spacing:-.01em}.rosmini.on .n b small{font-size:16px}
+.rosmini.on .beads{gap:7px;margin:2px 0 4px}.rosmini.on .beads i{width:14px;height:14px}
+.rosmini.on .txt{display:block;-webkit-line-clamp:unset;overflow:visible;font-size:16px;line-height:1.5;color:var(--ink)}
+.rosmini.on .go{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--accent);margin-top:2px}
+.rosmini.on .acts{flex-direction:row;justify-content:flex-end;gap:8px}

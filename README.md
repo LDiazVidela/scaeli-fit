@@ -104,3 +104,8 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - Descanso: el anillo del encabezado se toca para empezar/parar; tarjeta de descanso con +30 s y Saltar; «Rezar» abre el rosario compacto (mismo avance que Daily, `daily_settings/rosario`).
 - Login con Apple: requiere activar Apple en Firebase → Authentication → Sign-in method (cuenta Apple Developer). Hasta entonces el botón informa el error.
 - Ícono iOS: `icons/fit-ios-180.png` (arte con margen, como Daily). Caché `scaeli-fit-v8`.
+
+## Ronda 2026-11-02 (tarde)
+- Dibujos de ejercicios: Everkinetic (CC BY-SA 4.0) como máscaras SVG en `assets/ilus/ej/<id>-a|b.svg`, pintadas con `currentColor` y alternando dos poses (`.ilu`). Mapa catálogo→Everkinetic en `tools/ilus/mapa.json`; lista de ids con dibujo en `data/ilus.js`. Los sprites PixelLab quedan en el repo pero no se muestran.
+- Sesión de entrenamiento: `workout.startedAt` (botón Comenzar o al marcar la primera serie), cronómetro, Terminar → `workout.summary` {dur,sets,vol,ex[],prs[]} y pantalla de resumen. Récords por ejercicio en `settings/prs` {w,r,e1rm,date} (e1RM = Epley).
+- Ayuno: hora de inicio editable (`fastedit`). Hoy: botón «Volver a hoy» en la tarjeta; el render conserva el scroll.
