@@ -123,3 +123,10 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - **Dibujos**: se quitó `press-hombros-maquina` (mostraba una barra). Queda sin dibujo hasta tener uno fiel.
 - **Íconos nuevos** (pixel art, familia con Daily): llama dorada sobre la escalera, fondo ámbar. `icons/fit-*.png`, maskable con margen; el de Daily (libro, fondo azul) se entrega aparte para subir a ese repo.
 - Caché del service worker: `scaeli-fit-v10`.
+
+## Versión 11 (2026-11-02, tarde)
+- **Tu día** (reemplaza la fila de iconos): tarjeta con título y explicación; cada ítem muestra nombre, valor y meta, con barra de avance. Proteína se calcula sola con las comidas; pasos, sueño y agua se cargan tocando (panel con qué es, para qué sirve, botones − / + y meta); creatina es un tilde. Se guarda en `days/{fecha}.vals` (`{pasos,sueno,agua}`) y `check[k]` queda en `true` al llegar a la meta. Metas: 10.000 pasos, 8 h, 2,5 L (`DIA` en app.js). Pie: en la versión de tiendas, pasos y sueño vendrán de Apple Health / Google Fit.
+- **Tarjeta de sesión**: el cronómetro arriba y los botones abajo (Pausar/Seguir como ícono y Terminar), sin salirse de la tarjeta. Formato h:mm:ss pasada la hora.
+- **Tope de 3 h**: un entreno que quedó abierto se frena solo a las 3 h (`workout.autoPaused`); si no tenía series, se reinicia.
+- **Bordes**: nada se sale de la pantalla (revisado a 360, 375 y 390 px); en la app instalada, más margen a los costados y arriba para las esquinas redondeadas del teléfono.
+- Caché del service worker: `scaeli-fit-v11`.

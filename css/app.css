@@ -338,3 +338,41 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .rosmini.on .n b{font-size:20px;line-height:1.2}
 .eyebrow.fecha{font-size:13px;letter-spacing:.08em;color:var(--ink);opacity:.85;white-space:normal;overflow:visible}
 @media (display-mode:standalone){body{padding-top:calc(26px + env(safe-area-inset-top,0px))}}
+
+/* ---- v11: «Tu día» con datos, tarjeta de sesión con aire, sin desbordes ---- */
+.tudia{display:flex;flex-direction:column;gap:12px;padding:18px 18px 14px}
+.tudia .hd{display:flex;flex-direction:column;gap:4px}.tudia .hd .hint{margin:0}
+.tudia .items{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tudia .it{position:relative;display:flex;align-items:center;gap:10px;min-width:0;padding:11px 12px 13px;border-radius:16px;border:1px solid var(--line2);background:var(--inset);color:var(--ink);text-align:left;font:inherit;overflow:hidden}
+.tudia .it:first-child{grid-column:1/-1}
+.tudia .it .ic{width:34px;height:34px;flex:none;border-radius:999px;display:grid;place-items:center;background:var(--surface);color:var(--muted);border:1px solid var(--line2)}
+.tudia .it .ic .i{width:17px;height:17px}
+.tudia .it .tx{display:flex;flex-direction:column;gap:1px;min-width:0}
+.tudia .it b{font-size:14px;font-weight:600}
+.tudia .it small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tudia .it.vacio small{font-style:italic}
+.tudia .it.on{border-color:var(--accent-line);background:var(--accent-dim)}
+.tudia .it.on .ic{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tudia .it.on small{color:var(--ink)}
+.tudia .it .pb{position:absolute;left:12px;right:12px;bottom:6px;height:3px;border-radius:2px;background:var(--track);overflow:hidden;display:block}
+.tudia .it .pb i{display:block;height:100%;background:var(--accent);border-radius:2px}
+.tudia .pie{margin:0;font-size:11px}
+.dialead{margin:0;font-size:16px;line-height:1.5;color:var(--ink)}
+.stepper{display:flex;align-items:center;justify-content:center;gap:14px}
+.stepper .iconbtn{width:52px;height:52px;flex:none}
+.stepper .sv{display:flex;align-items:baseline;gap:6px;background:var(--inset);border:1px solid var(--line2);border-radius:16px;padding:6px 14px;min-width:0}
+.stepper .sv input{width:110px;border:0;background:none;color:var(--ink);font:inherit;font-size:34px;font-weight:300;text-align:center;padding:0;height:52px;outline:none}
+.stepper .sv span{color:var(--muted);font-size:14px}
+.wsession{flex-wrap:wrap;row-gap:14px;padding:18px 20px}
+.wsession .l{min-width:0;flex:1 1 140px}
+.wsession .acts{display:flex;align-items:center;gap:10px;flex:0 0 auto;margin-left:auto}
+.wsession .acts .iconbtn{width:52px;height:52px}
+.wsession .acts .primary{width:auto;height:52px;padding:0 20px;white-space:nowrap}
+.wsession .hint{white-space:normal}
+html,body{overflow-x:hidden}
+.wrap>*{min-width:0;max-width:100%}
+.card,.ex,.hero-char,.nowbar{box-sizing:border-box;max-width:100%}
+@media (max-width:370px){.wsession .acts{width:100%;justify-content:space-between}.wsession .acts .primary{flex:1;justify-content:center}}
+@media (display-mode:standalone){.nav{padding-left:max(22px,env(safe-area-inset-left,0px));padding-right:max(22px,env(safe-area-inset-right,0px))}body{padding-left:max(22px,env(safe-area-inset-left,0px));padding-right:max(22px,env(safe-area-inset-right,0px))}}
+.restcard .eyebrow{line-height:1.35}
+.tudia .it small{white-space:normal;line-height:1.25}

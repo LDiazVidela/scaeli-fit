@@ -48,6 +48,16 @@ const ic=n=>`<svg class="i" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const MEALS=[["desayuno","Desayuno"],["almuerzo","Almuerzo"],["merienda","Merienda"],["cena","Cena"],["extra","Extra"]];
 const DEFAULT_TARGETS={gym:{kcal:1900,p:175,c:160,g:60},rest:{kcal:1700,p:175,c:125,g:55}};
 const CHECKS=[["prot","Proteína","egg"],["crea","Creatina","pill"],["pasos","Pasos","steps"],["agua","Agua","drop"],["sueno","Sueño","moon"]];
+/* «Tu día»: cada ítem muestra su número y su meta; tocarlo abre un panel que explica para qué sirve. */
+const DIA={
+ prot:{n:"Proteína",u:"g",why:"Es lo que reconstruye el músculo después de entrenar. Se suma sola con lo que cargás en las comidas.",auto:true},
+ pasos:{n:"Pasos",u:"pasos",meta:10000,step:500,q:"¿Cuántos pasos llevás hoy?",why:"Caminar es la forma más simple de gastar energía sin cansar las piernas para el gym. Miralo en el contador de tu teléfono o reloj."},
+ sueno:{n:"Sueño",u:"h",meta:8,step:.5,q:"¿Cuántas horas dormiste anoche?",why:"Dormir bien es lo que más cuida el músculo, el hambre y las ganas de entrenar."},
+ agua:{n:"Agua",u:"L",meta:2.5,step:.25,q:"¿Cuánta agua tomaste hoy?",why:"Con agua suficiente rendís más, tenés menos hambre falsa y la creatina funciona mejor. Un vaso son 0,25 L."},
+ crea:{n:"Creatina",u:"",why:"5 g por día, a cualquier hora, todos los días (también los de descanso). Ayuda a sumar fuerza y músculo.",tick:true}};
+const diaVal=k=>{const d=day&&day.vals||{};return d[k]!=null?d[k]:null};
+const nfmt=(v,u)=>u==="pasos"?fmt(v):f1(v);
+const nfmtC=(v,u)=>u==="pasos"&&v>=1000?f1(v/1000)+" mil":nfmt(v,u); // corto, para que entre en la tarjeta
 const PLAN_START="2026-10-24";
 const DEFAULT_GOAL=80;
 function calcTargets(o){const w=o.weight||80,h=o.height||170,a=o.age||30;const bmr=10*w+6.25*h-5*a+(o.sex==="f"?-161:5);const tdee=bmr*(parseFloat(o.activity)||1.55);
@@ -166,7 +176,7 @@ async function write(p,okMsg){try{await p;if(okMsg)toast(okMsg)}catch(e){toast(e
 const dayType=()=> (day&&day.type)||defType(cur);
 const entries=()=> (day&&day.entries)||[];
 const checks=()=> (day&&day.check)||{};
-function saveDay(mut,msg){const d={date:cur,type:dayType(),entries:entries().map(e=>({...e})),check:{...checks()}};mut(d);day=d;render();write(backend.setDoc("days/"+cur,d),msg);
+function saveDay(mut,msg){const d={date:cur,type:dayType(),entries:entries().map(e=>({...e})),check:{...checks()},vals:{...((day&&day.vals)||{})}};mut(d);day=d;render();write(backend.setDoc("days/"+cur,d),msg);
   if(new Set(d.entries.map(e=>e.meal)).size>=3)award("meals",cur)}
 let dayUnsub=null;
 function openDay(d){cur=d;day=null;render();if(!backend)return;if(dayUnsub)dayUnsub();dayUnsub=backend.watchDoc("days/"+d,v=>{if(cur===d){day=v;render()}})}
@@ -207,7 +217,7 @@ function curRoutine(){const ids=[workout&&workout.routineId,routineSel,(routineF
 function wsets(exId){return (workout&&workout.sets&&workout.sets[exId])||[]}
 function restOf(ex){return ex.rest>0?ex.rest:(ex.step>=5?180:90)}
 function saveWorkout(mut,msg,quiet){const r=curRoutine();if(!r)return;
-  const w={date:wcur,routineId:r.id,sets:JSON.parse(JSON.stringify((workout&&workout.sets)||{})),done:!!(workout&&workout.done),intention:(workout&&workout.intention)||"",offered:!!(workout&&workout.offered),startedAt:(workout&&workout.startedAt)||null,pausedAt:(workout&&workout.pausedAt)||null,pausedMs:(workout&&workout.pausedMs)||0,summary:(workout&&workout.summary)||null};
+  const w={date:wcur,routineId:r.id,sets:JSON.parse(JSON.stringify((workout&&workout.sets)||{})),done:!!(workout&&workout.done),intention:(workout&&workout.intention)||"",offered:!!(workout&&workout.offered),startedAt:(workout&&workout.startedAt)||null,pausedAt:(workout&&workout.pausedAt)||null,pausedMs:(workout&&workout.pausedMs)||0,autoPaused:!!(workout&&workout.autoPaused),summary:(workout&&workout.summary)||null};
   mut(w);workout=w;if(!quiet)render();write(backend.setDoc("workouts/"+wcur,w),msg)}
 const esTiempo=ex=>!!(ex.tiempo||(ex.step===0&&/plancha|seg|hollow|farmer|soga|escalador|mountain/i.test(ex.name)));
 function suggest(ex){const L=loads[ex.id];if(!L||!(L.w>0))return{w:null,why:esTiempo(ex)?"Anotá los segundos que aguantaste con buena forma.":ex.step===0?"Peso corporal: anotá las reps; si agregás lastre, cargalo en kg.":"Primera vez: elegí un peso que te deje 2 reps en el tanque."};
@@ -228,7 +238,13 @@ function finishWorkout(){const r=curRoutine();if(!r||!workout)return;const nl={.
   const before=progress.xp||0;award("workout",wcur,offered?XP.offered:0);if(offered)award("offered",wcur);res.xp=(progress.xp||0)-before;
   openSheet({view:"resumen",res,intention:workout.intention});render()}
 const sesElapsed=w=>{w=w||workout;if(!w||!w.startedAt)return 0;return Math.max(0,(w.pausedAt||Date.now())-w.startedAt-(w.pausedMs||0))};
-function sesTick(){const t=$("#sesT");if(t&&workout&&workout.startedAt&&!workout.done&&!workout.pausedAt)t.textContent=mmss(Math.floor(sesElapsed()/1000))}
+const dur=ms=>{const s=Math.floor(ms/1000);return s>=3600?Math.floor(s/3600)+":"+pad(Math.floor(s%3600/60))+":"+pad(s%60):mmss(s)};
+const SES_MAX=3*36e5;
+/* Un entreno que quedó abierto (por ejemplo desde la mañana) se frena solo a las 3 h, para no inflar la duración. */
+function sesTope(){if(!workout||!workout.startedAt||workout.done||workout.pausedAt)return;if(sesElapsed()<SES_MAX)return;
+  const any=Object.values(workout.sets||{}).some(a=>(a||[]).some(x=>x&&x.r>0));
+  saveWorkout(w=>{if(any){w.pausedAt=w.startedAt+(w.pausedMs||0)+SES_MAX;w.autoPaused=true}else{w.startedAt=null;w.pausedAt=null;w.pausedMs=0}})}
+function sesTick(){sesTope();const t=$("#sesT");if(t&&workout&&workout.startedAt&&!workout.done&&!workout.pausedAt)t.textContent=dur(sesElapsed())}
 function durTxt(ms){const m=Math.round(ms/60000);if(m<1)return "menos de 1 min";return m>=60?Math.floor(m/60)+" h "+pad(m%60)+" min":m+" min"}
 const needsOffer=()=>!offerSkip&&!(workout&&(workout.offered||workout.done||Object.keys(workout.sets||{}).length));
 
@@ -310,7 +326,14 @@ function renderHoy(){
     <div class="macros">${M.map(([n,k,col,isP])=>{const v=tot[k],tg=t[k],over=!isP&&v>tg*1.08;
       return `<div><span class="eyebrow">${n}</span><span class="v">${fmt(v)}<small> /${fmt(tg)}</small></span><div class="bar3"><i style="width:${Math.min(100,v/tg*100)}%;background:${over?"var(--over)":col}"></i></div></div>`}).join("")}</div>
   </section>
-  <div class="check" role="group" aria-label="Checklist del día">${CHECKS.map(([k,n,i])=>{const on=k==="prot"?protOk:!!ck[k];return `<button data-check="${k}" aria-pressed="${on}" ${k==="prot"?"disabled":""} aria-label="${n}${on?" cumplido":""}">${ic(i)}<small>${n}</small></button>`}).join("")}</div>
+  <section class="card tudia" aria-label="Tu día"><div class="hd"><span class="eyebrow">Tu día</span><small class="hint">Lo que suma además de comer bien. Tocá cada uno para cargarlo.</small></div>
+    <div class="items">${[["prot","egg"],["pasos","steps"],["sueno","moon"],["agua","drop"],["crea","pill"]].map(([k,i])=>{const D=DIA[k];let val,meta,on,pct;
+      if(k==="prot"){val=fmt(tot.p);meta=fmt(t.p)+" g";on=protOk;pct=Math.min(1,tot.p/t.p)}
+      else if(D.tick){on=!!ck.crea;val=on?"Tomada":"Pendiente";meta="";pct=on?1:0}
+      else{const v=diaVal(k);on=v!=null&&v>=D.meta;val=v!=null?nfmtC(v,D.u):"—";meta=nfmtC(D.meta,D.u)+(D.u==="pasos"?"":" "+D.u);pct=v?Math.min(1,v/D.meta):0}
+      const vacio=!D.tick&&k!=="prot"&&diaVal(k)==null;
+      return `<button class="it${on?" on":""}${vacio?" vacio":""}" data-dia="${k}" aria-label="${D.n}: ${vacio?"sin cargar":val}"><span class="ic">${ic(on?"check":i)}</span><span class="tx"><b>${D.n}</b><small>${vacio?"sin cargar":D.tick?val:val+(meta?" / "+meta:"")}</small></span><i class="pb"><i style="width:${Math.round(pct*100)}%"></i></i></button>`}).join("")}</div>
+    <p class="hint pie">Cuando Scaeli Fit esté en las tiendas, pasos y sueño se cargan solos desde Apple Health o Google Fit.</p></section>
   <section class="card tight list" id="meals">${MEALS.map(([k,n])=>{const list=entries().filter(e=>e.meal===k),mt=totals(list);
     const sub=list.length?list.map(e=>esc(e.name)).join(" · "):(k==="cena"&&L.abstinencia?`<span class="acc">Sugerido: ${esc(nextIdeas())}</span>`:"");
     return `<div class="row"><div class="n"><b${list.length?"":' class="muted"'} style="${list.length?"":"font-weight:500"}">${n}</b>${sub?`<small${k==="cena"&&!list.length&&L.abstinencia?' class="acc"':""}>${sub}</small>`:""}</div>
@@ -368,7 +391,7 @@ function renderEntreno(){
   const nsets=r.ex.reduce((a,ex)=>a+wsets(ex.id).filter(s=>s.r>0).length,0),tsets=r.ex.reduce((a,ex)=>a+ex.sets,0);
   const cur_track=tracks[trackIdx];
   const sesion=done?`<section class="card wsession done"><div class="l"><span class="eyebrow">Entreno terminado</span><b>${workout.summary?durTxt(workout.summary.dur):"Listo"}</b><small class="hint">${workout.summary?workout.summary.sets+" series · "+fmt(workout.summary.vol)+" kg":""}</small></div><button class="chip off" id="verResumen">${ic("flag")}Resumen</button></section>`
-    :started?`<section class="card wsession${workout.pausedAt?" paused":""}"><div class="l"><span class="eyebrow">${workout.pausedAt?"En pausa":"En curso"}</span><b id="sesT">${mmss(Math.floor(sesElapsed()/1000))}</b><small class="hint">${nsets} de ${tsets} series</small></div><div class="acts"><button class="chip off" id="pausar" aria-label="${workout.pausedAt?"Seguir":"Pausar"}">${ic(workout.pausedAt?"play":"pause")}${workout.pausedAt?"Seguir":"Pausar"}</button><button class="primary ink" id="finish" style="width:auto;padding:0 18px">${ic("flag")}Terminar</button></div></section>`
+    :started?`<section class="card wsession${workout.pausedAt?" paused":""}"><div class="l"><span class="eyebrow">${workout.pausedAt?"En pausa":"En curso"}</span><b id="sesT">${dur(sesElapsed())}</b><small class="hint">${nsets} de ${tsets} series${workout.autoPaused?" · quedó abierto, lo frené en 3 h":""}</small></div><div class="acts"><button class="iconbtn ${workout.pausedAt?"acc":"inset"}" id="pausar" aria-label="${workout.pausedAt?"Seguir":"Pausar"}">${ic(workout.pausedAt?"play":"pause")}</button><button class="primary ink" id="finish">${ic("flag")}Terminar</button></div></section>`
     :`<button class="primary" id="comenzar">${ic("play")}Comenzar entrenamiento</button>`;
   return `
   <div class="top"><div class="l"><span class="eyebrow fecha">${esc(fecha(wcur))} · semana ${weekNo}</span><h1 class="title">${esc(r.name)}</h1><small class="hint">${esc(r.goal)} · RIR 2${intention?" · Por "+esc(intention):""}</small></div>
@@ -616,6 +639,15 @@ function renderSheetBody(){
       <section class="card tight list">${R.ex.map(e=>`<div class="row"><div class="n"><b style="font-weight:500">${esc(e.name)}${e.pr==="peso"||e.pr==="1RM"?' <span class="prtag">Récord</span>':e.pr==="primero"?' <span class="prtag muted">Primera marca</span>':""}</b><small>${e.sets} ${e.sets===1?"serie":"series"}${e.w>0?" · mejor "+f1(e.w)+" kg × "+e.r:" · "+e.r+" reps"}</small></div>${e.vol>0?`<span class="k">${fmt(e.vol)}<small>kg</small></span>`:""}</div>`).join("")}</section>
       <p class="hint" style="text-align:center">Nivel ${L.i+1} · ${esc(L.name)}${L.to?" · "+fmt(L.to-(progress.xp||0))+" XP para "+esc(LEVELS[L.i+1][0]):""}</p>
       <button class="primary" id="x">${ic("check")}Amén</button></div>`;
+  } else if(sheet.view==="dia"){const k=sheet.k,D=DIA[k];const tg=((targets&&targets[dayType()])||DEFAULT_TARGETS[dayType()]);
+    if(k==="prot"){const tp=totals(entries()).p;el.innerHTML=`<h3>${D.n}${X}</h3><p class="dialead">${esc(D.why)}</p><div class="preview"><div><b>${fmt(tp)}</b><span>llevás (g)</span></div><div><b>${fmt(tg.p)}</b><span>meta (g)</span></div><div><b>${fmt(Math.max(0,tg.p-tp))}</b><span>faltan</span></div></div><button class="primary ink" id="x">Entendido</button>`}
+    else if(D.tick){const on=!!checks().crea;el.innerHTML=`<h3>${D.n}${X}</h3><p class="dialead">${esc(D.why)}</p><button class="primary${on?" ink":""}" data-check="crea">${ic("check")}${on?"Desmarcar":"La tomé"}</button>`}
+    else{const v=diaVal(k);const cur=sheet.v!=null?sheet.v:(v!=null?v:0);
+      el.innerHTML=`<h3>${D.n}${X}</h3><p class="dialead">${esc(D.why)}</p><span class="eyebrow">${esc(D.q)}</span>
+      <div class="stepper"><button class="iconbtn" data-dstep="-1" aria-label="Menos">${ic("minus")}</button><label class="sv"><input type="number" id="diaV" inputmode="decimal" step="any" value="${cur||""}" placeholder="0"><span>${D.u}</span></label><button class="iconbtn" data-dstep="1" aria-label="Más">${ic("plus")}</button></div>
+      <p class="hint" style="text-align:center;margin:0">Meta: ${nfmt(D.meta,D.u)} ${D.u}</p>
+      <button class="primary" id="diaSave">${ic("check")}Guardar</button>`;
+      $("#diaV").oninput=e=>{sheet.v=parseFloat(String(e.target.value).replace(",","."))||0}}
   } else if(sheet.view==="fastdone"){const R=sheet.rec;const L=levelOf(progress.xp||0);const fr=FAST_FRASES[fasts.length%FAST_FRASES.length];
     el.innerHTML=`<div class="resumen"><span class="eyebrow">Ayuno cumplido</span><h2 class="fh" style="margin:0">Bien hecho.</h2>
       <div class="preview"><div><b>${hms(R.ms).slice(0,-3)}</b><span>horas</span></div><div><b>${esc(R.plan)}</b><span>plan</span></div><div><b>${sheet.xp?"+"+sheet.xp:"—"}</b><span>XP</span></div><div><b>${fasts.filter(f=>f.done).length}</b><span>cumplidos</span></div></div>
@@ -796,7 +828,7 @@ document.addEventListener("click",e=>{
   if(b.id==="ringBtn"){if(timer)stopTimer();else startTimer(lastRestEx||{id:"",name:"Descanso",rest:90,step:1});return}
   if(b.id==="rest30"){if(timer){timer.end+=30000;timer.total+=30;paintTimer()}return}
   if(b.id==="restSkip"){stopTimer();return}
-  if(b.id==="pausar"){saveWorkout(w=>{if(w.pausedAt){w.pausedMs=(w.pausedMs||0)+(Date.now()-w.pausedAt);w.pausedAt=null}else w.pausedAt=Date.now()},workout&&workout.pausedAt?"Seguimos":"En pausa");return}
+  if(b.id==="pausar"){saveWorkout(w=>{if(w.pausedAt){if(w.autoPaused){w.startedAt=Date.now()-(w.pausedAt-w.startedAt-(w.pausedMs||0));w.pausedMs=0;w.autoPaused=false}else w.pausedMs=(w.pausedMs||0)+(Date.now()-w.pausedAt);w.pausedAt=null}else w.pausedAt=Date.now()},workout&&workout.pausedAt?"Seguimos":"En pausa");return}
   if(b.id==="comenzar"){saveWorkout(w=>{w.startedAt=Date.now()},"Que sea para Él");window.scrollTo(0,0);return}
   if(b.id==="verResumen"){if(workout&&workout.summary)openSheet({view:"resumen",res:workout.summary,intention:workout.intention,xp:0});return}
   if(b.id==="wlater"){const enCurso=!!(workout&&!workout.done&&Object.keys(workout.sets||{}).length);view="hoy";closeSheet();render();window.scrollTo(0,0);if(enCurso)toast("Guardado: seguís después");return}
@@ -839,7 +871,10 @@ document.addEventListener("click",e=>{
   if(b.id==="timerpill"){view="entreno";render();return}
   if(b.id==="prev")openDay(addDays(cur,-1));else if(b.id==="next")openDay(addDays(cur,1));else if(b.id==="todayBtn")openDay(today());
   else if(b.id==="tType"){const t=dayType()==="gym"?"rest":"gym";saveDay(x=>x.type=t)}
-  else if(d.check){const k=d.check;saveDay(x=>{x.check[k]=!x.check[k]})}
+  else if(d.check){const k=d.check;saveDay(x=>{x.check[k]=!x.check[k]});if(sheet&&sheet.view==="dia")closeSheet()}
+  else if(d.dia){openSheet({view:"dia",k:d.dia,short:true})}
+  else if(d.dstep){const D=DIA[sheet.k];const inp=$("#diaV");const v=Math.max(0,r1((parseFloat(String(inp.value).replace(",","."))||0)+(+d.dstep)*D.step));sheet.v=v;inp.value=v}
+  else if(b.id==="diaSave"){const k=sheet.k,D=DIA[k];const v=Math.max(0,parseFloat(String($("#diaV").value).replace(",","."))||0);closeSheet();saveDay(x=>{x.vals={...(x.vals||{}),[k]:v};x.check[k]=v>=D.meta},D.n+": "+nfmt(v,D.u)+" "+D.u)}
   else if(d.add){if(!ready)return;openSheet({view:"search",meal:d.add,q:""})}
   else if(d.open){openSheet({view:"meal",meal:d.open,short:true})}
   else if(d.del){saveDay(x=>x.entries=x.entries.filter(y=>y.id!==d.del),"Borrado");if(sheet&&sheet.view==="meal")renderSheetNow()}
