@@ -1,0 +1,66 @@
+{
+ "frameW": 180,
+ "frameH": 180,
+ "frames": 9,
+ "floorY": 153,
+ "direction": "east",
+ "bboxes": [
+  [
+   60,
+   29,
+   136,
+   153
+  ],
+  [
+   60,
+   28,
+   143,
+   153
+  ],
+  [
+   60,
+   29,
+   144,
+   153
+  ],
+  [
+   60,
+   30,
+   136,
+   153
+  ],
+  [
+   60,
+   30,
+   133,
+   153
+  ],
+  [
+   60,
+   31,
+   133,
+   153
+  ],
+  [
+   60,
+   31,
+   133,
+   153
+  ],
+  [
+   60,
+   31,
+   144,
+   153
+  ],
+  [
+   60,
+   30,
+   144,
+   153
+  ]
+ ],
+ "source": "pixellab",
+ "character": "seated_on_a_biceps_c",
+ "animation": "Seated_machine_biceps_curl_slow_smooth_even_steps"
+}

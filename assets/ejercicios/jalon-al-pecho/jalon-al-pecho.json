@@ -1,60 +1,66 @@
 {
- "frameW": 105,
- "frameH": 150,
- "frames": 8,
- "floorY": 146,
+ "frameW": 216,
+ "frameH": 216,
+ "frames": 9,
+ "floorY": 171,
  "direction": "east",
  "bboxes": [
   [
-   4,
-   4,
-   101,
-   146
+   90,
+   31,
+   153,
+   171
   ],
   [
-   4,
-   18,
-   101,
-   146
+   90,
+   40,
+   153,
+   171
   ],
   [
-   4,
-   32,
-   101,
-   146
+   92,
+   43,
+   153,
+   171
   ],
   [
-   4,
-   41,
-   101,
-   146
+   92,
+   55,
+   153,
+   171
   ],
   [
-   4,
-   41,
-   101,
-   146
+   89,
+   55,
+   153,
+   171
   ],
   [
-   4,
-   41,
-   101,
-   146
+   88,
+   55,
+   153,
+   171
   ],
   [
-   4,
-   34,
-   101,
-   146
+   88,
+   56,
+   153,
+   171
   ],
   [
-   4,
-   32,
-   101,
-   146
+   91,
+   55,
+   153,
+   171
+  ],
+  [
+   92,
+   49,
+   153,
+   171
   ]
  ],
  "source": "pixellab",
- "character": "Same character, seat",
- "animation": "Lat pulldown animation from the seated state, 8 frames, seam"
+ "character": "jalon-inicio",
+ "animation": "Lat_pulldown_seated_pure_side_view_facing_right_8"
 }

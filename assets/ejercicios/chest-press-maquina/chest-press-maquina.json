@@ -1,0 +1,60 @@
+{
+ "frameW": 216,
+ "frameH": 216,
+ "frames": 8,
+ "floorY": 184,
+ "direction": "south-east",
+ "bboxes": [
+  [
+   59,
+   61,
+   159,
+   184
+  ],
+  [
+   59,
+   61,
+   159,
+   184
+  ],
+  [
+   59,
+   61,
+   159,
+   184
+  ],
+  [
+   59,
+   61,
+   159,
+   184
+  ],
+  [
+   59,
+   61,
+   159,
+   184
+  ],
+  [
+   59,
+   63,
+   159,
+   184
+  ],
+  [
+   59,
+   63,
+   159,
+   184
+  ],
+  [
+   59,
+   61,
+   159,
+   184
+  ]
+ ],
+ "source": "pixellab",
+ "character": "sentado-sin-barra",
+ "animation": "Seated_chest_press_animation_from_the_seated_state"
+}

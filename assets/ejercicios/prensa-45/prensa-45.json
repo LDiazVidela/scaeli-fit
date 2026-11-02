@@ -1,0 +1,66 @@
+{
+ "frameW": 180,
+ "frameH": 180,
+ "frames": 9,
+ "floorY": 151,
+ "direction": "east",
+ "bboxes": [
+  [
+   26,
+   49,
+   154,
+   151
+  ],
+  [
+   26,
+   49,
+   154,
+   151
+  ],
+  [
+   26,
+   49,
+   154,
+   151
+  ],
+  [
+   26,
+   40,
+   154,
+   151
+  ],
+  [
+   26,
+   34,
+   154,
+   151
+  ],
+  [
+   26,
+   28,
+   154,
+   151
+  ],
+  [
+   26,
+   28,
+   154,
+   151
+  ],
+  [
+   26,
+   36,
+   154,
+   151
+  ],
+  [
+   26,
+   45,
+   154,
+   151
+  ]
+ ],
+ "source": "pixellab",
+ "character": "lying_back_on_a_45_d",
+ "animation": "Leg_press_repetition_with_a_BIG_range_of_motion_si"
+}

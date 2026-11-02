@@ -1,0 +1,66 @@
+{
+ "frameW": 180,
+ "frameH": 180,
+ "frames": 9,
+ "floorY": 154,
+ "direction": "east",
+ "bboxes": [
+  [
+   26,
+   26,
+   153,
+   154
+  ],
+  [
+   26,
+   26,
+   152,
+   154
+  ],
+  [
+   26,
+   26,
+   152,
+   154
+  ],
+  [
+   26,
+   26,
+   152,
+   154
+  ],
+  [
+   26,
+   26,
+   152,
+   154
+  ],
+  [
+   26,
+   26,
+   152,
+   154
+  ],
+  [
+   26,
+   26,
+   154,
+   154
+  ],
+  [
+   26,
+   26,
+   154,
+   154
+  ],
+  [
+   26,
+   26,
+   154,
+   154
+  ]
+ ],
+ "source": "pixellab",
+ "character": "standing_in_a_hack_s",
+ "animation": "Hack_squat_on_the_machine_side_view_slow_smooth_ev"
+}

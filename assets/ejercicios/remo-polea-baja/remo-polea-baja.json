@@ -1,0 +1,66 @@
+{
+ "frameW": 180,
+ "frameH": 180,
+ "frames": 9,
+ "floorY": 153,
+ "direction": "east",
+ "bboxes": [
+  [
+   83,
+   37,
+   143,
+   153
+  ],
+  [
+   82,
+   37,
+   138,
+   153
+  ],
+  [
+   80,
+   37,
+   135,
+   153
+  ],
+  [
+   75,
+   38,
+   135,
+   153
+  ],
+  [
+   38,
+   38,
+   135,
+   153
+  ],
+  [
+   32,
+   39,
+   135,
+   153
+  ],
+  [
+   32,
+   39,
+   135,
+   153
+  ],
+  [
+   32,
+   39,
+   135,
+   153
+  ],
+  [
+   40,
+   37,
+   135,
+   153
+  ]
+ ],
+ "source": "pixellab",
+ "character": "Same_character_same",
+ "animation": "Seated_cable_row_to_the_belly_pure_side_view_facin"
+}

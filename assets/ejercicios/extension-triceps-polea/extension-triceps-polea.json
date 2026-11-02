@@ -1,0 +1,66 @@
+{
+ "frameW": 172,
+ "frameH": 172,
+ "frames": 9,
+ "floorY": 147,
+ "direction": "east",
+ "bboxes": [
+  [
+   59,
+   26,
+   101,
+   147
+  ],
+  [
+   59,
+   26,
+   101,
+   147
+  ],
+  [
+   59,
+   25,
+   100,
+   147
+  ],
+  [
+   59,
+   25,
+   100,
+   147
+  ],
+  [
+   59,
+   25,
+   100,
+   147
+  ],
+  [
+   59,
+   25,
+   100,
+   147
+  ],
+  [
+   57,
+   20,
+   100,
+   147
+  ],
+  [
+   54,
+   14,
+   100,
+   147
+  ],
+  [
+   52,
+   9,
+   100,
+   147
+  ]
+ ],
+ "source": "pixellab",
+ "character": "extension-arriba-2",
+ "animation": "Overhead_triceps_extension_pure_side_view_facing_r"
+}

@@ -1,0 +1,66 @@
+{
+ "frameW": 180,
+ "frameH": 180,
+ "frames": 9,
+ "floorY": 153,
+ "direction": "south",
+ "bboxes": [
+  [
+   37,
+   29,
+   120,
+   153
+  ],
+  [
+   37,
+   31,
+   127,
+   153
+  ],
+  [
+   37,
+   32,
+   134,
+   153
+  ],
+  [
+   37,
+   32,
+   137,
+   153
+  ],
+  [
+   37,
+   32,
+   137,
+   153
+  ],
+  [
+   37,
+   32,
+   136,
+   153
+  ],
+  [
+   37,
+   32,
+   132,
+   153
+  ],
+  [
+   37,
+   31,
+   125,
+   153
+  ],
+  [
+   37,
+   29,
+   120,
+   153
+  ]
+ ],
+ "source": "pixellab",
+ "character": "seated_upright_on_a",
+ "animation": "Seated_hip_abduction_machine_exercise_seen_from_th"
+}

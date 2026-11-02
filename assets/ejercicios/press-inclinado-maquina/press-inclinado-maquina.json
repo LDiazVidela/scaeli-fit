@@ -1,0 +1,66 @@
+{
+ "frameW": 180,
+ "frameH": 180,
+ "frames": 9,
+ "floorY": 153,
+ "direction": "east",
+ "bboxes": [
+  [
+   80,
+   37,
+   135,
+   153
+  ],
+  [
+   84,
+   38,
+   135,
+   153
+  ],
+  [
+   84,
+   38,
+   135,
+   153
+  ],
+  [
+   84,
+   38,
+   135,
+   153
+  ],
+  [
+   84,
+   38,
+   136,
+   153
+  ],
+  [
+   84,
+   38,
+   137,
+   153
+  ],
+  [
+   84,
+   35,
+   137,
+   153
+  ],
+  [
+   84,
+   29,
+   135,
+   153
+  ],
+  [
+   83,
+   25,
+   135,
+   153
+  ]
+ ],
+ "source": "pixellab",
+ "character": "chestpress-inicio",
+ "animation": "Seated_incline_machine_press_pure_side_view_facing"
+}

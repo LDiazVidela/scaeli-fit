@@ -1,0 +1,66 @@
+{
+ "frameW": 180,
+ "frameH": 180,
+ "frames": 9,
+ "floorY": 123,
+ "direction": "east",
+ "bboxes": [
+  [
+   26,
+   58,
+   154,
+   123
+  ],
+  [
+   24,
+   59,
+   156,
+   123
+  ],
+  [
+   23,
+   61,
+   156,
+   119
+  ],
+  [
+   23,
+   62,
+   157,
+   123
+  ],
+  [
+   23,
+   64,
+   157,
+   123
+  ],
+  [
+   23,
+   66,
+   157,
+   122
+  ],
+  [
+   23,
+   67,
+   157,
+   123
+  ],
+  [
+   23,
+   65,
+   157,
+   123
+  ],
+  [
+   23,
+   63,
+   158,
+   123
+  ]
+ ],
+ "source": "pixellab",
+ "character": "forearm_plank_on_a_d",
+ "animation": "Forearm_plank_hold_isometric_side_view._The_whole"
+}

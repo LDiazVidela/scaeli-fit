@@ -1,0 +1,60 @@
+{
+ "frameW": 172,
+ "frameH": 172,
+ "frames": 8,
+ "floorY": 147,
+ "direction": "east",
+ "bboxes": [
+  [
+   75,
+   26,
+   103,
+   147
+  ],
+  [
+   75,
+   27,
+   107,
+   147
+  ],
+  [
+   53,
+   25,
+   123,
+   147
+  ],
+  [
+   44,
+   25,
+   129,
+   147
+  ],
+  [
+   40,
+   25,
+   132,
+   147
+  ],
+  [
+   39,
+   25,
+   133,
+   147
+  ],
+  [
+   45,
+   24,
+   129,
+   147
+  ],
+  [
+   54,
+   25,
+   123,
+   147
+  ]
+ ],
+ "source": "pixellab",
+ "character": "Idle",
+ "animation": "Standing_hammer_curl_animation_8_frames_seamless_l"
+}

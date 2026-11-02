@@ -1,0 +1,66 @@
+{
+ "frameW": 180,
+ "frameH": 180,
+ "frames": 9,
+ "floorY": 154,
+ "direction": "north",
+ "bboxes": [
+  [
+   41,
+   26,
+   137,
+   154
+  ],
+  [
+   36,
+   28,
+   142,
+   154
+  ],
+  [
+   28,
+   29,
+   148,
+   154
+  ],
+  [
+   25,
+   32,
+   152,
+   154
+  ],
+  [
+   25,
+   32,
+   152,
+   154
+  ],
+  [
+   26,
+   32,
+   151,
+   154
+  ],
+  [
+   30,
+   29,
+   147,
+   154
+  ],
+  [
+   36,
+   26,
+   142,
+   154
+  ],
+  [
+   42,
+   24,
+   136,
+   154
+  ]
+ ],
+ "source": "pixellab",
+ "character": "seated_on_a_reverse",
+ "animation": "Reverse_pec_deck_fly_seen_from_behind_slow_and_smo"
+}

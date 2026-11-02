@@ -1,0 +1,66 @@
+{
+ "frameW": 180,
+ "frameH": 180,
+ "frames": 9,
+ "floorY": 153,
+ "direction": "east",
+ "bboxes": [
+  [
+   83,
+   37,
+   136,
+   153
+  ],
+  [
+   76,
+   34,
+   148,
+   150
+  ],
+  [
+   65,
+   31,
+   151,
+   143
+  ],
+  [
+   53,
+   32,
+   152,
+   137
+  ],
+  [
+   39,
+   33,
+   144,
+   131
+  ],
+  [
+   30,
+   31,
+   137,
+   124
+  ],
+  [
+   25,
+   31,
+   133,
+   123
+  ],
+  [
+   32,
+   31,
+   139,
+   127
+  ],
+  [
+   43,
+   33,
+   149,
+   132
+  ]
+ ],
+ "source": "pixellab",
+ "character": "Same_character_same_2",
+ "animation": "Seated_leg_extension_pure_side_view_facing_right_8"
+}

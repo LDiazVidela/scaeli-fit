@@ -1,0 +1,66 @@
+{
+ "frameW": 180,
+ "frameH": 180,
+ "frames": 9,
+ "floorY": 151,
+ "direction": "east",
+ "bboxes": [
+  [
+   79,
+   26,
+   117,
+   151
+  ],
+  [
+   79,
+   26,
+   117,
+   151
+  ],
+  [
+   78,
+   26,
+   119,
+   151
+  ],
+  [
+   76,
+   26,
+   121,
+   151
+  ],
+  [
+   75,
+   26,
+   123,
+   151
+  ],
+  [
+   75,
+   26,
+   124,
+   151
+  ],
+  [
+   76,
+   26,
+   122,
+   151
+  ],
+  [
+   77,
+   26,
+   119,
+   151
+  ],
+  [
+   77,
+   26,
+   117,
+   151
+  ]
+ ],
+ "source": "pixellab",
+ "character": "parado-soga-v",
+ "animation": "Triceps_rope_pushdown_side_view_facing_right_8_fra"
+}

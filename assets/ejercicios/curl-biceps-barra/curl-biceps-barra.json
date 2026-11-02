@@ -1,0 +1,60 @@
+{
+ "frameW": 172,
+ "frameH": 172,
+ "frames": 8,
+ "floorY": 147,
+ "direction": "east",
+ "bboxes": [
+  [
+   75,
+   26,
+   106,
+   147
+  ],
+  [
+   73,
+   26,
+   112,
+   147
+  ],
+  [
+   71,
+   26,
+   113,
+   147
+  ],
+  [
+   72,
+   25,
+   106,
+   147
+  ],
+  [
+   73,
+   25,
+   101,
+   147
+  ],
+  [
+   73,
+   25,
+   101,
+   147
+  ],
+  [
+   72,
+   25,
+   111,
+   147
+  ],
+  [
+   74,
+   25,
+   112,
+   147
+  ]
+ ],
+ "source": "pixellab",
+ "character": "Idle",
+ "animation": "Standing_barbell_biceps_curl_animation_8_frames_se"
+}

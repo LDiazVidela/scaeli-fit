@@ -1,0 +1,66 @@
+{
+ "frameW": 172,
+ "frameH": 172,
+ "frames": 9,
+ "floorY": 147,
+ "direction": "east",
+ "bboxes": [
+  [
+   68,
+   25,
+   107,
+   147
+  ],
+  [
+   65,
+   26,
+   111,
+   147
+  ],
+  [
+   61,
+   25,
+   117,
+   147
+  ],
+  [
+   53,
+   25,
+   123,
+   147
+  ],
+  [
+   47,
+   25,
+   127,
+   147
+  ],
+  [
+   42,
+   25,
+   131,
+   147
+  ],
+  [
+   39,
+   25,
+   131,
+   147
+  ],
+  [
+   43,
+   25,
+   130,
+   147
+  ],
+  [
+   48,
+   25,
+   127,
+   147
+  ]
+ ],
+ "source": "pixellab",
+ "character": "parado-mancuernas",
+ "animation": "Standing_dumbbell_front_raise_side_view_slow_smoot"
+}

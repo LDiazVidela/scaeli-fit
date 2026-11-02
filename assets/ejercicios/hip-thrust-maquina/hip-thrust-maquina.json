@@ -1,0 +1,66 @@
+{
+ "frameW": 176,
+ "frameH": 176,
+ "frames": 9,
+ "floorY": 150,
+ "direction": "east",
+ "bboxes": [
+  [
+   43,
+   27,
+   140,
+   150
+  ],
+  [
+   43,
+   28,
+   140,
+   150
+  ],
+  [
+   43,
+   30,
+   140,
+   150
+  ],
+  [
+   43,
+   34,
+   140,
+   150
+  ],
+  [
+   43,
+   39,
+   140,
+   150
+  ],
+  [
+   43,
+   42,
+   140,
+   150
+  ],
+  [
+   41,
+   47,
+   140,
+   150
+  ],
+  [
+   37,
+   50,
+   140,
+   150
+  ],
+  [
+   34,
+   52,
+   140,
+   150
+  ]
+ ],
+ "source": "pixellab",
+ "character": "hip_thrust_start_pos",
+ "animation": "Barbell_hip_thrust_side_view_slow_smooth_even_step"
+}
