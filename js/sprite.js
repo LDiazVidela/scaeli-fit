@@ -39,6 +39,8 @@ export class SpriteAnim {
     this.end = opts.end ?? c.fin ?? (m.frames - 1);
     this.scale = Math.max(1, Math.round(opts.scale ?? 2));
     this.flip = opts.flip ?? !!c.espejar;
+    // crop: recorta al área que ocupa el personaje en todos los cuadros (menos aire alrededor)
+    this.crop = opts.crop ? cropBox(m, opts.pad ?? 4) : null;
     this.frame = this.start; this._raf = 0; this._last = 0; this._acc = 0;
     this.ctx = canvas.getContext("2d");
     this._size();
@@ -46,9 +48,10 @@ export class SpriteAnim {
     if (opts.autoplay) this.play();
   }
   _size() {
-    const m = this.sprite.meta, s = this.scale;
-    this.canvas.width = m.frameW * s; this.canvas.height = m.frameH * s;
-    this.canvas.style.width = m.frameW * s + "px"; this.canvas.style.height = m.frameH * s + "px";
+    const m = this.sprite.meta, s = this.scale, c = this.crop;
+    const w = c ? c.w : m.frameW, h = c ? c.h : m.frameH;
+    this.canvas.width = w * s; this.canvas.height = h * s;
+    if (!this.canvas.dataset.fluid) { this.canvas.style.width = w * s + "px"; this.canvas.style.height = h * s + "px"; }
     this.canvas.style.imageRendering = "pixelated";
   }
   set(o) {
@@ -65,7 +68,8 @@ export class SpriteAnim {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.save();
     if (this.flip) { ctx.translate(this.canvas.width, 0); ctx.scale(-1, 1); }
-    ctx.drawImage(this.sprite.img, this.frame * m.frameW, 0, m.frameW, m.frameH, 0, 0, m.frameW * s, m.frameH * s);
+    const c = this.crop || { x: 0, y: 0, w: m.frameW, h: m.frameH };
+    ctx.drawImage(this.sprite.img, this.frame * m.frameW + c.x, c.y, c.w, c.h, 0, 0, c.w * s, c.h * s);
     ctx.restore();
   }
   step() { this.frame = this.frame >= this.end ? this.start : this.frame + 1; this.draw(); }
@@ -86,8 +90,16 @@ export class SpriteAnim {
   get length() { return this.end - this.start + 1; }
 }
 
+/** Unión de las cajas de todos los cuadros, con margen. */
+export function cropBox(meta, pad = 4) {
+  const b = meta.bboxes || [];
+  if (!b.length) return { x: 0, y: 0, w: meta.frameW, h: meta.frameH };
+  const x0 = Math.max(0, Math.min(...b.map((v) => v[0])) - pad), y0 = Math.max(0, Math.min(...b.map((v) => v[1])) - pad);
+  const x1 = Math.min(meta.frameW, Math.max(...b.map((v) => v[2])) + pad), y1 = Math.min(meta.frameH, Math.max(...b.map((v) => v[3])) + pad);
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
 /** Dibuja un solo cuadro (sin animar) en un canvas: para miniaturas y fichas. */
-export function drawFrame(canvas, sprite, frame, scale = 1, flip = false) {
-  const a = new SpriteAnim(canvas, sprite, { scale, flip, start: frame, end: frame });
-  return a;
+export function drawFrame(canvas, sprite, frame, scale = 1, flip = false, crop = true) {
+  return new SpriteAnim(canvas, sprite, { scale, flip, start: frame, end: frame, crop });
 }

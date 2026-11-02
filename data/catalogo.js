@@ -8,6 +8,7 @@
 //   vista   : dirección de PixelLab
 //   cuadros : 8 o 12
 //   musc    : músculos principales
+//   sprite  : (opcional) usar el sprite de otro ejercicio mientras no exista el propio
 //   paso    : incremento de carga sugerido en kg (0 = sin carga)
 //   rest    : descanso sugerido en segundos
 export const CATALOGO = [
@@ -58,8 +59,8 @@ export const CATALOGO = [
   { id: "sentadilla-barra", app: null, nombre: "Sentadilla con barra", grupo: "piernas", equipo: "barra", estado: "parado", vista: "east", cuadros: 12, musc: ["cuádriceps", "glúteo"], paso: 5, rest: 180 },
   { id: "sentadilla-goblet", app: null, nombre: "Sentadilla goblet", grupo: "piernas", equipo: "mancuernas", estado: "parado", vista: "east", cuadros: 12, musc: ["cuádriceps", "glúteo"], paso: 2, rest: 180 },
   { id: "sentadilla-frontal", app: null, nombre: "Sentadilla frontal", grupo: "piernas", equipo: "barra", estado: "parado", vista: "east", cuadros: 12, musc: ["cuádriceps"], paso: 5, rest: 180 },
-  { id: "sentadilla-sin-peso", app: null, nombre: "Sentadilla sin peso", grupo: "piernas", equipo: "peso-corporal", estado: "parado", vista: "east", cuadros: 8, musc: ["cuádriceps", "glúteo"], paso: 0, rest: 60 },
-  { id: "sentadilla-hack", app: "hack", nombre: "Sentadilla hack", grupo: "piernas", equipo: "maquina", estado: "parado", vista: "east", cuadros: 12, musc: ["cuádriceps"], paso: 5, rest: 180 },
+  { id: "sentadilla-sin-peso", app: null, sprite: "sentadilla-goblet", nombre: "Sentadilla sin peso", grupo: "piernas", equipo: "peso-corporal", estado: "parado", vista: "east", cuadros: 8, musc: ["cuádriceps", "glúteo"], paso: 0, rest: 60 },
+  { id: "sentadilla-hack", app: "hack", sprite: "sentadilla-goblet", nombre: "Sentadilla hack", grupo: "piernas", equipo: "maquina", estado: "parado", vista: "east", cuadros: 12, musc: ["cuádriceps"], paso: 5, rest: 180 },
   { id: "sentadilla-smith", app: null, nombre: "Sentadilla en Smith", grupo: "piernas", equipo: "maquina", estado: "parado", vista: "east", cuadros: 12, musc: ["cuádriceps", "glúteo"], paso: 5, rest: 180 },
   { id: "sentadilla-bulgara", app: null, nombre: "Sentadilla búlgara", grupo: "piernas", equipo: "mancuernas", estado: "parado", vista: "east", cuadros: 8, musc: ["cuádriceps", "glúteo"], paso: 2, rest: 120 },
   { id: "zancadas", app: null, nombre: "Zancadas", grupo: "piernas", equipo: "mancuernas", estado: "parado", vista: "east", cuadros: 12, musc: ["cuádriceps", "glúteo"], paso: 2, rest: 120 },

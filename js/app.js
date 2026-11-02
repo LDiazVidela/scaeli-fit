@@ -1,4 +1,24 @@
 import { login, logout, watchAuth, finishRedirect, userBackend } from "./firebase.js";
+import { loadSprite, SpriteAnim, EJERCICIOS } from "./sprite.js";
+import { CATALOGO } from "../data/catalogo.js";
+
+/* Sprite por id de ejercicio de la rutina (los ids viejos de la app se mapean por el catálogo). */
+const SPRITE_BY_APP={};CATALOGO.forEach(c=>{const sp=EJERCICIOS[c.id]?c.id:(c.sprite&&EJERCICIOS[c.sprite]?c.sprite:null);if(sp){SPRITE_BY_APP[c.id]=sp;if(c.app)SPRITE_BY_APP[c.app]=sp}});
+const spriteFor=ex=>SPRITE_BY_APP[ex.id]||null;
+
+/* Niveles e insignias: subir de nivel como en el juego, sin ruido. */
+const LEVELS=[["Principiante",0],["Intermedio",300],["Avanzado",900],["Experto",2000],["Maestro",4000]];
+const XP={workout:50,offered:20,rosary:30,meals:10,body:5};
+const BADGES=[
+ ["w1","Primer entreno","gym",p=>p.counts.workouts>=1],["w10","10 entrenos","gym",p=>p.counts.workouts>=10],["w50","50 entrenos","gym",p=>p.counts.workouts>=50],
+ ["o10","10 ofrecidos","cross",p=>p.counts.offered>=10],["r1","Primer rosario","rosary",p=>p.counts.rosaries>=1],["r10","10 rosarios","rosary",p=>p.counts.rosaries>=10],
+ ["s7","7 días seguidos","candle",p=>p.best>=7],["s30","30 días seguidos","candle",p=>p.best>=30],["m30","30 días de comidas","egg",p=>p.counts.meals>=30],["b14","14 pesajes","scale",p=>p.counts.body>=14]
+];
+const FAST_PLANS=[["16:8",16],["18:6",18],["20:4",20],["OMAD",23],["Eclesiástico",0]];
+let progress={xp:0,counts:{workouts:0,offered:0,rosaries:0,meals:0,body:0},days:[],best:0,badges:{}},plus=null,fast=null;
+function levelOf(xp){let i=0;LEVELS.forEach((l,k)=>{if(xp>=l[1])i=k});const cur=LEVELS[i],next=LEVELS[i+1];return{i,name:cur[0],from:cur[1],to:next?next[1]:null,pct:next?Math.min(100,(xp-cur[1])/(next[1]-cur[1])*100):100}}
+function streakOf(days,ref){const set=new Set(days);let n=0,d=ref;if(!set.has(d)){d=addDays(d,-1);if(!set.has(d))return{n:0,today:false}}while(set.has(d)){n++;d=addDays(d,-1)}return{n,today:set.has(ref)}}
+const isPlus=()=>!!(plus&&plus.active&&(!plus.until||plus.until>=today()));
 
 const ic=n=>`<svg class="i" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const MEALS=[["desayuno","Desayuno"],["almuerzo","Almuerzo"],["merienda","Merienda"],["cena","Cena"],["extra","Extra"]];
@@ -87,7 +107,8 @@ async function write(p,okMsg){try{await p;if(okMsg)toast(okMsg)}catch(e){toast(e
 const dayType=()=> (day&&day.type)||defType(cur);
 const entries=()=> (day&&day.entries)||[];
 const checks=()=> (day&&day.check)||{};
-function saveDay(mut,msg){const d={date:cur,type:dayType(),entries:entries().map(e=>({...e})),check:{...checks()}};mut(d);day=d;render();write(backend.setDoc("days/"+cur,d),msg)}
+function saveDay(mut,msg){const d={date:cur,type:dayType(),entries:entries().map(e=>({...e})),check:{...checks()}};mut(d);day=d;render();write(backend.setDoc("days/"+cur,d),msg);
+  if(new Set(d.entries.map(e=>e.meal)).size>=3)award("meals",cur)}
 let dayUnsub=null;
 function openDay(d){cur=d;day=null;render();if(!backend)return;if(dayUnsub)dayUnsub();dayUnsub=backend.watchDoc("days/"+d,v=>{if(cur===d){day=v;render()}})}
 function totals(list){return list.reduce((a,e)=>({kcal:a.kcal+e.kcal,p:a.p+e.p,c:a.c+e.c,g:a.g+e.g}),{kcal:0,p:0,c:0,g:0})}
@@ -133,13 +154,27 @@ function suggest(ex){const L=loads[ex.id];if(!L||!(L.w>0))return{w:null,why:"Pri
 function finishWorkout(){const r=curRoutine();if(!r||!workout)return;const nl={...loads};
   r.ex.forEach(ex=>{const ss=wsets(ex.id).filter(s=>s.w>0&&s.r>0);if(!ss.length)return;const w=Math.max(...ss.map(s=>s.w));
     const top=ss.length>=ex.sets&&ss.every(s=>s.r>=ex.hi&&(s.rir==null||s.rir>=2));nl[ex.id]={w,date:wcur,top,hard:ss.some(s=>s.hard),reps:ss.map(s=>s.r)}});
-  loads=nl;stopTimer();saveWorkout(w=>w.done=true,workout.intention?"Ofrecido por "+workout.intention:"Ofrecido");write(backend.setDoc("settings/loads",nl))}
+  loads=nl;stopTimer();const offered=!!(workout.offered&&workout.intention);saveWorkout(w=>w.done=true,workout.intention?"Ofrecido por "+workout.intention:"Ofrecido");write(backend.setDoc("settings/loads",nl));
+  award("workout",wcur,offered?XP.offered:0);if(offered)award("offered",wcur)}
 const needsOffer=()=>!offerSkip&&!(workout&&(workout.offered||workout.done||Object.keys(workout.sets||{}).length));
+
+/* ---------- Progreso: XP, racha, insignias ---------- */
+function award(kind,date,extra){const p=JSON.parse(JSON.stringify(progress));p.counts=p.counts||{};p.days=p.days||[];p.badges=p.badges||{};
+  const key=kind+":"+date;p.done=p.done||{};if(p.done[key])return;p.done[key]=1;
+  p.xp=(p.xp||0)+(XP[kind]||0)+(extra||0);const ck={workout:"workouts",offered:"offered",rosary:"rosaries",meals:"meals",body:"body"}[kind];if(ck)p.counts[ck]=(p.counts[ck]||0)+1;
+  if(kind==="workout"||kind==="meals"){if(!p.days.includes(date)){p.days.push(date);p.days.sort();if(p.days.length>400)p.days=p.days.slice(-400)}}
+  const st=streakOf(p.days,today());p.best=Math.max(p.best||0,st.n);
+  const before=levelOf(progress.xp||0).i;const newBadges=[];BADGES.forEach(([id,name,,test])=>{if(!p.badges[id]&&test(p)){p.badges[id]=today();newBadges.push(name)}});
+  // limpiar el registro de hechos de hace más de 60 días para que el documento no crezca sin fin
+  const cut=addDays(today(),-60);Object.keys(p.done).forEach(k=>{if(k.split(":")[1]<cut)delete p.done[k]});
+  progress=p;write(backend.setDoc("settings/progress",p));
+  const after=levelOf(p.xp).i;if(after>before)setTimeout(()=>openSheet({view:"levelup",name:LEVELS[after][0],short:true}),300);
+  else if(newBadges.length)toast("Insignia: "+newBadges[0]);}
 
 /* ---------- Temporizador de descanso ---------- */
 let timer=null,timerTick=null;
-function startTimer(ex){stopTimer(false);const total=restOf(ex);timer={end:Date.now()+total*1000,total,name:ex.name};timerTick=setInterval(tick,500);tick()}
-function stopTimer(rerender=true){if(timerTick)clearInterval(timerTick);timerTick=null;timer=null;$("#timerpill").hidden=true;if(rerender&&view==="entreno")paintTimer()}
+function startTimer(ex){stopTimer(false);const total=restOf(ex);timer={end:Date.now()+total*1000,total,name:ex.name,exId:ex.id};timerTick=setInterval(tick,500);tick();if(view==="entreno")render()}
+function stopTimer(rerender=true){if(timerTick)clearInterval(timerTick);timerTick=null;const had=!!timer;timer=null;$("#timerpill").hidden=true;if(rerender&&view==="entreno"){paintTimer();if(had&&!typing())render()}}
 function tick(){if(!timer)return;const left=Math.ceil((timer.end-Date.now())/1000);
   if(left<=0){const n=timer.name;stopTimer();try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}toast("Descanso listo · "+n);return}
   paintTimer(left)}
@@ -172,8 +207,8 @@ function renderHoy(){
   const chips=(L.ayuno?`<span class="chip">Ayuno</span>`:L.abstinencia?`<span class="chip">Abstinencia</span>`:L.domingo?`<span class="chip muted">${ic("sun")}Día del Señor</span>`:"");
   const M=[["Prot","p","var(--accent)",true],["Carb","c","var(--carb)"],["Grasa","g","var(--fat)"]];
   return `
-  <div class="top"><div class="l"><span class="eyebrow">${esc(eyebrow)}</span><h1 class="title">Hoy</h1></div>
-    <div class="r">${chips}<button class="chip off" id="tType" aria-label="Tipo de día">${type==="gym"?"Gym":"Descanso"}</button></div></div>
+  <div class="top"><div class="l"><span class="eyebrow">${esc(eyebrow)}</span><h1 class="title">Hoy</h1>${chips?`<div class="r" style="margin-top:6px">${chips}</div>`:""}</div>
+    <div class="r" style="flex:none">${candleChip()}<button class="chip off" id="tType" aria-label="Tipo de día">${type==="gym"?"Gym":"Descanso"}</button></div></div>
   <section class="card" aria-label="Resumen del día">
     <div class="kcal"><div class="stat"><span class="eyebrow">${left>=0?"Restantes":"Te pasaste"}</span><span class="big${left<0?" over":""}">${fmt(Math.abs(left))}</span><small class="d">de ${fmt(t.kcal)} kcal · consumidas ${fmt(tot.kcal)}</small></div>
       <div class="r"><button class="iconbtn inset" id="prev" aria-label="Día anterior">${ic("left")}</button><button class="iconbtn inset" id="next" aria-label="Día siguiente">${ic("right")}</button>${cur!==today()?`<button class="iconbtn inset" id="todayBtn" aria-label="Ir a hoy">${ic("today")}</button>`:""}</div></div>
@@ -187,9 +222,33 @@ function renderHoy(){
     return `<div class="row"><div class="n"><b${list.length?"":' class="muted"'} style="${list.length?"":"font-weight:500"}">${n}</b>${sub?`<small${k==="cena"&&!list.length&&L.abstinencia?' class="acc"':""}>${sub}</small>`:""}</div>
       <div class="acts">${list.length?`<span class="k">${fmt(mt.kcal)}<small>${fmt(mt.p)} g P</small></span><button class="sm" data-fav="${k}" aria-label="Guardar ${n} como favorito">${ic("star")}</button><button class="sm" data-open="${k}" aria-label="Ver ${n}">${ic("down")}</button>`:""}
       <button class="iconbtn ${list.length?"inset":"acc"}" data-add="${k}" aria-label="Agregar a ${n}">${ic("plus")}</button></div></div>`}).join("")}</section>
+  ${fastCard()}
+  ${charCard()}
   <div class="top" style="align-items:center"><span class="hint" id="status" style="${statusErr?"color:var(--over)":""}">${esc(statusTxt)}</span>
     ${entries().length?"":`<button class="ghost g" id="copyY">${ic("copy")}Copiar ayer</button>`}</div>`;
 }
+/* Vela de racha: encendida, en riesgo (hoy todavía nada) o apagada. */
+function candleChip(){const st=streakOf(progress.days||[],today());const cls=st.n?(st.today?"on":"risk"):"off";
+  const flame=st.n?`<g class="fl"><ellipse cx="8" cy="4.5" rx="3.6" ry="4.5" fill="var(--accent)" opacity=".25"/><path d="M8 1c1.2 1.6 2.2 3 2.2 4.4A2.2 2.2 0 0 1 5.8 5.4C5.8 4 6.8 2.6 8 1z" fill="var(--accent)"/></g>`:`<path d="M8 1c.6 1 .2 2-.4 3s-.4 2 .4 3" fill="none" stroke="var(--muted)" stroke-width="1" stroke-linecap="round"/>`;
+  return `<span class="candle ${cls}" title="Racha de días activos" aria-label="Racha: ${st.n} días"><svg viewBox="0 0 16 22" aria-hidden="true">${flame}<rect x="5" y="9" width="6" height="12" rx="1.2" fill="${st.n?"var(--ink)":"var(--muted)"}" opacity="${st.n?1:.5}"/></svg>${st.n}</span>`}
+function charCard(){const L=levelOf(progress.xp||0);const nb=Object.keys(progress.badges||{}).length;
+  return `<button class="hero-char" id="openChar" style="text-align:left;width:100%"><span class="av"><img src="assets/personaje/south.png" alt=""></span>
+    <span class="n"><span class="lvl">Nivel ${L.i+1} · ${esc(L.name)}</span><b>${fmt(progress.xp||0)} XP${L.to?` <small style="font-weight:400">· ${fmt(L.to-(progress.xp||0))} para ${esc(LEVELS[L.i+1][0])}</small>`:""}</b><span class="xp"><i style="width:${L.pct}%"></i></span><small>${nb} ${nb===1?"insignia":"insignias"} · ${progress.counts&&progress.counts.workouts||0} entrenos</small></span>${ic("right")}</button>`}
+/* Ayuno (Plus): plan con ventana de alimentación; el eclesiástico sigue el calendario litúrgico. */
+function fastState(){if(!fast||!fast.start)return null;const h=FAST_PLANS.find(p=>p[0]===fast.plan)||FAST_PLANS[0];const goal=h[1]*3600e3;const el=Date.now()-fast.start;return{plan:h[0],goalMs:goal,elapsed:el,done:goal>0&&el>=goal,endAt:fast.start+goal}}
+function hms(ms){ms=Math.max(0,ms);const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4);return h+":"+pad(m)}
+function fastCard(){
+  if(!isPlus())return `<button class="card lockcard" id="openPlus" style="text-align:left;width:100%"><span class="ic">${ic("fast")}</span><span class="n" style="flex:1"><b style="font-weight:600">Ayuno</b><br><small class="hint">Planes 16:8, 18:6, 20:4, OMAD y el ayuno eclesiástico, con tu ventana de comida.</small></span><span class="plus">Plus</span></button>`;
+  const st=fastState();const L=liturgy(cur);
+  if(!st)return `<section class="card fast"><div class="top" style="align-items:center"><span class="eyebrow">Ayuno</span><span class="plus">Plus</span></div>
+    <div class="chips">${FAST_PLANS.map(([n])=>`<button data-fplan="${n}" aria-pressed="${(fast&&fast.plan||"16:8")===n}">${n}</button>`).join("")}</div>
+    <p class="hint">${(fast&&fast.plan)==="Eclesiástico"?"Una comida fuerte y dos ligeras que no sumen otra; sin comer entre horas. Hoy "+(L.ayuno?"es día de ayuno obligatorio.":"no es obligatorio; podés ofrecerlo igual."):"Empezá cuando termines de comer; la app te avisa cuándo se abre la ventana."}</p>
+    <button class="primary ink" id="fastStart">${ic("fast")}Empezar</button></section>`;
+  const pct=st.goalMs?Math.min(100,st.elapsed/st.goalMs*100):0;
+  return `<section class="card fast"><div class="top" style="align-items:center"><span class="eyebrow">Ayuno ${esc(st.plan)}</span><span class="plus">Plus</span></div>
+    <div class="top" style="align-items:flex-end"><span class="t${st.done?" on":""}" id="fastT">${hms(st.elapsed)}</span><span class="win">${st.goalMs?(st.done?"Ventana abierta desde las "+new Date(st.endAt).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false}):"Se abre a las "+new Date(st.endAt).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false})):"Hasta la comida fuerte"}</span></div>
+    ${st.goalMs?`<div class="bar"><i style="width:${pct}%"></i></div>`:""}
+    <button class="primary${st.done?"":" ink"}" id="fastStop">${ic("check")}${st.done?"Comer":"Cortar"}</button></section>`}
 
 function renderEntreno(){
   const r=curRoutine();const weekNo=Math.min(13,Math.max(1,Math.floor(daysBetween(PLAN_START,wcur)/7)+1));
@@ -197,11 +256,11 @@ function renderEntreno(){
   const nav=`<div class="r"><button class="iconbtn inset" id="wprev" aria-label="Día anterior">${ic("left")}</button><button class="iconbtn inset" id="wnext" aria-label="Día siguiente">${ic("right")}</button>${wcur!==today()?`<button class="iconbtn inset" id="wtoday" aria-label="Ir a hoy">${ic("today")}</button>`:""}</div>`;
   if(!r)return `<div class="top"><div class="l"><span class="eyebrow">${esc(dateLabel(wcur))} · semana ${weekNo} de 13</span><h1 class="title">Descanso</h1></div>${nav}</div><p class="hint">Hoy no hay rutina asignada. Elegí una si querés entrenar igual.</p>${rt}`;
   if(needsOffer()){const pr=PRAYERS[daysBetween(PLAN_START,wcur)%PRAYERS.length];
-    return `<div class="offer"><div class="top"><span class="eyebrow">${esc(DOW[parse(wcur).getDay()])} · ${esc(r.name)}</span><button class="iconbtn ghost" id="offerSkip" aria-label="Saltar">${ic("x")}</button></div>
+    return `<div class="hero"><div class="offer"><div class="top"><span class="eyebrow">${esc(DOW[parse(wcur).getDay()])} · ${esc(r.name)}</span><button class="iconbtn ghost" id="offerSkip" aria-label="Saltar">${ic("x")}</button></div>
       <div style="display:flex;flex-direction:column;gap:28px"><span class="dot"></span><p class="pr">${esc(pr)}</p><p class="sub">Ordenar el cuerpo desde la templanza, no desde la vanagloria.</p></div>
       <div style="display:flex;flex-direction:column;gap:12px"><label for="intencion" class="eyebrow">Lo ofrezco por</label><input id="intencion" type="text" placeholder="una persona, una intención…" autocomplete="off">
         ${intents.length?`<div class="chips">${intents.slice(0,6).map(i=>`<button data-intent="${esc(i)}">${esc(i)}</button>`).join("")}</div>`:""}
-        <button class="primary" id="offer" style="margin-top:8px">${ic("cross")}Ofrecer</button></div></div>`}
+        <button class="primary" id="offer" style="margin-top:8px">${ic("cross")}Ofrecer</button></div></div></div>`}
   const done=!!(workout&&workout.done);const intention=workout&&workout.intention;
   const cur_track=tracks[trackIdx];
   return `
@@ -216,7 +275,8 @@ function renderEntreno(){
         <input type="number" inputmode="numeric" class="${done?"":"empty"}" data-set="${ex.id}" data-i="${i}" data-k="rir" value="${esc(s.rir!=null?s.rir:"")}" placeholder="2" aria-label="RIR serie ${i+1}">
         <button class="mini hard" data-hard="${ex.id}" data-i="${i}" aria-pressed="${!!s.hard}" aria-label="Me costó">${ic("flame")}</button>
         <button class="mini ok" data-ok="${ex.id}" data-i="${i}" aria-pressed="${done}" aria-label="Serie lista">${ic("check")}</button>`)}
-    return `<section class="ex"><div class="hd"><div><b>${esc(ex.name)}</b><small>${ex.sets} × ${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}${ex.step===0?" s":""} · descanso ${mmss(restOf(ex))}</small></div>
+    const sp=spriteFor(ex);const live=!!(timer&&timer.exId===ex.id&&sp);
+    return `<section class="ex"><div class="hd"><div class="ttl">${sp?`<button class="exthumb${live?" live":""}" data-ficha="${ex.id}" aria-label="Ver ${esc(ex.name)}"><canvas data-sprite="${sp}" data-live="${live?1:0}"></canvas></button>`:""}<div><b>${esc(ex.name)}</b><small>${ex.sets} × ${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}${ex.step===0?" s":""} · descanso ${mmss(restOf(ex))}</small></div></div>
       <div class="sug${sg.hold?" hold":""}"><span class="eyebrow">Sugerido</span><span class="v">${sg.w!=null?f1(sg.w):"—"}<small> ${ex.step===0?"s":"kg"}</small></span></div></div>
       <div class="sets"><span></span><span class="th">${ex.step===0?"seg":"kg"}</span><span class="th">reps</span><span class="th">rir</span><span></span><span></span>${rows.join("")}</div>
       <div class="next">${esc(sg.why)}${L?" Última: "+f1(L.w)+" × "+(L.reps||[]).join("/")+".":""}</div></section>`}).join("")}
@@ -270,10 +330,14 @@ function renderMas(){
   const own=userFoods.filter(f=>!f.recipeId).length;
   return `
   <div class="top"><div class="l"><span class="eyebrow">${esc(user&&(user.displayName||user.email)||"")}</span><h1 class="title">Más</h1></div><div class="r"><button class="chip off" id="theme">${light?"Oscuro":"Claro"}</button><button class="iconbtn" id="logout" aria-label="Salir">${ic("out")}</button></div></div>
+  ${charCard()}
+  <section class="card pad" style="display:flex;flex-direction:column;gap:10px"><div class="top" style="align-items:center"><span class="eyebrow">Scaeli Fit Plus</span>${isPlus()?`<span class="plus">Activo</span>`:""}</div>
+    <p class="hint">${isPlus()?"Tenés todas las funciones: ayuno con planes, y lo que venga."+(plus.until?" Hasta el "+esc(parse(plus.until).toLocaleDateString("es-AR"))+".":""):"Ayuno con planes y ventanas, y más adelante el escaneo de comidas por foto. Si tenés un código, canjealo acá."}</p>
+    ${isPlus()?"":`<button class="ghost" id="openPlus">${ic("key")}Código</button>`}</section>
   <section class="card tight list"><div class="row"><span class="eyebrow">Recetas (${recipes.length})</span><button class="ghost" id="newRecipe" style="height:32px;font-size:12px">${ic("plus")}Nueva</button></div>
     ${recipes.length?recipes.map(r=>`<div class="row"><div class="n"><b>${esc(r.name)}</b><small>${r.items.length} ingredientes · ${r.portions} ${r.portions===1?"porción":"porciones"} · ${fmt(totals(r.items).kcal/(r.portions||1))} kcal c/u${r.lent?" · abstinencia":""}</small></div><div class="acts"><button class="sm" data-edrec="${r.id}" aria-label="Editar receta">${ic("edit")}</button><button class="sm" data-delrec="${r.id}" aria-label="Borrar receta">${ic("trash")}</button></div></div>`).join(""):`<p class="empty">Tus comidas caseras con sus macros exactos: cargás los ingredientes y cuántas porciones salen.</p>`}</section>
   <section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Alimentos</span>
-    <p class="hint">${BASE.length} de la base argentina${hidden.size?" ("+hidden.size+" ocultos)":""} · ${own} propios · ${recipes.length} recetas.</p>
+    <p class="hint">${BASE.length} en la base (argentinos y USDA)${hidden.size?", "+hidden.size+" ocultos":""} · ${own} propios · ${recipes.length} recetas.</p>
     <div class="r"><button class="ghost g" id="openFoods">${ic("edit")}Editar</button><button class="ghost g" id="newFood">${ic("plus")}Nuevo</button></div></section>
   <section class="card pad"><form id="tf"><span class="eyebrow">Objetivos diarios</span>
     ${["gym","rest"].map(k=>`<div><p class="hint" style="margin:6px 0 6px;font-weight:600;color:var(--ink)">${k==="gym"?"Gym / fútbol":"Descanso"}</p><div class="grid4">${[["kcal","kcal"],["p","Prot"],["c","Carb"],["g","Grasa"]].map(([f,l])=>`<label class="f" for="t_${k}_${f}">${l}<input class="inset" type="number" id="t_${k}_${f}" inputmode="numeric" value="${(t[k]||DEFAULT_TARGETS[k])[f]}"></label>`).join("")}</div></div>`).join("")}
@@ -291,7 +355,12 @@ function renderMas(){
     <p class="hint" id="status" style="${statusErr?"color:var(--over)":""}">${esc(statusTxt)}</p></section>`;
 }
 
+let anims=[];
+function mountSprites(root){anims.forEach(a=>a.stop());anims=[];
+  (root||document).querySelectorAll("canvas[data-sprite]").forEach(cv=>{const id=cv.dataset.sprite;loadSprite(id).then(sp=>{if(!cv.isConnected)return;const live=cv.dataset.live==="1";const scale=+cv.dataset.scale||1;
+    const a=new SpriteAnim(cv,sp,{scale,crop:true,start:live?undefined:(sp.cfg.quieto??sp.cfg.inicio??0),end:live?undefined:(sp.cfg.quieto??sp.cfg.inicio??0),autoplay:live});if(!live){a.frame=sp.cfg.quieto??sp.cfg.inicio??0;a.draw()}anims.push(a)}).catch(()=>{})})}
 function afterRender(){
+  mountSprites($("#app"));
   const imp=$("#importFile");if(imp)imp.onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{const dump=JSON.parse(await f.text());const cols=["days","workouts","body","combos","recipes","foods","tracks","settings"];const clean={};cols.forEach(c=>{if(dump[c]&&typeof dump[c]==="object")clean[c]=dump[c]});
       if(!Object.keys(clean).length)return toast("El archivo no tiene datos de Scaeli Fit");toast("Importando…");const n=await backend.importAll(clean);toast("Importados "+n+" registros")}catch(err){toast("No se pudo importar: "+(err&&err.message||""))}e.target.value=""};
   const tf=$("#tf");if(tf)tf.onsubmit=e=>{e.preventDefault();const nt={};["gym","rest"].forEach(k=>{nt[k]={};["kcal","p","c","g"].forEach(f=>nt[k][f]=parseFloat($("#t_"+k+"_"+f).value)||0)});
@@ -303,7 +372,8 @@ let sheet=null;
 function openSheet(s){sheet=s;$("#scrim").hidden=false;const sh=$("#sheet");sh.hidden=false;sh.classList.toggle("short",!!s.short);renderSheetNow()}
 function closeSheet(){sheet=null;$("#scrim").hidden=true;$("#sheet").hidden=true;$("#sheetIn").innerHTML=""}
 const X=`<button class="iconbtn ghost" id="x" aria-label="Cerrar">${ic("x")}</button>`;
-function renderSheetNow(){
+function renderSheetNow(){renderSheetBody();if(sheet&&sheet.view==="ficha")mountSprites($("#sheetIn"))}
+function renderSheetBody(){
   const el=$("#sheetIn");if(!sheet)return;const mealName=sheet.meal?MEALS.find(m=>m[0]===sheet.meal)[1]:"";
   if(sheet.view==="search"){const L=liturgy(cur);const list=searchFoods(sheet.q||"");const favs=(sheet.q||sheet.target)?[]:combos.filter(c=>c.meal===sheet.meal);const title=sheet.target==="recipe"?"Ingrediente":mealName;
     el.innerHTML=`<h3>${esc(title)}${X}</h3><input type="search" id="q" placeholder="Buscar alimento…" value="${esc(sheet.q||"")}" autocomplete="off" enterkeyhint="search">
@@ -380,6 +450,29 @@ function renderSheetNow(){
       <button class="primary" id="obSave">${ic("check")}Guardar</button></div>`;
     [["#obAge","age"],["#obH","height"],["#obW","weight"],["#obGW","goalW"]].forEach(([id,k])=>{const n=$(id);n.oninput=e=>{o[k]=parseFloat(e.target.value)||0};n.onchange=()=>renderSheetNow()});
   } else if(sheet.view==="listen"){renderListen(el)}
+  else if(sheet.view==="ficha"){const ex=sheet.ex;const sp=spriteFor(ex)||sheet.sp;const c=CATALOGO.find(x=>x.id===sp)||{};const L=loads[ex.id];
+    el.innerHTML=`<h3>${esc(ex.name)}${X}</h3><div class="scroll" style="display:flex;flex-direction:column;gap:14px">
+      <div class="ficha"><canvas data-sprite="${sp}" data-live="1" data-scale="2"></canvas><small>${esc((c.musc||[]).join(" · ")||"técnica")}</small></div>
+      <div class="preview"><div><b>${ex.sets}</b><span>series</span></div><div><b>${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}</b><span>${ex.step===0?"seg":"reps"}</span></div><div><b>${mmss(restOf(ex))}</b><span>descanso</span></div><div><b>${L?f1(L.w):"—"}</b><span>última kg</span></div></div>
+      <p class="hint">${esc(suggest(ex).why)} Dejá 2 repeticiones en el tanque; si una serie costó, marcá la llama y la app no te sube el peso.</p></div>`;
+  } else if(sheet.view==="plus"){
+    el.innerHTML=`<h3>Scaeli Fit Plus${X}</h3><div class="scroll" style="display:flex;flex-direction:column;gap:14px">
+      <div class="hero" style="margin:0;border-radius:22px;padding:22px 20px"><span class="eyebrow" style="color:rgba(243,241,236,.7)">Incluye</span><p class="pr" style="margin:8px 0 0;font-size:22px;font-weight:300;line-height:1.3;color:#F3F1EC">Ayuno con planes y ventanas de comida. Más adelante, el escaneo de comidas por foto.</p></div>
+      <p class="hint">La suscripción llega pronto. Si tenés un código de acceso, canjealo acá.</p>
+      <div class="r"><input type="text" id="plusCode" placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters" style="flex:1;text-transform:uppercase;letter-spacing:.1em"><button class="iconbtn acc" id="plusRedeem" style="width:52px;height:52px" aria-label="Canjear">${ic("check")}</button></div>
+      <p class="hint" id="plusMsg"></p></div>`;
+    setTimeout(()=>{const n=$("#plusCode");n&&n.focus()},50);
+  } else if(sheet.view==="levelup"){
+    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:12px 0 6px"><span class="eyebrow">Subiste de nivel</span><span class="bignum" style="font-size:64px">${esc(sheet.name)}</span><img src="assets/personaje/south.png" alt="" style="width:96px;height:96px;image-rendering:pixelated;background:var(--paper);border-radius:24px;padding:8px"><p class="hint" style="max-width:30ch">No para mirarte vos: para servir mejor. Seguí.</p><button class="primary" id="x" style="max-width:240px">${ic("check")}Amén</button></div>`;
+  } else if(sheet.view==="char"){const L=levelOf(progress.xp||0);const st=streakOf(progress.days||[],today());const c=progress.counts||{};
+    el.innerHTML=`<h3>Personaje${X}</h3><div class="scroll" style="display:flex;flex-direction:column;gap:14px">
+      <div class="hero-char" style="border:0;background:var(--inset)"><span class="av" style="width:80px;height:80px"><img src="assets/personaje/south.png" alt="" style="width:72px;height:72px"></span><span class="n"><span class="lvl">Nivel ${L.i+1} · ${esc(L.name)}</span><b style="font-size:28px;font-weight:300">${fmt(progress.xp||0)} <small style="font-size:13px;font-weight:400;color:var(--muted)">XP</small></b><span class="xp"><i style="width:${L.pct}%"></i></span><small>${L.to?fmt(L.to-(progress.xp||0))+" XP para "+esc(LEVELS[L.i+1][0]):"Nivel máximo"}</small></span></div>
+      <div class="grid4">${[["Racha",st.n],["Mejor",progress.best||0],["Entrenos",c.workouts||0],["Rosarios",c.rosaries||0]].map(([n,v])=>`<div class="stat"><span class="eyebrow">${n}</span><span class="v">${v}</span></div>`).join("")}</div>
+      <span class="sect">Insignias</span>
+      <div class="badges">${BADGES.map(([id,name,icon])=>`<div class="badge${progress.badges&&progress.badges[id]?" on":""}"><span class="ic">${ic(icon)}</span>${esc(name)}</div>`).join("")}</div>
+      <span class="sect">Cómo se gana</span>
+      <p class="hint">Entreno terminado ${XP.workout} XP (+${XP.offered} si lo ofreciste) · rosario completo ${XP.rosary} · tres comidas cargadas en el día ${XP.meals} · pesaje ${XP.body}. Los niveles: ${LEVELS.map(l=>l[0]+" "+l[1]).join(" · ")}.</p></div>`;
+  }
 }
 
 /* ---------- Escuchar: música y rosario ---------- */
@@ -460,7 +553,17 @@ function setInput(exId,i,k,val){saveWorkout(w=>{const arr=w.sets[exId]=w.sets[ex
 function saveIntents(list){intents=list.slice(0,12);write(backend.setDoc("settings/intents",{list:intents}))}
 document.addEventListener("click",e=>{
   const b=e.target.closest("button,[role=button]");if(!b)return;const d=b.dataset;
+  if(d.view==="escuchar"){if(sheet&&sheet.view==="listen")closeSheet();else openSheet({view:"listen"});return}
   if(d.view){view=d.view;closeSheet();if(view==="entreno"&&!workout)openWorkout(wcur);else render();return}
+  if(d.ficha){const r=curRoutine();const ex=r&&r.ex.find(x=>x.id===d.ficha);if(ex)openSheet({view:"ficha",ex});return}
+  if(b.id==="openChar"){openSheet({view:"char"});return}
+  if(b.id==="openPlus"){openSheet({view:"plus",short:true});return}
+  if(b.id==="plusRedeem"){const code=($("#plusCode").value||"").trim();const msg=$("#plusMsg");if(!code)return;b.disabled=true;msg.textContent="Verificando…";
+    backend.redeemCode(code).then(r=>{if(!r.ok){msg.textContent=r.why;b.disabled=false;return}const until=r.days>0?addDays(today(),r.days):null;plus={active:true,code:r.code,since:today(),until,label:r.label};
+      write(backend.setDoc("settings/plus",plus),"Plus activado");closeSheet();render()}).catch(()=>{msg.textContent="No se pudo verificar. Probá de nuevo.";b.disabled=false});return}
+  if(d.fplan){fast={...(fast||{}),plan:d.fplan};write(backend.setDoc("settings/fast",fast));render();return}
+  if(b.id==="fastStart"){fast={...(fast||{plan:"16:8"}),start:Date.now()};write(backend.setDoc("settings/fast",fast),"Ayuno iniciado");render();return}
+  if(b.id==="fastStop"){const st=fastState();fast={...(fast||{}),start:null,last:st?{plan:st.plan,ms:st.elapsed,date:today()}:null};write(backend.setDoc("settings/fast",fast),st&&st.done?"Buen provecho":"Ayuno cortado");render();return}
   if(b.id==="timerpill"){view="entreno";render();return}
   if(b.id==="prev")openDay(addDays(cur,-1));else if(b.id==="next")openDay(addDays(cur,1));else if(b.id==="todayBtn")openDay(today());
   else if(b.id==="tType"){const t=dayType()==="gym"?"rest":"gym";saveDay(x=>x.type=t)}
@@ -508,7 +611,7 @@ document.addEventListener("click",e=>{
   else if(d.tdel){const id=d.tdel;if(sheet.confirm===id){sheet.confirm=null;const t=tracks.find(x=>x.id===id);write(backend.delDoc("tracks/"+id),"Pista borrada");if(t&&t.path)backend.deleteTrackFile(t.path)}else{sheet.confirm=id;renderSheetNow()}}
   else if(b.id==="taddurl"){const u=($("#turl").value||"").trim();if(!/^https?:\/\//.test(u))return toast("Pegá un enlace que empiece con https://");const name=decodeURIComponent(u.split("/").pop()||"Pista").replace(/\.[^.]+$/,"")||"Pista";write(backend.setDoc("tracks/"+newId("t"),{name,url:u,order:Date.now()}),"Pista agregada")}
   else if(d.ltab){listenTab=d.ltab;renderSheetNow()}
-  else if(d.rnext){const S=rosarySteps(wcur);if(rosaryStep>=S.length-1){rosaryStep=0;closeSheet();toast("Amén")}else{rosaryStep++;renderSheetNow()}}
+  else if(d.rnext){const S=rosarySteps(wcur);if(rosaryStep>=S.length-1){rosaryStep=0;closeSheet();toast("Amén");award("rosary",today())}else{rosaryStep++;renderSheetNow()}}
   else if(d.rprev){rosaryStep=Math.max(0,rosaryStep-1);renderSheetNow()}
   /* Recetas */
   else if(b.id==="newRecipe"){recipeDraft={id:null,name:"",items:[],portions:"",cookedG:0,lent:false};openSheet({view:"recipe"})}
@@ -528,7 +631,7 @@ document.addEventListener("click",e=>{
   /* Datos */
   else if(b.id==="exportData"){toast("Preparando la copia…");backend.exportAll(["days","workouts","body","combos","recipes","foods","tracks","settings"]).then(dump=>{const blob=new Blob([JSON.stringify(dump,null,1)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="scaeli-fit-"+today()+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}).catch(()=>toast("No se pudo exportar"))}
   /* Cuerpo */
-  else if(b.id==="saveBody"){const w=parseFloat(($("#bw").value||"").replace(",","."));const wa=parseFloat(($("#bwa").value||"").replace(",","."));if(!(w>0)&&!(wa>0))return;const rec={date:today()};if(w>0)rec.weight=r1(w);if(wa>0)rec.waist=r1(wa);write(backend.setDoc("body/"+today(),rec),"Guardado")}
+  else if(b.id==="saveBody"){const w=parseFloat(($("#bw").value||"").replace(",","."));const wa=parseFloat(($("#bwa").value||"").replace(",","."));if(!(w>0)&&!(wa>0))return;const rec={date:today()};if(w>0)rec.weight=r1(w);if(wa>0)rec.waist=r1(wa);write(backend.setDoc("body/"+today(),rec),"Guardado");if(w>0)award("body",today())}
   else if(d.delbody){write(backend.delDoc("body/"+d.delbody),"Borrado")}
   /* Más */
   else if(d.edex){const[rid,eid]=d.edex.split("/");openSheet({view:"edex",rid,eid,short:true})}
@@ -548,11 +651,11 @@ function saveFood(id,f){return backend.setDoc("foods/"+id,f)}
 function deleteFood(id){if(BASE.some(f=>f.id===id)){hidden.add(id);return backend.setDoc("settings/hidden",{list:[...hidden]})}return backend.delDoc("foods/"+id)}
 function renderLogin(){
   $("#nav").hidden=true;
-  $("#app").innerHTML=`<div class="offer" style="justify-content:center;gap:36px;text-align:center;align-items:center">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:16px"><span class="dot"></span><h1 class="title" style="font-size:44px">Scaeli Fit</h1><p class="sub" style="font-size:15px">Ordenar el cuerpo desde la templanza.</p></div>
-    <p class="pr" style="font-size:20px;max-width:28ch">Comidas, entrenamiento ofrecido y descanso, con tus datos guardados en tu cuenta.</p>
+  $("#app").innerHTML=`<div class="hero" style="min-height:100vh;display:flex;flex-direction:column"><div class="offer" style="justify-content:center;gap:32px;text-align:center;align-items:center;flex:1">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:18px"><img class="logo lg" src="icons/logo.png" alt="Scaeli Fit"><div><h1 class="title" style="font-size:40px">Scaeli Fit</h1><p class="sub" style="font-size:14px;margin-top:8px">Tu fe, a otro nivel. También en el cuerpo.</p></div></div>
+    <p class="pr" style="font-size:19px;max-width:28ch;font-weight:300">Comidas, entrenamiento ofrecido y descanso, guardados en tu cuenta.</p>
     <button class="primary" id="login" style="max-width:320px">${ic("user")}Entrar</button>
-    <p class="hint" id="status">${esc(statusTxt)}</p></div>`;
+    <p class="hint" id="status">${esc(statusTxt)}</p></div></div>`;
 }
 function startSession(u){
   user=u;unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];
@@ -571,14 +674,32 @@ function startSession(u){
   w(()=>backend.watchDoc("settings/routines",r=>{if(r&&r.list&&r.list.length)routines=r.list;if(view!=="hoy")render()}));
   w(()=>backend.watchDoc("settings/loads",l=>{loads=l||{};if(view==="entreno")render()}));
   w(()=>backend.watchDoc("settings/intents",v=>{intents=(v&&v.list)||[];if(view==="entreno"||view==="mas")render()}));
+  w(()=>backend.watchDoc("settings/progress",v=>{if(v)progress={xp:0,counts:{},days:[],best:0,badges:{},done:{},...v};if(view==="hoy"||view==="mas")render()}));
+  w(()=>backend.watchDoc("settings/plus",v=>{plus=v||null;if(view==="hoy"||view==="mas")render()}));
+  w(()=>backend.watchDoc("settings/fast",v=>{fast=v||null;if(view==="hoy")render()}));
   ready=true;render();openDay(cur);openWorkout(wcur);
 }
-function endSession(){user=null;backend=null;ready=false;unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];profile=null;foods=[];userFoods=[];combos=[];recipes=[];bodyRows=[];tracks=[];loads={};intents=[];day=null;workout=null;targets=DEFAULT_TARGETS;routines=DEFAULT_ROUTINES;closeSheet();renderLogin()}
+function endSession(){user=null;backend=null;ready=false;unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];profile=null;progress={xp:0,counts:{},days:[],best:0,badges:{}};plus=null;fast=null;anims.forEach(a=>a.stop());anims=[];foods=[];userFoods=[];combos=[];recipes=[];bodyRows=[];tracks=[];loads={};intents=[];day=null;workout=null;targets=DEFAULT_TARGETS;routines=DEFAULT_ROUTINES;closeSheet();renderLogin()}
 document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
   if(b.id==="login"){b.disabled=true;setStatus("Abriendo Google…");login().then(()=>setStatus("Entrando…")).catch(err=>{setStatus(err&&err.message||"No se pudo entrar. Probá de nuevo.",true);b.disabled=false})}
   else if(b.id==="logout"){logout()}});
 try{if(localStorage.getItem("balanza_theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}
-fetch("data/foods.json").then(r=>r.json()).then(list=>{BASE=list;mergeFoods()}).catch(()=>setStatus("No se pudo cargar la base de alimentos.",true));
+setInterval(()=>{const t=$("#fastT");const st=fastState();if(t&&st){t.textContent=hms(st.elapsed);if(st.done&&!t.classList.contains("on")&&!typing())render()}},30000);
+Promise.all([fetch("data/foods.json").then(r=>r.json()),fetch("data/foods_extra.json").then(r=>r.ok?r.json():[]).catch(()=>[])])
+  .then(([a,b])=>{const ids=new Set(a.map(f=>f.id));BASE=a.concat(b.filter(f=>!ids.has(f.id)).map(f=>({id:f.id,name:f.name,kcal:f.kcal,p:f.p,c:f.c,g:f.f!=null?f.f:(f.g||0),unitG:f.unitG,unitName:f.unitName,src:f.src})));mergeFoods()})
+  .catch(()=>setStatus("No se pudo cargar la base de alimentos.",true));
 if(navigator.serviceWorker&&navigator.serviceWorker.register){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
 renderLogin();
-finishRedirect().then(()=>{watchAuth(u=>{if(u)startSession(u);else{endSession();if(!statusTxt)setStatus("Guardado en tu cuenta de Google. Nada es público.")}})});
+/* Modo demo (?demo=1): sesión local en memoria, sin Google ni Firestore. Sirve para probar y mostrar la app. */
+function memoryBackend(){const store={};const subs={};const key=p=>p;const col=p=>p.split("/")[0];const emit=p=>{(subs[p]||[]).forEach(cb=>cb(store[p]===undefined?null:store[p]));const c=col(p);(subs["col:"+c]||[]).forEach(cb=>cb(Object.keys(store).filter(k=>k.startsWith(c+"/")).map(k=>({id:k.split("/")[1],...store[k]}))))};
+  const on=(k,cb)=>{(subs[k]=subs[k]||[]).push(cb);return()=>{subs[k]=subs[k].filter(f=>f!==cb)}};
+  return{mode:"memory",uid:"demo",watchDoc(p,cb){const un=on(key(p),cb);setTimeout(()=>cb(store[p]===undefined?null:store[p]),0);return un},
+    watchCol(c,cb){const un=on("col:"+c,cb);setTimeout(()=>cb(Object.keys(store).filter(k=>k.startsWith(c+"/")).map(k=>({id:k.split("/")[1],...store[k]}))),0);return un},
+    async setDoc(p,d){store[p]=JSON.parse(JSON.stringify(d));emit(p)},async delDoc(p){delete store[p];emit(p)},async importAll(d){let n=0;for(const c in d)for(const id in d[c]){store[c+"/"+id]=d[c][id];n++;emit(c+"/"+id)}return n},
+    async exportAll(cols){const o={};cols.forEach(c=>{o[c]={};Object.keys(store).filter(k=>k.startsWith(c+"/")).forEach(k=>o[c][k.split("/")[1]]=store[k])});return o},
+    async uploadTrack(){throw new Error("demo")},deleteTrackFile(){},async redeemCode(code){return String(code).toUpperCase()==="DEMO"?{ok:true,code:"DEMO",days:0,label:"demo"}:{ok:false,why:"En el modo demo el código es DEMO."}}}}
+if(/[?&]demo=1/.test(location.search)){const u={uid:"demo",displayName:"Demo"};user=u;backend=memoryBackend();profile={};const startDemo=()=>{const b=backend;unsubs=[];const w=fn=>{const un=fn();if(typeof un==="function")unsubs.push(un)};
+    w(()=>b.watchCol("foods",l=>{userFoods=l;mergeFoods()}));w(()=>b.watchCol("combos",l=>{combos=l}));w(()=>b.watchCol("recipes",l=>{recipes=l}));w(()=>b.watchCol("body",l=>{bodyRows=l;if(view==="cuerpo")render()}));w(()=>b.watchCol("tracks",l=>{tracks=l}));
+    w(()=>b.watchDoc("settings/progress",v=>{if(v)progress={xp:0,counts:{},days:[],best:0,badges:{},done:{},...v};render()}));w(()=>b.watchDoc("settings/plus",v=>{plus=v||null;render()}));w(()=>b.watchDoc("settings/fast",v=>{fast=v||null;render()}));w(()=>b.watchDoc("settings/loads",l=>{loads=l||{}}));
+    ready=true;setStatus("Modo demo: nada se guarda.");$("#nav").hidden=false;render();openDay(cur);openWorkout(wcur)};startDemo()}
+else finishRedirect().then(()=>{watchAuth(u=>{if(u)startSession(u);else{endSession();if(!statusTxt)setStatus("Guardado en tu cuenta de Google. Nada es público.")}})});

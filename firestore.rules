@@ -5,5 +5,14 @@ service cloud.firestore {
     match /users/{uid}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
+    // Códigos premium: cualquier usuario con sesión puede leerlos y sumar un uso; se crean desde la consola.
+    // Documento: codes/SCAELI-XXXX  { label: "Lorenzo", days: 0 (0 = para siempre), max: 1 (0 = sin límite), uses: 0, until: "2027-12-31" (opcional) }
+    match /codes/{code} {
+      allow read: if request.auth != null;
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uses'])
+        && request.resource.data.uses == resource.data.uses + 1;
+      allow create, delete: if false;
+    }
   }
 }

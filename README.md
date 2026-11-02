@@ -72,3 +72,20 @@ Para sumar un ejercicio nuevo:
 2. Corré `python3 tools/pixellab2sheet.py <archivo.zip> <id-del-ejercicio> --dir east` (nombre en minúsculas con guiones, ej. `peso-muerto-rumano`). Genera el PNG y el JSON en `assets/ejercicios/<id>/` y avisa si los pies no quedan en la misma línea.
 3. Registralo en `data/ejercicios.js`: `"<id>": { nombre, fps: 8, inicio: 1, espejar: false }` (`inicio: 1` saltea el cuadro quieto que agrega PixelLab).
 4. Abrí `sprites.html`, elegí el ejercicio y revisá loop, FPS y espejado. Listo: la app lo usa desde el mismo registro.
+
+## Plus y códigos de acceso
+
+Las funciones Plus (ayuno con planes) se desbloquean con un código. Los códigos se crean en la consola de Firebase, colección `codes`, un documento por código (el id es el código, en mayúsculas):
+
+```
+codes/SCAELI-LORENZO   { label: "Lorenzo", days: 0, max: 0, uses: 0 }
+codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "2027-03-31" }
+```
+
+- `days`: duración en días (0 = para siempre). `max`: cantidad de canjes permitidos (0 = sin límite). `until`: fecha límite para canjearlo (opcional).
+- Hay que publicar `firestore.rules` (incluye la regla de `codes`).
+- El estado queda en `users/{uid}/settings/plus`.
+
+## Modo demo
+
+`index.html?demo=1` abre la app con una sesión en memoria, sin Google ni Firestore (nada se guarda). El código Plus del demo es `DEMO`.

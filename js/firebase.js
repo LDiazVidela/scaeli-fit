@@ -1,7 +1,7 @@
 // Conexión con Firebase (proyecto "scaeli"). La configuración es pública por diseño: la seguridad está en las reglas.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, onSnapshot, setDoc, deleteDoc, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, onSnapshot, setDoc, deleteDoc, getDoc, getDocs, writeBatch, increment, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
 export const firebaseConfig = {
@@ -74,6 +74,18 @@ export function userBackend(uid, onError) {
       await uploadBytes(r, file, { contentType: file.type || "audio/mpeg" });
       return { path: r.fullPath, url: await getDownloadURL(r) };
     },
-    deleteTrackFile(p) { return deleteObject(ref(storage, p)).catch(() => {}); }
+    deleteTrackFile(p) { return deleteObject(ref(storage, p)).catch(() => {}); },
+    /* Códigos premium: viven en la raíz (codes/{CODIGO}); solo lectura + contador de usos. */
+    async redeemCode(code) {
+      const id = String(code || "").trim().toUpperCase().replace(/\s+/g, "");
+      if (!id) return { ok: false, why: "Escribí el código." };
+      const snap = await getDoc(doc(db, "codes/" + id));
+      if (!snap.exists()) return { ok: false, why: "Ese código no existe." };
+      const c = snap.data() || {};
+      if (c.max > 0 && (c.uses || 0) >= c.max) return { ok: false, why: "Ese código ya se usó." };
+      if (c.until && new Date(c.until) < new Date()) return { ok: false, why: "Ese código venció." };
+      try { await updateDoc(doc(db, "codes/" + id), { uses: increment(1) }); } catch (e) { /* las reglas pueden impedirlo; no es grave */ }
+      return { ok: true, code: id, days: c.days || 0, label: c.label || "" };
+    }
   };
 }

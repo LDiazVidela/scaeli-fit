@@ -4,12 +4,13 @@
   --line:rgba(255,255,255,.06); --line2:rgba(255,255,255,.12);
   --accent:#F2B544; --accent-ink:#0C0D10; --accent-dim:rgba(242,181,68,.12); --accent-line:rgba(242,181,68,.45);
   --carb:#A9B4C4; --fat:#D9A58E; --over:#E8826A; --ok:#F2B544;
+  --bordo:#400E1E; --bordo2:#1A1420; --paper:#ECEAE4; --paper-ink:#1B1C20;
   --font:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif; color-scheme:dark;
 }
 :root[data-theme="light"]{
   --bg:#F4F2EC; --surface:#FFFFFF; --inset:#F0EEE8; --track:#E6E3DC; --ink:#17181C; --muted:#6E7079;
   --line:rgba(0,0,0,.06); --line2:rgba(0,0,0,.12); --accent:#C8841A; --accent-ink:#FFFFFF; --accent-dim:rgba(200,132,26,.12); --accent-line:rgba(200,132,26,.5);
-  --carb:#5F7799; --fat:#B06A4D; --over:#C2361B; --ok:#C8841A; color-scheme:light }
+  --carb:#5F7799; --fat:#B06A4D; --over:#C2361B; --ok:#C8841A; --bordo:#5A1A2E; --bordo2:#EADFE2; color-scheme:light }
 
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -180,3 +181,50 @@ form{display:flex;flex-direction:column;gap:10px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;z-index:30}
 @media (prefers-reduced-motion:no-preference){ .bar i,.bar3 i{transition:width .3s ease} .sheet{animation:up .18s ease-out} @keyframes up{from{transform:translateY(24px);opacity:.6}} }
 @media (max-width:380px){ .kcal .big{font-size:56px} .sets{grid-template-columns:20px 1fr 1fr 1fr 36px 36px;gap:6px} .title{font-size:32px} }
+
+/* ---- Scaeli · unificación con Daily ---- */
+.hero{position:relative;margin:calc(-16px - env(safe-area-inset-top,0px)) -20px 0;padding:calc(24px + env(safe-area-inset-top,0px)) 20px 24px;background:linear-gradient(180deg,var(--bordo) 0%,var(--bordo2) 55%,var(--bg) 100%)}
+.hero .offer{min-height:calc(100vh - 110px)}
+.logo{width:96px;height:96px;border-radius:26px;display:block}
+.logo.lg{width:160px;height:160px;border-radius:40px}
+@media (prefers-reduced-motion:no-preference){ .wrap>*{animation:in .18s ease both} @keyframes in{from{opacity:0;transform:translateY(14px)}} .candle .fl{transform-origin:50% 100%;animation:flk 1.6s ease-in-out infinite} .candle.risk .fl{animation-duration:.5s} @keyframes flk{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.86) translateX(.4px)}} }
+/* Vela de racha */
+.candle{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px 0 8px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);font-size:13px;font-weight:600;color:var(--ink)}
+.candle svg{width:16px;height:22px;display:block;overflow:visible}
+.candle.on{border-color:var(--accent-line);background:var(--accent-dim)}
+.candle.off{color:var(--muted)}
+/* Personaje y nivel */
+.hero-char{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:14px 18px 14px 14px}
+.hero-char .av{width:64px;height:64px;border-radius:18px;background:var(--paper);display:grid;place-items:center;overflow:hidden;flex:none}
+.hero-char .av img{width:56px;height:56px;image-rendering:pixelated;display:block}
+.hero-char .n{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.hero-char .n b{font-size:16px;font-weight:600;line-height:1.1}
+.hero-char .n small{font-size:12px;color:var(--muted)}
+.xp{height:4px;border-radius:2px;background:var(--track);overflow:hidden}
+.xp i{display:block;height:100%;background:var(--accent);border-radius:2px}
+.lvl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.badges{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.badge{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:11px;color:var(--muted);line-height:1.2}
+.badge .ic{width:52px;height:52px;border-radius:999px;border:1px solid var(--line2);display:grid;place-items:center;color:var(--muted);background:var(--inset)}
+.badge.on{color:var(--ink)}
+.badge.on .ic{border-color:var(--accent-line);background:var(--accent-dim);color:var(--accent)}
+.bignum{font-size:84px;font-weight:200;line-height:.95;letter-spacing:-.03em;color:var(--accent)}
+/* Sprites en Entreno */
+.ex .hd{align-items:center}
+.exthumb{width:52px;height:60px;border-radius:14px;background:var(--paper);display:grid;place-items:center;overflow:hidden;flex:none;border:0;padding:0;cursor:pointer}
+.exthumb canvas{display:block;image-rendering:pixelated;max-height:54px;width:auto!important;height:auto!important}
+.exthumb.live{outline:2px solid var(--accent)}
+.ex .hd .ttl{display:flex;align-items:center;gap:12px;min-width:0}
+.ficha{background:var(--paper);color:var(--paper-ink);border-radius:22px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.ficha canvas{display:block;image-rendering:pixelated}
+.ficha small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#6E6A62}
+/* Plus y ayuno */
+.plus{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.fast{display:flex;flex-direction:column;gap:12px}
+.fast .t{font-size:48px;font-weight:200;line-height:1;letter-spacing:-.02em}
+.fast .t.on{color:var(--accent)}
+.fast .win{font-size:12px;color:var(--muted)}
+.lockcard{display:flex;align-items:center;gap:14px}
+.lockcard .ic{width:44px;height:44px;border-radius:14px;background:var(--inset);display:grid;place-items:center;color:var(--muted);flex:none}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
