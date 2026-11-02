@@ -1,12 +1,37 @@
 rules_version = '2';
+// REGLAS COMPARTIDAS del proyecto Firebase "scaeli": las usan Scaeli Daily y Scaeli Fit.
+// Este archivo es la única fuente: cualquier cambio se hace acá y se publica entero.
+// Copia idéntica en los dos repos (scaeli-daily/firestore.rules y scaeli-fit/firestore.rules).
 service cloud.firestore {
   match /databases/{database}/documents {
     // Cada persona lee y escribe solo lo suyo. Nada es público.
+    // Daily guarda en users/{uid}/daily_*; Fit en users/{uid}/{days,workouts,body,combos,recipes,foods,tracks,settings}.
+    // El Plus compartido vive en users/{uid}/settings/plus (lo leen y escriben las dos apps).
     match /users/{uid}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
-    // Códigos premium: cualquier usuario con sesión puede leerlos y sumar un uso; se crean desde la consola.
-    // Documento: codes/SCAELI-XXXX  { label: "Lorenzo", days: 0 (0 = para siempre), max: 1 (0 = sin límite), uses: 0, until: "2027-12-31" (opcional) }
+
+    // Grupos de perseverancia (Daily 1.8) y grupos de entrenamiento (Fit): quien tiene el código del grupo
+    // (y una cuenta) puede leerlo y sumarse. El grupo lo crea y lo cambia su creador; cada miembro escribe
+    // SOLO su propio documento; el creador puede sacar a alguien.
+    match /grupos/{gid} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.creador == request.auth.uid
+                    && request.resource.data.n is string && request.resource.data.n.size() <= 40;
+      allow update, delete: if request.auth != null && resource.data.creador == request.auth.uid;
+      match /miembros/{uid} {
+        allow read: if request.auth != null;
+        allow create, update: if request.auth != null && request.auth.uid == uid
+                              && (!("n" in request.resource.data) || request.resource.data.n.size() <= 24)
+                              && (!("int" in request.resource.data) || request.resource.data.int.size() <= 80);
+        allow delete: if request.auth != null && (request.auth.uid == uid
+                      || get(/databases/$(database)/documents/grupos/$(gid)).data.creador == request.auth.uid);
+      }
+    }
+
+    // Códigos de Scaeli+ (compartidos por las dos apps): cualquier usuario con sesión puede leerlos y sumar un uso.
+    // Se crean desde la consola. Documento: codes/SCAELI-XXXX
+    //   { label: "para quién", days: 0 (0 = para siempre), max: 1 (0 = sin límite), uses: 0, until: "2027-12-31" (opcional) }
     match /codes/{code} {
       allow read: if request.auth != null;
       allow update: if request.auth != null
