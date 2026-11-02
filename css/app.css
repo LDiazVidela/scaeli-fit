@@ -307,3 +307,34 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .rosmini.on .txt{display:block;-webkit-line-clamp:unset;overflow:visible;font-size:16px;line-height:1.5;color:var(--ink)}
 .rosmini.on .go{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--accent);margin-top:2px}
 .rosmini.on .acts{flex-direction:row;justify-content:flex-end;gap:8px}
+
+/* ---- v10: etiquetas del checklist, personaje centrado con fondo, música como pestaña, pausa, catálogo, carga a mano ---- */
+.check{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:0}
+.check button{width:100%;height:auto;border-radius:16px;padding:9px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:4px;font:inherit;font-size:10px;letter-spacing:.02em;line-height:1}
+.check button small{font-size:10px;color:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.check button:disabled{opacity:1}
+.top .l .eyebrow{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.card.big{display:flex;justify-content:center;align-items:flex-end;min-height:300px;padding:18px 18px 12px}
+.card.big .pj{display:block;margin:0 auto;position:relative;z-index:1}
+.card.big.confondo{padding:18px 18px 12px}
+.wsession .acts{display:flex;align-items:center;gap:8px;flex:none}
+.wsession.paused{border-color:var(--line2)}.wsession.paused b{color:var(--muted)}
+.food.manual{align-items:center;gap:12px;border-bottom:0;margin-top:4px;color:var(--accent)}
+.food.manual>.i{align-self:center;width:22px;height:22px;flex:none}
+.food.manual span{display:flex;flex-direction:column;flex:1;min-width:0}.food.manual b{color:var(--ink)}.food.manual small{white-space:normal}
+.card.agregar{display:flex;flex-direction:column;gap:12px;padding:18px 20px 16px}
+.card.agregar .ghost{justify-content:center;height:50px}
+.card.agregar .hint{margin:0}
+.card.agregar .eyebrow+.eyebrow{margin-top:4px}
+.catsel{border-color:var(--accent-line)}
+.catsel .n{display:flex;flex-direction:column;gap:2px;min-width:0}.catsel .n b{font-weight:600}
+.catsel .chips button[aria-pressed="true"]{opacity:.5}
+.rosmini .med{font-size:14px;line-height:1.45;color:var(--ink);font-style:italic;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.rosmini .cnt{font-size:13px;color:var(--muted);font-weight:500}
+.rosmini.on .cnt{font-size:15px;color:var(--ink)}
+.rosmini .txt.open{display:block;-webkit-line-clamp:unset;overflow:visible;font-size:14px;line-height:1.5;color:var(--muted);white-space:pre-line}
+.rosmini.on .acts .chip{height:32px;font-size:12px;padding:0 10px}
+#addToRoutine{height:48px;border-style:dashed}
+.rosmini.on .n b{font-size:20px;line-height:1.2}
+.eyebrow.fecha{font-size:13px;letter-spacing:.08em;color:var(--ink);opacity:.85;white-space:normal;overflow:visible}
+@media (display-mode:standalone){body{padding-top:calc(26px + env(safe-area-inset-top,0px))}}

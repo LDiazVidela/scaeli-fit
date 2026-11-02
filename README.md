@@ -109,3 +109,17 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - Dibujos de ejercicios: Everkinetic (CC BY-SA 4.0) como máscaras SVG en `assets/ilus/ej/<id>-a|b.svg`, pintadas con `currentColor` y alternando dos poses (`.ilu`). Mapa catálogo→Everkinetic en `tools/ilus/mapa.json`; lista de ids con dibujo en `data/ilus.js`. Los sprites PixelLab quedan en el repo pero no se muestran.
 - Sesión de entrenamiento: `workout.startedAt` (botón Comenzar o al marcar la primera serie), cronómetro, Terminar → `workout.summary` {dur,sets,vol,ex[],prs[]} y pantalla de resumen. Récords por ejercicio en `settings/prs` {w,r,e1rm,date} (e1RM = Epley).
 - Ayuno: hora de inicio editable (`fastedit`). Hoy: botón «Volver a hoy» en la tarjeta; el render conserva el scroll.
+
+## Versión 10 (2026-11-02, mediodía)
+- **Búsqueda rápida**: al escribir se redibuja solo la lista de resultados (no el panel), la base se ordena y normaliza una sola vez, y se muestran hasta 60 resultados. En el modo sin cuenta, el guardado local avisa solo a quien mira ese documento.
+- **Cargar a mano** (al final de cualquier búsqueda): nombre, calorías y macros; con gramos se guarda por 100 g, sin gramos como «1 porción». Se puede guardar en «mis alimentos».
+- **Ayuno**: historial en `settings/fasts` (`{list:[{date,plan,ms,done}]}`, últimos 60), pantalla «Ayuno cumplido» con horas, plan y XP, y mensaje sobrio si se corta antes. XP: ayuno cumplido 15 (`XP.fast`); el eclesiástico cuenta como cumplido con más de 1 h. Yo → Ayunos lista los últimos 10.
+- **XP**: entreno 50 (+20 ofrecido) · rosario 30 · ayuno 15 · comidas 10 · pesaje 5.
+- **Hoy**: los iconos del checklist llevan su nombre; la fecha va arriba en grande (`.eyebrow.fecha`) y «Día N de 90» y el tiempo litúrgico pasan a etiquetas. En la app instalada hay más aire arriba.
+- **Yo**: personaje centrado, con el fondo elegido en Daily (`daily_settings/profile.fondo`; imágenes `assets/ilus/daily_<fondo>.png`, copiadas de Daily).
+- **Escuchar** es una pestaña (sin panel ni animación), con «Agregar pista» como tarjeta aparte.
+- **Entreno**: botón Pausar/Seguir (`workout.pausedAt`, `workout.pausedMs`; la duración los descuenta), el anillo dice siempre «Descanso», «Agregar ejercicio» al final de la rutina, y la fecha en el título. Rosario compacto: solo cuenta y contemplación del misterio, con «Ver oración» opcional; al pasar la cuenta se redibuja solo esa tarjeta.
+- **Catálogo**: pestaña en Rutinas con los 101 ejercicios; al tocar uno se elige a qué rutina va.
+- **Dibujos**: se quitó `press-hombros-maquina` (mostraba una barra). Queda sin dibujo hasta tener uno fiel.
+- **Íconos nuevos** (pixel art, familia con Daily): llama dorada sobre la escalera, fondo ámbar. `icons/fit-*.png`, maskable con margen; el de Daily (libro, fondo azul) se entrega aparte para subir a ese repo.
+- Caché del service worker: `scaeli-fit-v10`.
