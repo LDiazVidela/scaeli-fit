@@ -116,3 +116,11 @@ Fit:
 1. Ya lee y escribe `users/{uid}/settings/plus` (código y equipo). Agregar `source`, `app`, `updated`.
 2. Copiar de Daily la pantalla de Scaeli+ (textos, planes, «Restaurar compras», «Ver como gratis») y la pestaña «Yo».
 3. Cuando se empaquete con Capacitor, usar `nativo.js` de Daily tal cual con `Purchases.logIn(uid)`.
+
+## 11. Avatar compartido
+
+- Fuente: **`users/{uid}/daily_settings/profile`** (campos `sx`, `prenda`, `peinado`, `alt`, `nombre`, `fondo`, como los escribe Daily hoy).
+- **Daily edita, Fit solo lee.** Fit escucha el documento con `onSnapshot` y pinta el avatar con `personaje.js` y las hojas `assets/personaje/m.png` / `f.png` / `pj.json` de Daily, copiadas sin cambios al repo de Fit. Cuando Daily agregue prendas o peinados, manda las tres piezas nuevas a Fit.
+- Fit muestra «Personalizar en Scaeli Daily» (abre la otra app) en lugar de un editor propio.
+- Los sprites de ejercicios son del personaje deportivo y no cambian con la ropa de Daily. Lo único que Fit toma del perfil para los ejercicios es `sx`: con `sx: "f"` usa los sprites femeninos cuando existan.
+- Si el documento no existe (usuario que empieza por Fit), Fit muestra el personaje base masculino y ofrece el botón para crearlo en Daily.
