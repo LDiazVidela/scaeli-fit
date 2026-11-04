@@ -108,6 +108,44 @@ const PROGRAMAS=[
   ["mqB","Máquinas B",3,"Tracción y posterior",[["jalon-al-pecho",3,10,12],["remo-maquina",3,10,12],["curl-femoral-sentado",3,12,15],["curl-biceps-maquina",3,12,15],["gemelos-sentado",3,12,15]]],
   ["mqC","Máquinas C",5,"Completo",[["sentadilla-hack",3,10,12],["press-inclinado-maquina",3,10,12],["remo-polea-baja",3,12,12],["pec-deck",3,12,15],["posterior-hombro-pec-deck",3,15,15]]]])
 ];
+/* ---------- Mi equipo: cada usuario marca lo que tiene y la app arma rutinas posibles ---------- */
+const EQUIPOS=[["gym","Voy a un gimnasio","Máquinas, poleas y todo lo demás"],["mancuernas","Mancuernas","Fijas o ajustables"],["barra","Barra con discos",""],["rack","Soportes o rack","Para sentadilla y press con barra"],["banco","Banco plano",""],["inclinable","Banco inclinable","Se levanta el respaldo"],["dominadas","Barra de dominadas",""],["kettlebell","Kettlebell",""]];
+let equipo=null; // null = sin configurar (se muestra todo)
+const NEED_GYM=new Set(["fondos-paralelas","hiperextensiones","curl-predicador","elevacion-piernas-colgado","rueda-abdominal"]);
+function reqDe(c){if(!c)return["gym"];const id=c.id,e=c.equipo;if(e==="maquina"||e==="polea"||NEED_GYM.has(id))return["gym"];
+  const r=[];if(e==="mancuernas")r.push("mancuernas");if(e==="barra")r.push("barra");if(e==="kettlebell")r.push("kettlebell");
+  if(/^dominadas/.test(id))r.push("dominadas");
+  if(/inclinado|curl-inclinado/.test(id))r.push("inclinable");
+  else if(/press-banca|press-declinado|press-cerrado|aperturas-mancuernas|pull-over|press-frances|extension-triceps-mancuerna|curl-concentrado|step-up|sentadilla-bulgara|remo-mancuerna|hip-thrust-maquina/.test(id))r.push("banco");
+  if(/sentadilla-barra|sentadilla-frontal|press-banca$|press-inclinado-barra|press-declinado-barra|press-cerrado|press-militar-barra/.test(id))r.push("rack");
+  return r}
+const tieneEq=k=>!equipo||equipo.includes("gym")||equipo.includes(k)||(k==="banco"&&equipo.includes("inclinable"));
+const puedo=c=>reqDe(c).every(k=>k==="gym"?(!equipo||equipo.includes("gym")):tieneEq(k));
+const eqTxt=()=>!equipo?"Sin configurar":equipo.length?EQUIPOS.filter(e=>equipo.includes(e[0])).map(e=>e[1]).join(" · "):"Solo el cuerpo";
+const porMancuerna=ex=>{const c=CATALOGO.find(x=>x.id===(CAT_BY_APP[ex.id]||ex.id));return !!(c&&c.equipo==="mancuernas"&&!/goblet|pull-over|extension-triceps-mancuerna|flexion-lateral/.test(c.id))};
+/* Programas de casa: cada lugar de la rutina tiene opciones en orden de preferencia; se elige la primera que el equipo permite. */
+const OPC={
+ sent:["sentadilla-barra","sentadilla-goblet","sentadilla-sin-peso"],bulg:["sentadilla-bulgara","zancadas","sentadilla-sin-peso"],
+ bisagra:["peso-muerto-rumano","kettlebell-swing","puente-gluteo"],gluteo:["hip-thrust-maquina","puente-gluteo"],
+ pecho:["press-banca","press-banca-mancuernas","flexiones"],pechoInc:["press-inclinado-mancuernas","press-inclinado-barra","flexiones"],
+ remo:["remo-barra","remo-mancuerna-un-brazo","remo-invertido"],remo2:["remo-mancuerna-un-brazo","remo-barra","remo-invertido"],tiron:["dominadas","remo-mancuerna-un-brazo","remo-invertido"],
+ hombro:["press-militar-mancuernas","press-militar-barra","flexiones"],lateral:["elevaciones-laterales","pajaros"],post:["pajaros","remo-invertido"],
+ biceps:["curl-biceps-mancuernas","curl-biceps-barra","curl-martillo"],martillo:["curl-martillo","curl-biceps-mancuernas"],triceps:["extension-triceps-mancuerna","press-frances","patada-triceps","fondos-banco"],
+ core:["plancha","bicho-muerto"],core2:["elevacion-piernas-piso","abdominales-piso"],core3:["plancha-lateral","bicho-muerto"],
+ aperturas:["aperturas-mancuernas","flexiones"],gemelo:["step-up","sentadilla-salto"]};
+function pick(slot,usados){const c=OPC[slot].map(id=>CATALOGO.find(x=>x.id===id)).find(x=>x&&puedo(x)&&!usados.has(x.id))||OPC[slot].map(id=>CATALOGO.find(x=>x.id===id)).find(x=>x&&puedo(x));if(c)usados.add(c.id);return c&&c.id}
+function rutinaCasa(rid,name,day,goal,slots){const u=new Set();const ex=[];slots.forEach(([sl,sets,lo,hi])=>{const id=pick(sl,u);if(id&&!ex.some(e=>e.id===id)){const e=exDeCatalogo(id,sets,lo,hi);const c=CATALOGO.find(x=>x.id===id);if(c&&c.equipo==="mancuernas")e.step=Math.min(e.step||2,2);ex.push(e)}});return{id:rid,name,day,goal,ex}}
+function programasCasa(){return[
+ {id:"casa-fb3",casa:true,nombre:"En casa · full body 3 días",desc:"Todo el cuerpo tres veces por semana con lo que tengas en casa.",nivel:"Principiante",lugar:"Casa",rutinas:[
+  rutinaCasa("cfA","Casa A",1,"Todo el cuerpo",[["sent",3,8,12],["pecho",3,8,12],["remo",3,10,12],["hombro",3,10,12],["biceps",2,10,15],["core",3,30,40]]),
+  rutinaCasa("cfB","Casa B",3,"Todo el cuerpo",[["bisagra",3,8,12],["pechoInc",3,8,12],["tiron",3,8,12],["lateral",3,12,15],["triceps",2,10,15],["core2",3,12,15]]),
+  rutinaCasa("cfC","Casa C",5,"Todo el cuerpo",[["bulg",3,8,12],["gluteo",3,10,12],["pecho",3,10,12],["remo2",3,10,12],["martillo",2,12,15],["core3",3,10,12]])]},
+ {id:"casa-tp4",casa:true,nombre:"En casa · torso / piernas 4 días",desc:"Cuatro días alternando torso y piernas. Ideal con mancuernas, banco y barra.",nivel:"Intermedio",lugar:"Casa",rutinas:[
+  rutinaCasa("ctA","Torso A",1,"Pecho, espalda y brazos",[["pecho",4,6,10],["remo",4,8,10],["hombro",3,8,12],["aperturas",3,10,15],["biceps",3,10,12],["triceps",3,10,12]]),
+  rutinaCasa("ctB","Piernas A",2,"Cuádriceps y core",[["sent",4,6,10],["bulg",3,8,12],["gemelo",3,12,15],["core",3,30,45],["core2",3,12,15]]),
+  rutinaCasa("ctC","Torso B",4,"Espalda, hombros y brazos",[["tiron",4,6,10],["pechoInc",3,8,12],["remo2",3,10,12],["lateral",3,12,15],["post",3,12,15],["martillo",3,10,12]]),
+  rutinaCasa("ctD","Piernas B",5,"Posterior y glúteo",[["bisagra",4,8,10],["gluteo",3,10,12],["bulg",3,10,12],["core3",3,10,12],["core",3,30,45]])]}]}
+const todosProgramas=()=>programasCasa().concat(PROGRAMAS);
 const GRUPOS=[["pecho","Pecho"],["espalda","Espalda"],["hombros","Hombros"],["piernas","Piernas"],["gluteos","Glúteos"],["brazos","Brazos"],["core","Core"],["completo","Completo"]];
 let rutDraft={name:"",day:-1,ex:[]},rosMini=false,rosMiniTxt=false,lastRestEx=null,prs={};
 const e1rm=(w,r)=>r>0&&w>0?w*(1+r/30):0;
@@ -220,10 +258,10 @@ function saveWorkout(mut,msg,quiet){const r=curRoutine();if(!r)return;
   const w={date:wcur,routineId:r.id,sets:JSON.parse(JSON.stringify((workout&&workout.sets)||{})),done:!!(workout&&workout.done),intention:(workout&&workout.intention)||"",offered:!!(workout&&workout.offered),startedAt:(workout&&workout.startedAt)||null,pausedAt:(workout&&workout.pausedAt)||null,pausedMs:(workout&&workout.pausedMs)||0,autoPaused:!!(workout&&workout.autoPaused),summary:(workout&&workout.summary)||null};
   mut(w);workout=w;if(!quiet)render();write(backend.setDoc("workouts/"+wcur,w),msg)}
 const esTiempo=ex=>!!(ex.tiempo||(ex.step===0&&/plancha|seg|hollow|farmer|soga|escalador|mountain/i.test(ex.name)));
-function suggest(ex){const L=loads[ex.id];if(!L||!(L.w>0))return{w:null,why:esTiempo(ex)?"Anotá los segundos que aguantaste con buena forma.":ex.step===0?"Peso corporal: anotá las reps; si agregás lastre, cargalo en kg.":"Primera vez: elegí un peso que te deje 2 reps en el tanque."};
+function suggest(ex){const L=loads[ex.id];if(!L||!(L.w>0))return{w:null,why:esTiempo(ex)?"Anotá los segundos que aguantaste con buena forma.":ex.step===0?"Peso corporal: anotá las reps; si agregás lastre, cargalo en kg.":(porMancuerna(ex)?"Primera vez: elegí el peso de cada mancuerna que te deje 2 reps en el tanque.":"Primera vez: elegí un peso que te deje 2 reps en el tanque.")};
   if(ex.step===0)return{w:L.w,why:"Último registro: "+L.w+"."};
   if(L.hard)return{w:L.w,why:"Mantener "+f1(L.w)+" kg: la última vez una serie costó.",hold:true};
-  if(L.top)return{w:r1(L.w+ex.step),why:"Subís +"+f1(ex.step)+" kg: cumpliste el rango con RIR ≥ 2."};
+  if(L.top)return{w:r1(L.w+ex.step),why:"Subís +"+f1(ex.step)+" kg"+(porMancuerna(ex)?" por mancuerna":"")+": cumpliste el rango con RIR ≥ 2."+(porMancuerna(ex)?" Si no tenés ese peso, usá el más cercano y sumá una repetición por serie.":"")};
   return{w:L.w,why:"Mantener "+f1(L.w)+" kg hasta cumplir el rango en todas las series.",hold:true}}
 function finishWorkout(){const r=curRoutine();if(!r||!workout)return;const nl={...loads};const np=JSON.parse(JSON.stringify(prs||{}));
   if(workout.pausedAt){workout.pausedMs=(workout.pausedMs||0)+(Date.now()-workout.pausedAt);workout.pausedAt=null}const res={dur:sesElapsed(),sets:0,vol:0,ex:[],prs:[]};
@@ -274,7 +312,7 @@ function paintTimer(left){if(timer&&left==null)left=Math.ceil((timer.end-Date.no
   const big=$("#restBig");if(big&&timer)big.textContent=mmss(left);
   const pill=$("#timerpill");if(timer&&(view!=="entreno"||window.scrollY>150)){pill.hidden=false;pill.innerHTML=ic("today")+mmss(left)+" · "+esc(timer.name)}else pill.hidden=true}
 window.addEventListener("scroll",()=>{if(timer)paintTimer()},{passive:true});
-function restCard(){if(!timer)return "";return `<section class="card restcard"><div class="l"><span class="eyebrow">${timer.name==="Descanso"?"Descanso entre series":"Descanso · "+esc(timer.name)}</span><b class="big" id="restBig">${mmss(Math.ceil((timer.end-Date.now())/1000))}</b></div><div class="acts"><button class="chip off" id="rest30">+30 s</button><button class="chip off" id="restSkip">Saltar</button></div></section>`}
+function restCard(){if(!timer)return "";return `<section class="card restcard"><div class="l"><span class="eyebrow">Descanso</span>${timer.name!=="Descanso"?`<small class="rx">${esc(timer.name)}</small>`:""}<b class="big" id="restBig">${mmss(Math.ceil((timer.end-Date.now())/1000))}</b></div><div class="acts"><button class="chip off" id="rest30">+30 s</button><button class="chip off" id="restSkip">Saltar</button></div></section>`}
 /* Rosario compacto para rezar entre series: usa el mismo avance compartido con Daily. */
 function rosMiniHTML(){const act=rosario&&rosario.f===today()?rosario:null;const hk=misteriosHoy();const hecho=(progress.done||{})["rosary:"+today()];
   if(!act||act.fase==="intro"||act.fase==="fin")return `<section class="card rosmini"><img class="cv" src="${ilu(hk)}" alt=""><div class="n"><span class="eyebrow">Santo Rosario</span><b>${esc(MISTERIOS[hk].n)}</b><small>${hecho?"Hoy ya lo rezaste. Podés rezarlo de nuevo.":"Una cuenta por descanso: tocá para pasarla."}</small></div><div class="acts"><button class="iconbtn acc" data-rosempezar="${hk}" aria-label="Empezar">${ic("play")}</button><button class="sm" id="rosMiniX" aria-label="Cerrar">${ic("x")}</button></div></section>`;
@@ -327,7 +365,7 @@ function renderHoy(){
       return `<div><span class="eyebrow">${n}</span><span class="v">${fmt(v)}<small> /${fmt(tg)}</small></span><div class="bar3"><i style="width:${Math.min(100,v/tg*100)}%;background:${over?"var(--over)":col}"></i></div></div>`}).join("")}</div>
   </section>
   <section class="card tudia" aria-label="Tu día"><div class="hd"><span class="eyebrow">Tu día</span><small class="hint">Lo que suma además de comer bien. Tocá cada uno para cargarlo.</small></div>
-    <div class="items">${[["prot","egg"],["pasos","steps"],["sueno","moon"],["agua","drop"],["crea","pill"]].map(([k,i])=>{const D=DIA[k];let val,meta,on,pct;
+    <div class="items">${[["prot","prot"],["pasos","steps"],["sueno","moon"],["agua","drop"],["crea","pill"]].map(([k,i])=>{const D=DIA[k];let val,meta,on,pct;
       if(k==="prot"){val=fmt(tot.p);meta=fmt(t.p)+" g";on=protOk;pct=Math.min(1,tot.p/t.p)}
       else if(D.tick){on=!!ck.crea;val=on?"Tomada":"Pendiente";meta="";pct=on?1:0}
       else{const v=diaVal(k);on=v!=null&&v>=D.meta;val=v!=null?nfmtC(v,D.u):"—";meta=nfmtC(D.meta,D.u)+(D.u==="pasos"?"":" "+D.u);pct=v?Math.min(1,v/D.meta):0}
@@ -377,7 +415,7 @@ function fastTick(){const t=$("#fastT");if(!t)return;const st=fastState();if(!st
 
 function renderEntreno(){
   const r=curRoutine();const weekNo=Math.min(13,Math.max(1,Math.floor(daysBetween(PLAN_START,wcur)/7)+1));
-  const rt=`<div class="rtabs" role="group" aria-label="Rutina">${routines.map(x=>`<button data-rsel="${x.id}" aria-pressed="${!!(r&&r.id===x.id)}">${esc(x.name)}</button>`).join("")}<button class="more" id="openRutinas" aria-label="Biblioteca de rutinas">${ic("plus")}</button></div>`;
+  const rt=`<div class="rtabs scrollx" role="group" aria-label="Rutina">${routines.map(x=>`<button data-rsel="${x.id}" aria-pressed="${!!(r&&r.id===x.id)}">${esc(x.name)}</button>`).join("")}<button class="more" id="openRutinas" aria-label="Biblioteca de rutinas">${ic("plus")}</button></div>`;
   const nav=`<div class="r"><button class="iconbtn inset" id="wprev" aria-label="Día anterior">${ic("left")}</button><button class="iconbtn inset" id="wnext" aria-label="Día siguiente">${ic("right")}</button>${wcur!==today()?`<button class="iconbtn inset" id="wtoday" aria-label="Ir a hoy">${ic("today")}</button>`:""}</div>`;
   const rezar=`<button class="chip ${rosMini?"":"off"}" id="rosMiniT" aria-pressed="${rosMini}">${ic("rosary")}Rezar</button>`;
   if(!r)return `<div class="top"><div class="l"><span class="eyebrow fecha">${esc(fecha(wcur))} · semana ${weekNo} de 13</span><h1 class="title">Descanso</h1></div>${nav}</div><p class="hint">Hoy no hay rutina asignada. Elegí una si querés entrenar igual, o armá la tuya con el +.</p>${rt}<div class="wacts">${rezar}</div>${rosMini?rosMiniHTML():""}`;
@@ -391,13 +429,13 @@ function renderEntreno(){
   const nsets=r.ex.reduce((a,ex)=>a+wsets(ex.id).filter(s=>s.r>0).length,0),tsets=r.ex.reduce((a,ex)=>a+ex.sets,0);
   const cur_track=tracks[trackIdx];
   const sesion=done?`<section class="card wsession done"><div class="l"><span class="eyebrow">Entreno terminado</span><b>${workout.summary?durTxt(workout.summary.dur):"Listo"}</b><small class="hint">${workout.summary?workout.summary.sets+" series · "+fmt(workout.summary.vol)+" kg":""}</small></div><button class="chip off" id="verResumen">${ic("flag")}Resumen</button></section>`
-    :started?`<section class="card wsession${workout.pausedAt?" paused":""}"><div class="l"><span class="eyebrow">${workout.pausedAt?"En pausa":"En curso"}</span><b id="sesT">${dur(sesElapsed())}</b><small class="hint">${nsets} de ${tsets} series${workout.autoPaused?" · quedó abierto, lo frené en 3 h":""}</small></div><div class="acts"><button class="iconbtn ${workout.pausedAt?"acc":"inset"}" id="pausar" aria-label="${workout.pausedAt?"Seguir":"Pausar"}">${ic(workout.pausedAt?"play":"pause")}</button><button class="primary ink" id="finish">${ic("flag")}Terminar</button></div></section>`
+    :started?`<section class="card wsession${workout.pausedAt?" paused":""}"><div class="l"><span class="eyebrow">${workout.pausedAt?"En pausa":"En curso"}</span><b id="sesT">${dur(sesElapsed())}</b><small class="hint">${nsets} de ${tsets} series${workout.autoPaused?" · lo frené en 3 h":""}</small></div><div class="acts"><button class="iconbtn ${workout.pausedAt?"acc":"inset"}" id="pausar" aria-label="${workout.pausedAt?"Seguir":"Pausar"}">${ic(workout.pausedAt?"play":"pause")}</button><button class="primary ink" id="finish">${ic("flag")}Terminar</button></div></section>`
     :`<button class="primary" id="comenzar">${ic("play")}Comenzar entrenamiento</button>`;
   return `
   <div class="top"><div class="l"><span class="eyebrow fecha">${esc(fecha(wcur))} · semana ${weekNo}</span><h1 class="title">${esc(r.name)}</h1><small class="hint">${esc(r.goal)} · RIR 2${intention?" · Por "+esc(intention):""}</small></div>
     <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><button class="ring" id="ringBtn" aria-label="${timer?"Parar el descanso":"Empezar un descanso"}"><svg viewBox="0 0 68 68" aria-hidden="true"><circle cx="34" cy="34" r="29" fill="none" stroke="var(--track)" stroke-width="5"/><circle class="p" cx="34" cy="34" r="29" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="182" stroke-dashoffset="182"/></svg><b>0:00</b></button><span class="eyebrow rl" style="font-size:10px">Descanso</span></div></div>
-  <div class="top" style="align-items:center">${rt}${nav}</div>
-  <div class="wacts"><button class="chip off" id="wlater">${ic("out")}${enCurso?"Seguir después":"Salir"}</button><button class="chip off" id="openRutinas">${ic("edit")}Cambiar</button>${rezar}</div>
+  <div class="rrow">${rt}${nav}</div>
+  <div class="wacts"><button class="chip off" id="wlater" aria-label="${enCurso?"Salir y seguir después":"Salir"}">${ic("out")}Salir</button><button class="chip off" id="openRutinas">${ic("edit")}Rutinas</button>${rezar}</div>
   ${sesion}${restCard()}${rosMini?rosMiniHTML():""}
   ${r.ex.map(ex=>{const ss=wsets(ex.id);const sg=suggest(ex);const L=loads[ex.id];const rows=[];
     for(let i=0;i<Math.max(ex.sets,ss.length);i++){const s=ss[i]||{};const prev=ss[i-1]||{};const w=s.w!=null?s.w:(prev.w!=null?prev.w:(sg.w!=null?sg.w:""));const done=s.r>0;
@@ -409,8 +447,8 @@ function renderEntreno(){
         <button class="mini ok" data-ok="${ex.id}" data-i="${i}" aria-pressed="${done}" aria-label="Serie lista">${ic("check")}</button>`)}
     const il=iluId(ex);const live=!!(timer&&timer.exId===ex.id);const pr=prs[ex.id];
     return `<section class="ex"><div class="hd"><div class="ttl">${il?`<button class="exthumb${live?" live":""}" data-ficha="${ex.id}" aria-label="Ver ${esc(ex.name)}">${iluHTML(il)}</button>`:""}<div><b>${esc(ex.name)}${pr&&pr.w>0?` <span class="prtag" title="Récord">${f1(pr.w)}</span>`:""}</b><small>${ex.sets} × ${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}${esTiempo(ex)?" s":""} · descanso ${mmss(restOf(ex))}</small></div></div>
-      <div class="sug${sg.hold?" hold":""}"><span class="eyebrow">Sugerido</span><span class="v">${sg.w!=null?f1(sg.w):"—"}<small> ${esTiempo(ex)?"s":"kg"}</small></span></div></div>
-      <div class="sets"><span></span><span class="th">${esTiempo(ex)?"seg":"kg"}</span><span class="th">reps</span><span class="th">rir</span><span></span><span></span>${rows.join("")}</div>
+      <div class="sug${sg.hold?" hold":""}"><span class="eyebrow">Sugerido</span>${sg.w!=null?`<span class="v">${f1(sg.w)}<small> ${esTiempo(ex)?"s":porMancuerna(ex)?"kg c/u":"kg"}</small></span>`:`<span class="v vacio">${esTiempo(ex)?"Anotá":"Elegí"}</span>`}</div></div>
+      <div class="sets"><span></span><span class="th">${esTiempo(ex)?"seg":porMancuerna(ex)?"kg c/u":"kg"}</span><span class="th">reps</span><span class="th">rir</span><span></span><span></span>${rows.join("")}</div>
       <div class="next">${esc(sg.why)}${L?" Última: "+f1(L.w)+" × "+(L.reps||[]).join("/")+".":""}</div></section>`}).join("")}
   <button class="ghost g" id="addToRoutine" style="justify-content:center">${ic("plus")}Agregar ejercicio</button>
   ${started&&!done?`<button class="primary" id="finish">${ic("flag")}Terminar</button>`:""}
@@ -437,6 +475,11 @@ function renderCuerpo(){
   const bars=W.map((v,i)=>{const x=2+i*25;if(v==null)return `<rect x="${x}" y="${Y(hasData?vals[vals.length-1]:goal+5).toFixed(1)}" width="20" height="${(146-Y(hasData?vals[vals.length-1]:goal+5)).toFixed(1)}" rx="6" fill="none" stroke="var(--track)" stroke-width="1" stroke-dasharray="3 3"/>`;
     const y=Y(v);return `<rect x="${x}" y="${y.toFixed(1)}" width="20" height="${(146-y).toFixed(1)}" rx="6" fill="${i===curW?"var(--accent)":"var(--track)"}"/><text x="${x+10}" y="${(y-8).toFixed(1)}" text-anchor="middle" fill="${i===curW?"var(--accent)":"var(--muted)"}" font-size="10" font-weight="${i===curW?600:400}" font-family="Bricolage Grotesque, sans-serif">${f1(v)}</text>`}).join("");
   const gy=Y(goal);
+  if(!rows.length)return `<div class="top"><div class="l"><span class="eyebrow fecha">Semana ${weekNo} de 13 · día ${planDay} de 90</span><h1 class="title">Cuerpo</h1></div></div>
+  <section class="card vacio-card"><span class="ic">${ic("scale")}</span><b>Cargá tu primer peso</b><p class="hint">Pesate en ayunas, después del baño. La app saca el promedio de 7 días y te dice si hay que ajustar las calorías: el número de un día solo no dice nada.</p></section>
+  <section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Registrar hoy</span>
+    <div style="display:grid;grid-template-columns:1fr 1fr 48px;gap:8px;align-items:center"><input type="number" class="inset c" id="bw" inputmode="decimal" step="0.1" placeholder="Peso (kg)" aria-label="Peso en kg"><input type="number" class="inset c" id="bwa" inputmode="decimal" step="0.5" placeholder="Cintura (cm)" aria-label="Cintura en cm"><button class="iconbtn acc" id="saveBody" style="width:48px;height:48px" aria-label="Guardar">${ic("check")}</button></div>
+    <p class="hint">La cintura, una vez por semana a la altura del ombligo. Meta de peso: ${f1(goal)} kg (la cambiás en Yo).</p></section>`;
   return `
   <div class="top"><div class="l"><span class="eyebrow">Semana ${weekNo} de 13 · día ${planDay} de 90</span><h1 class="title">Cuerpo</h1></div>${lost!=null?`<span class="chip">${lost<=0?"":"+"}${f1(lost)} kg</span>`:""}</div>
   <section class="card">
@@ -489,6 +532,7 @@ function renderMas(){
     <div class="r"><button class="ghost" type="submit">${ic("check")}Guardar</button><button class="ghost g" type="button" id="recalc">${ic("scale")}Recalcular</button></div></form></section>
   <section class="card tight list"><div class="row"><span class="eyebrow">Favoritos (${combos.length})</span></div>
     ${combos.length?combos.map(c=>`<div class="row"><div class="n"><b>${esc(c.name)}</b><small>${MEALS.find(m=>m[0]===c.meal)[1]} · ${c.items.length} ítems · ${fmt(totals(c.items).kcal)} kcal</small></div><button class="sm" data-delcombo="${c.id}" aria-label="Borrar favorito">${ic("trash")}</button></div>`).join(""):`<p class="empty">Guardá una comida con la estrella en Hoy.</p>`}</section>
+  ${eqCardHTML()}
   <section class="card tight list"><div class="row"><span class="eyebrow">Rutinas</span><button class="ghost" id="openRutinas" style="height:32px;font-size:12px">${ic("plus")}Biblioteca</button></div>
     ${routines.map(r=>`<div class="row" style="flex-direction:column;align-items:stretch;gap:0"><div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0 8px"><b style="font-weight:600">${esc(r.name)}</b><small class="hint">${r.day>=0?DOWS[r.day]:"libre"} · ${esc(r.goal)}</small></div>
       ${r.ex.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)"><div class="n"><b style="font-weight:500;font-size:14px">${esc(e.name)}</b><small>${e.sets} × ${e.lo}${e.hi!==e.lo?"–"+e.hi:""} · +${f1(e.step)} kg · ${mmss(restOf(e))}</small></div><button class="sm" data-edex="${r.id}/${e.id}" aria-label="Editar ${esc(e.name)}">${ic("edit")}</button></div>`).join("")}</div>`).join("")}</section>
@@ -639,6 +683,11 @@ function renderSheetBody(){
       <section class="card tight list">${R.ex.map(e=>`<div class="row"><div class="n"><b style="font-weight:500">${esc(e.name)}${e.pr==="peso"||e.pr==="1RM"?' <span class="prtag">Récord</span>':e.pr==="primero"?' <span class="prtag muted">Primera marca</span>':""}</b><small>${e.sets} ${e.sets===1?"serie":"series"}${e.w>0?" · mejor "+f1(e.w)+" kg × "+e.r:" · "+e.r+" reps"}</small></div>${e.vol>0?`<span class="k">${fmt(e.vol)}<small>kg</small></span>`:""}</div>`).join("")}</section>
       <p class="hint" style="text-align:center">Nivel ${L.i+1} · ${esc(L.name)}${L.to?" · "+fmt(L.to-(progress.xp||0))+" XP para "+esc(LEVELS[L.i+1][0]):""}</p>
       <button class="primary" id="x">${ic("check")}Amén</button></div>`;
+  } else if(sheet.view==="equipo"){const sel=sheet.sel||(sheet.sel=new Set(equipo||[]));
+    el.innerHTML=`<h3>Mi equipo${X}</h3><div class="scroll" style="display:flex;flex-direction:column;gap:12px"><p class="dialead">Marcá lo que tenés. La app te muestra los ejercicios que podés hacer y arma los programas de casa con eso.</p>
+      <div class="eqlist">${EQUIPOS.map(([k,n,d])=>`<button class="eqit" data-eq="${k}" aria-pressed="${sel.has(k)}"><span class="ck">${ic("check")}</span><span class="n"><b>${esc(n)}</b>${d?`<small>${esc(d)}</small>`:""}</span></button>`).join("")}</div>
+      <p class="hint">Si no marcás nada, quedan los ejercicios con el peso del cuerpo.</p>
+      <button class="primary" id="eqSave">${ic("check")}Guardar</button></div>`;
   } else if(sheet.view==="dia"){const k=sheet.k,D=DIA[k];const tg=((targets&&targets[dayType()])||DEFAULT_TARGETS[dayType()]);
     if(k==="prot"){const tp=totals(entries()).p;el.innerHTML=`<h3>${D.n}${X}</h3><p class="dialead">${esc(D.why)}</p><div class="preview"><div><b>${fmt(tp)}</b><span>llevás (g)</span></div><div><b>${fmt(tg.p)}</b><span>meta (g)</span></div><div><b>${fmt(Math.max(0,tg.p-tp))}</b><span>faltan</span></div></div><button class="primary ink" id="x">Entendido</button>`}
     else if(D.tick){const on=!!checks().crea;el.innerHTML=`<h3>${D.n}${X}</h3><p class="dialead">${esc(D.why)}</p><button class="primary${on?" ink":""}" data-check="crea">${ic("check")}${on?"Desmarcar":"La tomé"}</button>`}
@@ -651,7 +700,7 @@ function renderSheetBody(){
   } else if(sheet.view==="fastdone"){const R=sheet.rec;const L=levelOf(progress.xp||0);const fr=FAST_FRASES[fasts.length%FAST_FRASES.length];
     el.innerHTML=`<div class="resumen"><span class="eyebrow">Ayuno cumplido</span><h2 class="fh" style="margin:0">Bien hecho.</h2>
       <div class="preview"><div><b>${hms(R.ms).slice(0,-3)}</b><span>horas</span></div><div><b>${esc(R.plan)}</b><span>plan</span></div><div><b>${sheet.xp?"+"+sheet.xp:"—"}</b><span>XP</span></div><div><b>${fasts.filter(f=>f.done).length}</b><span>cumplidos</span></div></div>
-      <p class="rmed" style="text-align:center;margin:4px 0">${esc(fr)}</p>
+      ${(()=>{const m=fr.match(/^(.*»)\s*\((.*)\)$/);return `<p class="rmed" style="text-align:center;margin:4px 0">${esc(m?m[1]:fr)}</p>${m?`<p class="rcita" style="text-align:center;margin:0">${esc(m[2])}</p>`:""}`})()}
       <p class="hint" style="text-align:center">Comé con calma y sin apuro. Nivel ${L.i+1} · ${esc(L.name)}.</p>
       <button class="primary" id="x">${ic("check")}Amén</button></div>`;
   } else if(sheet.view==="fastedit"){const d=new Date(fast&&fast.start||Date.now());const v=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes());
@@ -674,7 +723,12 @@ function renderSheetBody(){
 function exTxt(e){return e.sets+" × "+e.lo+(e.hi!==e.lo?"–"+e.hi:"")+(esTiempo(e)?" s":"")+" · "+mmss(restOf(e))}
 function catListHTML(){const tab=sheet.tab||"mias";const q=norm(sheet.q||"");const g=sheet.g||"";const attr=tab==="cat"?"data-cadd":"data-radd";
   const list=CATALOGO.filter(c=>(!g||c.grupo===g)&&(!q||q.split(/\s+/).every(w=>norm(c.nombre).includes(w))));
-  return list.map(c=>`<button class="food" ${attr}="${c.id}" ${tab==="cat"&&sheet.catSel===c.id?'aria-pressed="true"':""}>${ILUS.has(c.id)?iluHTML(c.id,"mini"):`<span class="mini"></span>`}<span><b>${esc(c.nombre)}</b><small>${esc(GRUPOS.find(x=>x[0]===c.grupo)[1])} · ${esc(c.equipo.replace("-"," "))}</small></span>${ic("plus")}</button>`).join("")||`<p class="empty">No hay coincidencias.</p>`}
+  const item=(c,dim)=>`<button class="food${dim?" dim":""}" ${attr}="${c.id}" ${tab==="cat"&&sheet.catSel===c.id?'aria-pressed="true"':""}>${ILUS.has(c.id)?iluHTML(c.id,"mini"):`<span class="mini"></span>`}<span><b>${esc(c.nombre)}</b><small>${esc(GRUPOS.find(x=>x[0]===c.grupo)[1])} · ${esc(c.equipo.replace("-"," "))}${dim?" · necesita "+esc(reqDe(c).filter(k=>k==="gym"?!(equipo&&equipo.includes("gym")):!tieneEq(k)).map(k=>k==="gym"?"gimnasio":(EQUIPOS.find(e=>e[0]===k)||[,k])[1].toLowerCase()).join(", ")):""}</small></span>${ic("plus")}</button>`;
+  if(!list.length)return `<p class="empty">No hay coincidencias.</p>`;
+  if(!equipo)return list.map(c=>item(c)).join("");
+  const si=list.filter(puedo),no=list.filter(c=>!puedo(c));
+  return si.map(c=>item(c)).join("")+(no.length?`<p class="sect" style="margin:14px 0 4px">Con otro equipo</p>`+no.map(c=>item(c,true)).join(""):"")}
+function eqCardHTML(compacto){return `<button class="card eqcard" data-eqopen="1"><span class="ic">${ic("gym")}</span><span class="n"><b>Mi equipo</b><small>${esc(eqTxt())}</small></span><span class="lnk">${equipo?"Editar":"Configurar"}</span></button>`}
 function shRutinas(){const tab=sheet.tab||"mias";const target=sheet.target?routines.find(x=>x.id===sheet.target):null;
   const tabs=`<div class="seg" style="margin-bottom:12px"><button data-rtab="mias" aria-pressed="${tab==="mias"}">Mías</button><button data-rtab="bib" aria-pressed="${tab==="bib"}">Programas</button><button data-rtab="cat" aria-pressed="${tab==="cat"||tab==="pick"}">${tab==="pick"?"Agregar":"Catálogo"}</button><button data-rtab="nueva" aria-pressed="${tab==="nueva"}">Nueva</button></div>`;
   let body="";
@@ -682,13 +736,14 @@ function shRutinas(){const tab=sheet.tab||"mias";const target=sheet.target?routi
     body=`<section class="card tight list">${routines.map(x=>`<div class="row" style="flex-direction:column;align-items:stretch;gap:0"><div class="row" style="padding:4px 0 6px"><button class="food" data-ruse="${x.id}" style="border:0;padding:0;flex:1"><b style="${cr&&cr.id===x.id?"color:var(--accent)":""}">${esc(x.name)}</b><small>${x.day>=0&&x.day!=null?DOWS[x.day]:"sin día"} · ${esc(x.goal||"")} · ${x.ex.length} ejercicios</small></button><div class="acts"><button class="sm" data-addex="${x.id}" aria-label="Agregar ejercicio">${ic("plus")}</button><button class="sm" data-rdelr="${x.id}" aria-label="Borrar rutina">${sheet.confirm==="r:"+x.id?ic("check"):ic("trash")}</button></div></div>
       ${x.ex.map(e=>`<div class="exrow"><div class="n"><b>${esc(e.name)}</b><small>${exTxt(e)}</small></div><button class="sm" data-edex="${x.id}/${e.id}" aria-label="Editar">${ic("edit")}</button><button class="sm" data-delex="${x.id}/${e.id}" aria-label="Quitar">${sheet.confirm==="e:"+x.id+"/"+e.id?ic("check"):ic("x")}</button></div>`).join("")}</div>`).join("")||`<p class="empty">No tenés rutinas. Elegí un programa de la biblioteca o armá una nueva.</p>`}</section>
       <p class="hint">Tocá el nombre para entrenarla hoy. El día asignado es el que aparece solo al abrir Entreno.</p><button class="ghost g" id="resetR">${ic("copy")}Restaurar las rutinas base</button>`}
-  else if(tab==="bib"){body=`<p class="hint">Un programa reemplaza tus rutinas actuales (las cargas registradas se conservan).</p><div class="progs">${PROGRAMAS.map(p=>`<div class="card prog"><div class="n"><b>${esc(p.nombre)}</b><small>${esc(p.desc)}</small><span class="r" style="margin-top:6px"><span class="chip muted" style="height:24px;font-size:11px">${p.nivel}</span><span class="chip muted" style="height:24px;font-size:11px">${p.lugar}</span><span class="chip muted" style="height:24px;font-size:11px">${p.rutinas.length} días</span></span></div>
+  else if(tab==="bib"){const pr=routines.find(r=>r.prog);const upd=pr&&equipo&&pr.eq!==equipo.slice().sort().join(",")?todosProgramas().find(x=>x.id===pr.prog):null;
+    body=`${eqCardHTML(true)}${upd?`<div class="card pad prbox upd">${ic("gym")}<div style="flex:1"><b>Tu equipo cambió</b><small>Actualizá «${esc(upd.nombre)}» para usar lo nuevo. Tus cargas se conservan.</small></div><button class="chip" data-puse="${upd.id}">${sheet.confirm==="p:"+upd.id?"Confirmar":"Actualizar"}</button></div>`:""}<p class="hint">Un programa reemplaza tus rutinas actuales (las cargas registradas se conservan). Los de casa se arman con tu equipo.</p><div class="progs">${todosProgramas().map(p=>`<div class="card prog"><div class="n"><b>${esc(p.nombre)}</b><small>${esc(p.desc)}</small><span class="ptags"><span class="chip muted sm">${p.nivel}</span><span class="chip ${p.casa?"":"muted "}sm">${p.lugar}</span><span class="chip muted sm">${p.rutinas.length} días</span></span></div>
       <details><summary class="hint">Ver ejercicios</summary>${p.rutinas.map(x=>`<p class="hint" style="margin:6px 0 0"><b style="color:var(--ink);font-weight:600">${esc(x.name)}</b> · ${x.ex.map(e=>esc(e.name)).join(", ")}</p>`).join("")}</details>
       <button class="primary ink" data-puse="${p.id}">${sheet.confirm==="p:"+p.id?ic("check")+"Confirmar":ic("check")+"Usar"}</button></div>`).join("")}</div>`}
   else{const d=rutDraft;const g=sheet.g||"";
     const sel=tab==="cat"&&sheet.catSel?CATALOGO.find(c=>c.id===sheet.catSel):null;
     const head=tab==="pick"?`<p class="hint">Agregás a <b style="color:var(--ink)">${esc(target?target.name:"")}</b>. Tocá un ejercicio y queda guardado.</p>`:
-      tab==="cat"?(sel?`<section class="card pad catsel"><div class="r" style="align-items:center;gap:12px">${ILUS.has(sel.id)?iluHTML(sel.id,"mini"):""}<div class="n" style="flex:1"><b>${esc(sel.nombre)}</b><small class="hint">¿A qué rutina lo agregás?</small></div><button class="sm" data-cadd="" aria-label="Cancelar">${ic("x")}</button></div><div class="chips" style="margin-top:10px">${routines.map(x=>`<button data-cto="${x.id}" ${x.ex.some(e=>e.id===sel.id)?'aria-pressed="true"':""}>${esc(x.name)}</button>`).join("")}</div></section>`:`<p class="hint">Todos los ejercicios, ${CATALOGO.length}. Tocá uno para agregarlo a una rutina tuya.</p>`):
+      tab==="cat"?(sel?`<section class="card pad catsel"><div class="cs-hd">${ILUS.has(sel.id)?iluHTML(sel.id,"mini"):""}<div class="n"><b>${esc(sel.nombre)}</b><small class="hint">¿A qué rutina lo agregás?</small></div><button class="iconbtn ghost" data-cadd="" aria-label="Cancelar">${ic("x")}</button></div><div class="chips" style="margin-top:10px">${routines.map(x=>`<button data-cto="${x.id}" ${x.ex.some(e=>e.id===sel.id)?'aria-pressed="true"':""}>${esc(x.name)}</button>`).join("")}</div></section>`:`${eqCardHTML(true)}<p class="hint">Todos los ejercicios, ${CATALOGO.length}. Tocá uno para agregarlo a una rutina tuya; arriba, los que podés hacer con tu equipo.</p>`):
       `<label class="f" for="rutName">Nombre<input class="inset" type="text" id="rutName" value="${esc(d.name)}" placeholder="Pecho y brazos" autocomplete="off"></label>
       <span class="eyebrow">Día</span><div class="chips">${[[-1,"Libre"],[1,"Lun"],[2,"Mar"],[3,"Mié"],[4,"Jue"],[5,"Vie"],[6,"Sáb"],[0,"Dom"]].map(([v,l])=>`<button data-rday="${v}" aria-pressed="${d.day===v}">${l}</button>`).join("")}</div>
       <section class="card tight list"><div class="row"><span class="eyebrow">Ejercicios (${d.ex.length})</span></div>${d.ex.map((e,k)=>`<div class="exrow"><div class="n"><b>${esc(e.name)}</b><small>${exTxt(e)}</small></div><button class="sm" data-rrm="${k}" aria-label="Quitar">${ic("x")}</button></div>`).join("")||`<p class="empty">Elegí abajo los ejercicios. Después podés ajustar series y descanso con el lápiz.</p>`}</section>
@@ -799,9 +854,9 @@ function rosarySteps(d){const k=mysteriesFor(d);const S=[{t:"Señal de la cruz",
 /* Escuchar es una pestaña (no un panel): música propia y el Rosario, sin animaciones que molesten en el gym. */
 function renderListen(){const t=tracks[trackIdx];const canUp=!!backend;const hk=misteriosHoy();
   return `<div class="top"><div class="l"><span class="eyebrow">Música y Rosario</span><h1 class="title">Escuchar</h1></div></div>
-    <section class="card" style="display:flex;flex-direction:column;gap:14px"><div class="top"><div class="l"><span class="eyebrow">${t?(playing?"Sonando":"En pausa"):"Sin pistas"}</span><b style="font-size:22px;font-weight:500;line-height:1.1">${t?esc(t.name):"Tu música"}</b><small class="hint">${t?"Pista "+(trackIdx+1)+" de "+tracks.length:"Todavía no agregaste ninguna pista."}</small></div><span class="iconbtn inset" style="border-radius:12px;color:var(--accent)" aria-hidden="true">${ic("music")}</span></div>
+    ${!t?`<section class="card vacio-card"><span class="ic">${ic("music")}</span><b>Agregá tu primera pista</b><p class="hint">Tu música para entrenar, guardada en tu cuenta. Subí un archivo o pegá un enlace acá abajo.</p></section>`:`<section class="card" style="display:flex;flex-direction:column;gap:14px"><div class="top"><div class="l"><span class="eyebrow">${playing?"Sonando":"En pausa"}</span><b style="font-size:22px;font-weight:500;line-height:1.1">${t?esc(t.name):"Tu música"}</b><small class="hint">${t?"Pista "+(trackIdx+1)+" de "+tracks.length:"Todavía no agregaste ninguna pista."}</small></div><span class="iconbtn inset" style="border-radius:12px;color:var(--accent)" aria-hidden="true">${ic("music")}</span></div>
       <div class="bar" style="height:4px"><i id="pbar" style="width:${player.duration?player.currentTime/player.duration*100:0}%"></i></div>
-      <div style="display:flex;justify-content:center;gap:18px;align-items:center"><button class="iconbtn" data-tprev="1" aria-label="Anterior" ${tracks.length?"":"disabled"}>${ic("prev")}</button><button class="iconbtn acc" data-pp="1" style="width:60px;height:60px" aria-label="${playing?"Pausar":"Reproducir"}" ${tracks.length?"":"disabled"}>${ic(playing?"pause":"play")}</button><button class="iconbtn" data-tnext="1" aria-label="Siguiente" ${tracks.length?"":"disabled"}>${ic("next")}</button></div></section>
+      <div style="display:flex;justify-content:center;gap:18px;align-items:center"><button class="iconbtn" data-tprev="1" aria-label="Anterior" ${tracks.length?"":"disabled"}>${ic("prev")}</button><button class="iconbtn acc" data-pp="1" style="width:60px;height:60px" aria-label="${playing?"Pausar":"Reproducir"}" ${tracks.length?"":"disabled"}>${ic(playing?"pause":"play")}</button><button class="iconbtn" data-tnext="1" aria-label="Siguiente" ${tracks.length?"":"disabled"}>${ic("next")}</button></div></section>`}
     ${tracks.length?`<section class="card tight list">${tracks.map((x,i)=>`<div class="row"><button class="food" data-tsel="${i}" style="border:0;padding:0;flex:1"><b style="${i===trackIdx?"color:var(--accent);font-weight:600":""}">${esc(x.name)}</b></button><button class="sm" data-tdel="${x.id}" aria-label="Borrar pista">${listenConfirm===x.id?ic("check"):ic("trash")}</button></div>`).join("")}</section>`:""}
     <section class="card pad agregar"><span class="eyebrow">Agregar pista</span>
       ${canUp?`<label class="ghost g" for="tfile">${ic("upload")}Subir archivo<input id="tfile" type="file" accept="audio/*,video/mp4,.m4a,.mp3,.wav,.ogg" hidden></label><p class="hint">Un .mp3 o .m4a tuyo. Queda guardado en tu cuenta.</p>`:``}
@@ -835,13 +890,17 @@ document.addEventListener("click",e=>{
   if(b.id==="openRutinas"){rutDraft={name:"",day:-1,ex:[]};openSheet({view:"rutinas",tab:"mias"});return}
   if(b.id==="addToRoutine"){const r=curRoutine();if(!r)return;rutDraft={name:"",day:-1,ex:[]};openSheet({view:"rutinas",tab:"pick",target:r.id,q:""});return}
   if(d.rtab){sheet.tab=d.rtab;sheet.target=null;sheet.confirm=null;sheet.catSel=null;renderSheetNow();return}
+  if(d.eqopen){const back=sheet&&sheet.view==="rutinas"?{tab:sheet.tab}:null;openSheet({view:"equipo",back});return}
+  if(d.eq){const k=d.eq;sheet.sel.has(k)?sheet.sel.delete(k):sheet.sel.add(k);b.setAttribute("aria-pressed",sheet.sel.has(k));return}
+  if(b.id==="eqSave"){equipo=[...sheet.sel];write(backend.setDoc("settings/equipo",{list:equipo}),"Equipo guardado");const pr=routines.find(r=>r.prog);if(pr&&pr.eq!==equipo.slice().sort().join(","))setTimeout(()=>toast("Tu programa de casa se puede actualizar: Rutinas → Programas"),2200);const back=sheet.back;if(back){openSheet({view:"rutinas",tab:back.tab})}else closeSheet();render();return}
   if(d.cadd!==undefined){sheet.catSel=d.cadd||null;renderSheetNow();if(sheet.catSel){const sc=$("#sheetIn .scroll");if(sc)sc.scrollTop=0}return}
   if(d.cto){const rr=routines.find(x=>x.id===d.cto);const e=exDeCatalogo(sheet.catSel);if(!rr||!e)return;if(rr.ex.some(x=>x.id===e.id))return toast("Ya está en "+rr.name);rr.ex.push(e);saveRoutines("Agregado a "+rr.name);sheet.catSel=null;renderSheetNow();render();return}
   if(d.ruse){closeSheet();usarRutina(d.ruse);return}
   if(d.rdelr){if(sheet.confirm==="r:"+d.rdelr){sheet.confirm=null;routines=routines.filter(x=>x.id!==d.rdelr);if(routineSel===d.rdelr)routineSel=null;saveRoutines("Rutina borrada");renderSheetNow();render()}else{sheet.confirm="r:"+d.rdelr;renderSheetNow()}return}
   if(d.delex){if(sheet.confirm==="e:"+d.delex){sheet.confirm=null;const[rid,eid]=d.delex.split("/");const rr=routines.find(x=>x.id===rid);if(rr){rr.ex=rr.ex.filter(x=>x.id!==eid);saveRoutines("Quitado")}renderSheetNow();render()}else{sheet.confirm="e:"+d.delex;renderSheetNow()}return}
   if(d.addex){sheet.tab="pick";sheet.target=d.addex;sheet.q="";renderSheetNow();return}
-  if(d.puse){if(sheet.confirm==="p:"+d.puse){sheet.confirm=null;const p=PROGRAMAS.find(x=>x.id===d.puse);routines=JSON.parse(JSON.stringify(p.rutinas));saveRoutines("Programa cargado: "+p.nombre);closeSheet();usarRutina(((routineFor(wcur)||routines[0])||{}).id)}else{sheet.confirm="p:"+d.puse;renderSheetNow()}return}
+  if(d.puse){const pp=todosProgramas().find(x=>x.id===d.puse);if(pp&&pp.casa&&!equipo){openSheet({view:"equipo",back:{tab:"bib"}});toast("Primero contá qué equipo tenés");return}
+    if(sheet.confirm==="p:"+d.puse){sheet.confirm=null;const p=pp;routines=JSON.parse(JSON.stringify(p.rutinas)).map(r=>p.casa?{...r,prog:p.id,eq:(equipo||[]).slice().sort().join(",")}:r);saveRoutines("Programa cargado: "+p.nombre);closeSheet();usarRutina(((routineFor(wcur)||routines[0])||{}).id)}else{sheet.confirm="p:"+d.puse;renderSheetNow()}return}
   if(d.rg!==undefined&&sheet&&sheet.view==="rutinas"){sheet.g=d.rg;renderSheetNow();return}
   if(d.rday){rutDraft.day=+d.rday;renderSheetNow();return}
   if(d.rrm){rutDraft.ex.splice(+d.rrm,1);renderSheetNow();return}
@@ -986,13 +1045,14 @@ function startSession(u,local){
   w(()=>backend.watchDoc("settings/progress",v=>{if(v)progress={xp:0,counts:{},days:[],best:0,badges:{},done:{},...v};if(view==="hoy"||view==="mas")render()}));
   w(()=>backend.watchDoc("settings/plus",v=>{plus=v||null;if(view==="hoy"||view==="mas")render()}));
   w(()=>backend.watchDoc("settings/fast",v=>{fast=v||null;if(view==="hoy")render()}));
+  w(()=>backend.watchDoc("settings/equipo",v=>{equipo=v&&Array.isArray(v.list)?v.list:null;if(sheet&&sheet.view==="rutinas")renderSheetNow();if(view==="mas")render()}));
   w(()=>backend.watchDoc("settings/fasts",v=>{fasts=(v&&v.list)||[];if(view==="mas")render()}));
   w(()=>backend.watchDoc("daily_settings/profile",v=>{dprofile=v||{};pintarPersonajes()}));
   w(()=>backend.watchDoc("daily_settings/rosario",v=>{const nv=v||null;if(JSON.stringify(nv)===JSON.stringify(rosario))return;rosario=nv;if(sheet&&sheet.view==="rosario")renderSheetNow();else if(view==="entreno"&&rosMini)rosMiniRefresh()}));
   if(!local&&delEquipo()&&!(plus&&plus.active))backend.setDoc("settings/plus",plusDoc({source:"team"}));
   ready=true;render();openDay(cur);openWorkout(wcur);
 }
-function endSession(){user=null;backend=null;ready=false;unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];profile=null;progress={xp:0,counts:{},days:[],best:0,badges:{}};plus=null;fast=null;fasts=[];dprofile=null;rosario=null;rosMini=false;lastRestEx=null;anims.forEach(a=>a.stop());anims=[];foods=[];userFoods=[];combos=[];recipes=[];bodyRows=[];tracks=[];loads={};prs={};intents=[];day=null;workout=null;targets=DEFAULT_TARGETS;routines=DEFAULT_ROUTINES;closeSheet();renderLogin()}
+function endSession(){user=null;backend=null;ready=false;unsubs.forEach(f=>{try{f()}catch(e){}});unsubs=[];profile=null;progress={xp:0,counts:{},days:[],best:0,badges:{}};plus=null;fast=null;fasts=[];equipo=null;dprofile=null;rosario=null;rosMini=false;lastRestEx=null;anims.forEach(a=>a.stop());anims=[];foods=[];userFoods=[];combos=[];recipes=[];bodyRows=[];tracks=[];loads={};prs={};intents=[];day=null;workout=null;targets=DEFAULT_TARGETS;routines=DEFAULT_ROUTINES;closeSheet();renderLogin()}
 document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
   if(b.id==="login"||b.id==="loginApple"){const q=b.dataset.q||"google";b.disabled=true;setStatus("Abriendo "+(q==="apple"?"Apple":"Google")+"…");try{localStorage.removeItem("fit_local")}catch(e){}login(q).then(()=>setStatus("Entrando…")).catch(err=>{setStatus(err&&err.message||"No se pudo entrar. Probá de nuevo.",true);b.disabled=false})}
   else if(b.id==="invitado"){startSession({uid:"local",displayName:""},true)}

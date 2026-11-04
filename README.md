@@ -130,3 +130,10 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - **Tope de 3 h**: un entreno que quedó abierto se frena solo a las 3 h (`workout.autoPaused`); si no tenía series, se reinicia.
 - **Bordes**: nada se sale de la pantalla (revisado a 360, 375 y 390 px); en la app instalada, más margen a los costados y arriba para las esquinas redondeadas del teléfono.
 - Caché del service worker: `scaeli-fit-v11`.
+
+## Versión 12 (2026-11-04)
+- **Mi equipo** (`settings/equipo`, `{list:[…]}`): gimnasio, mancuernas, barra, soportes/rack, banco plano, banco inclinable, barra de dominadas, kettlebell. Sin configurar se muestra todo. `reqDe(ejercicio)` dice qué necesita cada ejercicio (el inclinado pide banco inclinable; la sentadilla y el press con barra piden rack; máquinas, poleas, paralelas y rueda abdominal piden gimnasio). En el catálogo van primero los que podés hacer y después «Con otro equipo», atenuados y con lo que falta.
+- **Programas de casa** que se arman con el equipo (`programasCasa()`): «full body 3 días» y «torso / piernas 4 días». Cada lugar tiene opciones en orden (por ejemplo sentadilla con barra → goblet → sin peso). Si el programa es de casa y no hay equipo cargado, primero se pide. Las rutinas guardan `prog` y `eq`; si el equipo cambia, Programas ofrece «Actualizar».
+- **Mancuernas**: «kg c/u» en la columna y en el sugerido, saltos de hasta 2 kg y aviso de usar el peso más cercano y sumar repeticiones.
+- **Pulido**: barra de abajo con nombres; rutinas en una fila deslizable; Salir · Rutinas · Rezar en una fila; tarjeta de sesión en una línea; descanso con el ejercicio en chico; «Elegí» en vez de «— kg»; mensajes flotantes de una línea; Cuerpo y Escuchar con estado vacío; cita del ayuno con la referencia aparte; X del catálogo arriba a la derecha; ícono propio de proteína.
+- Caché del service worker: `scaeli-fit-v12`.
