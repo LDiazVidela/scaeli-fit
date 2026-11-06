@@ -1,4 +1,4 @@
-import { login, logout, watchAuth, finishRedirect, userBackend, localBackend } from "./firebase.js";
+import { login, logout, watchAuth, finishRedirect, userBackend, localBackend, gruposBackend, gruposLocal } from "./firebase.js";
 import * as PJ from "./personaje.js";
 import { ORACIONES, MISTERIOS, ROS_MED, ROS_FATIMA, ROS_DIAS_N } from "../data/rosario.js";
 const LOGO_APPLE='<svg class="logo-a" viewBox="0 0 814 1000" aria-hidden="true"><path fill="currentColor" d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105.6-57-155.5-127C46.7 790.7 0 663 0 541.8c0-194.4 126.4-297.5 250.8-297.5 66.1 0 121.2 43.4 162.7 43.4 39.5 0 101.1-46 176.3-46 28.5 0 130.9 2.6 198.3 99.2zm-234-181.5c31.1-36.9 53.1-88.1 53.1-139.3 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 83.6-55.1 135.5 0 7.8 1.3 15.6 1.9 18.1 3.2.6 8.4 1.3 13.6 1.3 45.4 0 102.5-30.4 135.5-71.3z"/></svg>';
@@ -7,7 +7,8 @@ const DAILY_URL="https://ldiazvidela.github.io/scaeli-daily/";
 /* Scaeli+ compartido con Daily (docs/SCAELI_PLUS_COMPARTIDO.md): equipo con acceso completo, y "ver como gratis" para probar. */
 const PLUS_EQUIPO=["lorenzodiazvidela@gmail.com"];
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
-let dprofile=null;   // el personaje, editado en Daily (users/{uid}/daily_settings/profile)
+let dprofile=null;
+let wHist=[],grupo={gid:null,meta:null,L:null,unsub:null,err:""},grupoBE=null,gSyncT=null,gUlt="";   // el personaje, editado en Daily (users/{uid}/daily_settings/profile)
 function personajeHTML(cls,tam){return '<canvas class="pj '+(cls||"")+'" data-pj="south" data-tam="'+(tam||160)+'" width="128" height="128" aria-label="Tu personaje"></canvas>'}
 function pintarPersonajes(){if(!PJ.cargado())return;document.querySelectorAll("canvas[data-pj]").forEach(cv=>{const t=+cv.dataset.tam||160;PJ.pintar(cv,dprofile||{},"south",t);if(t<128){cv.style.width=t+"px";cv.style.height=t+"px"}})}
 
@@ -145,7 +146,23 @@ function programasCasa(){return[
   rutinaCasa("ctB","Piernas A",2,"Cuádriceps y core",[["sent",4,6,10],["bulg",3,8,12],["gemelo",3,12,15],["core",3,30,45],["core2",3,12,15]]),
   rutinaCasa("ctC","Torso B",4,"Espalda, hombros y brazos",[["tiron",4,6,10],["pechoInc",3,8,12],["remo2",3,10,12],["lateral",3,12,15],["post",3,12,15],["martillo",3,10,12]]),
   rutinaCasa("ctD","Piernas B",5,"Posterior y glúteo",[["bisagra",4,8,10],["gluteo",3,10,12],["bulg",3,10,12],["core3",3,10,12],["core",3,30,45]])]}]}
-const todosProgramas=()=>programasCasa().concat(PROGRAMAS);
+/* más rutinas de casa: solo mancuernas, 30 minutos y sin equipo (estas no dependen de Mi equipo) */
+const fijo=(rid,name,day,goal,list)=>({id:rid,name,day,goal,ex:list.map(([id,sets,lo,hi])=>{const e=exDeCatalogo(id,sets,lo,hi);const c=CATALOGO.find(x=>x.id===id);if(c&&c.equipo==="mancuernas")e.step=Math.min(e.step||2,2);return e}).filter(Boolean)});
+const CASA_EXTRA=[
+ {id:"casa-man3",nombre:"Casa · solo mancuernas 3 días",desc:"Un par de mancuernas y el piso. Sin banco ni barra.",nivel:"Principiante",lugar:"Casa",rutinas:[
+  fijo("cmA","Mancuernas A",1,"Todo el cuerpo",[["sentadilla-goblet",3,10,12],["press-militar-mancuernas",3,8,12],["remo-mancuerna-un-brazo",3,10,12],["flexiones",3,8,15],["curl-biceps-mancuernas",2,10,15],["plancha",3,30,45]]),
+  fijo("cmB","Mancuernas B",3,"Todo el cuerpo",[["zancadas",3,10,12],["press-arnold",3,8,12],["pull-over",3,10,12],["elevaciones-laterales",3,12,15],["patada-triceps",2,12,15],["bicho-muerto",3,10,12]]),
+  fijo("cmC","Mancuernas C",5,"Todo el cuerpo",[["sentadilla-goblet",3,12,15],["thruster",3,8,10],["remo-mancuerna-un-brazo",3,10,12],["pajaros",3,12,15],["curl-martillo",2,10,12],["farmer-walk",3,30,45]])]},
+ {id:"casa-30",nombre:"Casa · 30 minutos",desc:"Para días apretados: cinco ejercicios, tres vueltas y listo. Con mancuernas.",nivel:"Principiante",lugar:"Casa",rutinas:[
+  fijo("c30A","Express A",1,"Todo el cuerpo",[["sentadilla-goblet",3,10,15],["flexiones",3,8,15],["remo-mancuerna-un-brazo",3,10,12],["press-militar-mancuernas",3,10,12],["plancha",3,30,40]]),
+  fijo("c30B","Express B",3,"Todo el cuerpo",[["zancadas",3,10,12],["press-banca-mancuernas",3,10,12],["remo-mancuerna-un-brazo",3,10,12],["elevaciones-laterales",3,12,15],["mountain-climbers",3,30,40]]),
+  fijo("c30C","Express C",5,"Todo el cuerpo",[["thruster",3,10,12],["flexiones",3,8,15],["pull-over",3,10,12],["curl-martillo",3,10,12],["bicho-muerto",3,10,12]])]},
+ {id:"casa-se4",nombre:"Casa · sin equipo 4 días",desc:"Solo el peso del cuerpo, cuatro días. Para viajes o para empezar.",nivel:"Principiante",lugar:"Casa",rutinas:[
+  fijo("cs1","Torso 1",1,"Pecho, espalda y brazos",[["flexiones",4,8,15],["remo-invertido",3,8,12],["fondos-banco",3,10,15],["flexiones-rodillas",2,10,15],["plancha",3,30,45]]),
+  fijo("cs2","Piernas 1",2,"Piernas y glúteo",[["sentadilla-sin-peso",4,15,20],["puente-gluteo",3,15,20],["sentadilla-salto",3,10,12],["plancha-lateral",3,30,40],["bicicleta",3,15,20]]),
+  fijo("cs3","Torso 2",4,"Hombro y core",[["flexiones",4,8,15],["remo-invertido",3,10,12],["mountain-climbers",3,30,40],["elevacion-piernas-piso",3,12,15],["bicho-muerto",3,10,12]]),
+  fijo("cs4","Piernas 2",5,"Piernas y cardio",[["sentadilla-sin-peso",4,15,20],["burpees",3,8,12],["puente-gluteo",3,15,20],["saltos-tijera",3,30,40],["russian-twist",3,15,20]])]}];
+const todosProgramas=()=>programasCasa().concat(CASA_EXTRA,PROGRAMAS);
 const GRUPOS=[["pecho","Pecho"],["espalda","Espalda"],["hombros","Hombros"],["piernas","Piernas"],["gluteos","Glúteos"],["brazos","Brazos"],["core","Core"],["completo","Completo"]];
 let rutDraft={name:"",day:-1,ex:[]},rosMini=false,rosMiniTxt=false,lastRestEx=null,prs={};
 const e1rm=(w,r)=>r>0&&w>0?w*(1+r/30):0;
@@ -263,6 +280,39 @@ function suggest(ex){const L=loads[ex.id];if(!L||!(L.w>0))return{w:null,why:esTi
   if(L.hard)return{w:L.w,why:"Mantener "+f1(L.w)+" kg: la última vez una serie costó.",hold:true};
   if(L.top)return{w:r1(L.w+ex.step),why:"Subís +"+f1(ex.step)+" kg"+(porMancuerna(ex)?" por mancuerna":"")+": cumpliste el rango con RIR ≥ 2."+(porMancuerna(ex)?" Si no tenés ese peso, usá el más cercano y sumá una repetición por serie.":"")};
   return{w:L.w,why:"Mantener "+f1(L.w)+" kg hasta cumplir el rango en todas las series.",hold:true}}
+/* ---------- Grupo de perseverancia (Fit): cada uno publica su semana; ranking y misión se calculan con lo de todos ---------- */
+const lunDe=f=>{const d=parse(f);return addDays(f,-((d.getDay()+6)%7))};
+const MISIONES=[["e","Entre todos, 3 entrenos por persona",3,"Cada miembro suma sus entrenos de la semana."],["m","Entre todos, 120 minutos por persona",120,"Los minutos entrenados de todos se suman."],["o","Entre todos, 2 entrenos ofrecidos por persona",2,"Ofrecé el entreno por una intención antes de empezar."]];
+const misionDe=lun=>MISIONES[Math.floor((parse(lun)-parse("2024-01-01"))/6048e5)%MISIONES.length];
+function semanaMia(lun){const o={e:0,m:0,o:0,x:0};wHist.forEach(w=>{if(w.id>=lun&&w.id<=addDays(lun,6)){o.e++;o.m+=Math.round(((w.summary||{}).dur||0)/6e4);if(w.offered&&w.intention)o.o++;o.x+=(w.summary||{}).xp||XP.workout}});return o}
+function miFichaG(){const n=((dprofile&&dprofile.nombre)||(user&&user.displayName&&user.displayName.split(" ")[0])||"Atleta").slice(0,24);const sem={};for(let i=0;i<6;i++){const l=addDays(lunDe(today()),-7*i);sem[l]=semanaMia(l)}
+  return{n,s:sem,hoy:{f:today(),ok:wHist.some(w=>w.id===today())}}}
+function grupoSync(){if(!grupo.gid||!grupoBE||!grupo.meta)return;clearTimeout(gSyncT);gSyncT=setTimeout(async()=>{const f=miFichaG(),k=JSON.stringify(f);if(k===gUlt)return;gUlt=k;try{await grupoBE.setMiembro(grupo.gid,f)}catch(e){}},600)}
+function grupoCerrar(){if(grupo.unsub){try{grupo.unsub()}catch(e){}}grupo={gid:null,meta:null,L:null,unsub:null,err:""};gUlt=""}
+function grupoAbrir(gid){grupoCerrar();if(!gid||!grupoBE){if(view==="mas")render();return}grupo={gid,meta:null,L:null,unsub:null,err:""};
+  grupo.unsub=grupoBE.watch(gid,(meta,L,err)=>{if(err){grupo.err="No se pudo leer el grupo.";}else{grupo.meta=meta;grupo.L=L||[];}if(view==="mas")render();if(sheet&&sheet.view==="grupo")renderSheetNow();grupoSync()})}
+function rankingG(lun){const L=(grupo.L||[]).map(x=>({...x,w:((x.s||{})[lun])||{e:0,m:0,o:0,x:0}})).sort((a,b)=>(b.w.x||0)-(a.w.x||0)||(b.w.e||0)-(a.w.e||0)||String(a.n).localeCompare(String(b.n)));let r=0,prev=null;L.forEach((x,i)=>{const k=(x.w.x||0)+"/"+(x.w.e||0);if(k!==prev){r=i+1;prev=k}x.rank=r});return L}
+function misionEstado(lun){const M=misionDe(lun),L=grupo.L||[],n=Math.max(1,L.length),meta=M[2]*n;let tot=0;L.forEach(x=>{tot+=(((x.s||{})[lun])||{})[M[0]]||0});return{M,meta,tot,ok:tot>=meta}}
+function grupoCardHTML(){if(!grupo.gid)return `<button class="card eqcard" data-gopen="1"><span class="ic">${ic("users")}</span><span class="n"><b>Grupo de perseverancia</b><small>Entrená con amigos: misión semanal, ranking y quién entrenó hoy.</small></span><span class="lnk">Unirme</span></button>`;
+  if(!grupo.meta)return `<button class="card eqcard" data-gopen="1"><span class="ic">${ic("users")}</span><span class="n"><b>Grupo de perseverancia</b><small>${grupo.meta===false?"El grupo ya no existe.":"Cargando…"}</small></span></button>`;
+  const lun=lunDe(today()),ME=misionEstado(lun),L=grupo.L||[],hoyN=L.filter(x=>x.hoy&&x.hoy.f===today()&&x.hoy.ok).length;
+  return `<button class="card eqcard" data-gopen="1"><span class="ic">${ic("users")}</span><span class="n"><b>${esc(grupo.meta.n)}</b><small>Hoy entrenaron ${hoyN} de ${L.length} · misión ${Math.min(100,Math.round(ME.tot/ME.meta*100))}%</small></span><span class="lnk">Ver</span></button>`}
+function grupoSheetHTML(X){if(!grupo.gid||grupo.meta===false){const m=sheet.m||"inicio";
+    if(m==="crear")return `<h3>Nuevo grupo${X}</h3><div class="scroll gform"><p class="dialead">Ponele un nombre. Después compartís el código con tus amigos.</p><input class="inset" id="gNom" maxlength="40" placeholder="Los del gym de San Isidro" autocomplete="off"><button class="primary" id="gCrear">${ic("check")}Crear</button>${sheet.err?`<p class="hint err">${esc(sheet.err)}</p>`:""}</div>`;
+    if(m==="codigo")return `<h3>Unirme${X}</h3><div class="scroll gform"><p class="dialead">Escribí el código de 8 letras que te pasaron.</p><input class="inset" id="gCod" maxlength="8" placeholder="ABCD2345" autocomplete="off" style="text-transform:uppercase;letter-spacing:.2em;text-align:center;font-size:22px"><button class="primary" id="gUnir">${ic("check")}Entrar</button>${sheet.err?`<p class="hint err">${esc(sheet.err)}</p>`:""}</div>`;
+    return `<h3>Grupo de perseverancia${X}</h3><div class="scroll gform"><p class="dialead">Entrenar con otros ayuda a no aflojar. En el grupo ven quién entrenó hoy, tienen una misión en común cada semana y un ranking con la experiencia de Fit.</p>
+      ${grupo.meta===false?`<p class="hint">El grupo en el que estabas ya no existe.</p>`:""}
+      <button class="primary" data-gm="crear">${ic("plus")}Crear un grupo</button><button class="primary ink" data-gm="codigo">${ic("users")}Tengo un código</button>
+      <p class="hint">Es aparte de los grupos de Scaeli Daily. ${user&&user.uid==="local"?"Sin cuenta, el grupo queda solo en este teléfono: para entrenar con amigos entrá con Google o Apple.":""}</p></div>`}
+  if(!grupo.meta)return `<h3>Grupo${X}</h3><p class="empty">Cargando…</p>`;
+  const lun=lunDe(today()),ME=misionEstado(lun),R=rankingG(lun),me=user&&user.uid;const pct=Math.min(100,Math.round(ME.tot/ME.meta*100));
+  return `<h3>${esc(grupo.meta.n)}${X}</h3><div class="scroll gsheet">
+    <section class="card pad gmision${ME.ok?" ok":""}"><span class="eyebrow">Misión de la semana</span><b>${esc(ME.M[1])}</b><small class="hint">${esc(ME.M[3])}</small>
+      <div class="bar"><i style="width:${pct}%"></i></div><small class="hint">${ME.tot} de ${ME.meta}${ME.M[0]==="m"?" min":""} · ${ME.ok?"¡cumplida!":"faltan "+(ME.meta-ME.tot)+(ME.M[0]==="m"?" min":"")}</small></section>
+    <section class="card tight list"><div class="row"><span class="eyebrow">Ranking de la semana</span><small class="hint">XP de Fit</small></div>
+      ${R.map(x=>`<div class="row grow${x.uid===me?" yo":""}"><span class="rk">${x.rank}</span><div class="n"><b>${esc(x.n||"Atleta")}${x.uid===me?" (vos)":""}</b><small>${x.w.e||0} ${(x.w.e||0)===1?"entreno":"entrenos"} · ${x.w.m||0} min${x.hoy&&x.hoy.f===today()&&x.hoy.ok?" · entrenó hoy":""}</small></div><span class="k">${x.w.x||0}<small>XP</small></span></div>`).join("")}</section>
+    <section class="card pad gcod"><span class="eyebrow">Código para invitar</span><b class="cod">${esc(grupo.gid)}</b><button class="primary ink" id="gShare">${ic("upload")}Compartir</button></section>
+    <button class="ghost g gsalir" id="gSalir">${sheet.confirm==="salir"?"Tocá de nuevo para salir":"Salir del grupo"}</button></div>`}
 function finishWorkout(){const r=curRoutine();if(!r||!workout)return;const nl={...loads};const np=JSON.parse(JSON.stringify(prs||{}));
   if(workout.pausedAt){workout.pausedMs=(workout.pausedMs||0)+(Date.now()-workout.pausedAt);workout.pausedAt=null}const res={dur:sesElapsed(),sets:0,vol:0,ex:[],prs:[]};
   r.ex.forEach(ex=>{const all=wsets(ex.id).filter(s=>s.r>0);if(!all.length)return;res.sets+=all.length;
@@ -272,8 +322,9 @@ function finishWorkout(){const r=curRoutine();if(!r||!workout)return;const nl={.
     if(w>0&&(w>(old.w||0)||bestE>(old.e1rm||0)*1.001)){const tipo=w>(old.w||0)?"peso":"1RM";np[ex.id]={w:Math.max(w,old.w||0),r:(all.find(s=>s.w===w)||{}).r||0,e1rm:Math.max(bestE,old.e1rm||0),date:wcur};if(old.w||old.e1rm){item.pr=tipo;res.prs.push(ex.name)}else{item.pr="primero"}}
     res.ex.push(item);
     const ss=all.filter(s=>s.w>0);if(!ss.length)return;const top=ss.length>=ex.sets&&ss.every(s=>s.r>=ex.hi&&(s.rir==null||s.rir>=2));nl[ex.id]={w,date:wcur,top,hard:ss.some(s=>s.hard),reps:ss.map(s=>s.r)}});
-  loads=nl;prs=np;stopTimer();const offered=!!(workout.offered&&workout.intention);saveWorkout(w=>{w.done=true;w.summary=res},null,true);write(backend.setDoc("settings/loads",nl));write(backend.setDoc("settings/prs",np));
+  loads=nl;prs=np;stopTimer();const offered=!!(workout.offered&&workout.intention);res.name=r.name;if(workout.intention)res.intention=workout.intention;
   const before=progress.xp||0;award("workout",wcur,offered?XP.offered:0);if(offered)award("offered",wcur);res.xp=(progress.xp||0)-before;
+  saveWorkout(w=>{w.done=true;w.summary=res},null,true);write(backend.setDoc("settings/loads",nl));write(backend.setDoc("settings/prs",np));
   openSheet({view:"resumen",res,intention:workout.intention});render()}
 const sesElapsed=w=>{w=w||workout;if(!w||!w.startedAt)return 0;return Math.max(0,(w.pausedAt||Date.now())-w.startedAt-(w.pausedMs||0))};
 const dur=ms=>{const s=Math.floor(ms/1000);return s>=3600?Math.floor(s/3600)+":"+pad(Math.floor(s%3600/60))+":"+pad(s%60):mmss(s)};
@@ -287,6 +338,10 @@ function durTxt(ms){const m=Math.round(ms/60000);if(m<1)return "menos de 1 min";
 const needsOffer=()=>!offerSkip&&!(workout&&(workout.offered||workout.done||Object.keys(workout.sets||{}).length));
 
 /* ---------- Progreso: XP, racha, insignias ---------- */
+/* deshace la experiencia de un entreno borrado */
+function unawardWorkout(date,xp){const p=JSON.parse(JSON.stringify(progress));p.done=p.done||{};p.counts=p.counts||{};let any=false;
+  ["workout","offered"].forEach(k=>{const key=k+":"+date;if(p.done[key]){delete p.done[key];any=true;const ck={workout:"workouts",offered:"offered"}[k];p.counts[ck]=Math.max(0,(p.counts[ck]||0)-1)}});
+  if(!any)return;p.xp=Math.max(0,(p.xp||0)-(xp!=null?xp:XP.workout));progress=p;write(backend.setDoc("settings/progress",p))}
 function award(kind,date,extra){const p=JSON.parse(JSON.stringify(progress));p.counts=p.counts||{};p.days=p.days||[];p.badges=p.badges||{};
   const key=kind+":"+date;p.done=p.done||{};if(p.done[key])return;p.done[key]=1;
   p.xp=(p.xp||0)+(XP[kind]||0)+(extra||0);const ck={workout:"workouts",offered:"offered",rosary:"rosaries",meals:"meals",body:"body",fast:"fasts"}[kind];if(ck)p.counts[ck]=(p.counts[ck]||0)+1;
@@ -429,7 +484,7 @@ function renderEntreno(){
   const nsets=r.ex.reduce((a,ex)=>a+wsets(ex.id).filter(s=>s.r>0).length,0),tsets=r.ex.reduce((a,ex)=>a+ex.sets,0);
   const cur_track=tracks[trackIdx];
   const sesion=done?`<section class="card wsession done"><div class="l"><span class="eyebrow">Entreno terminado</span><b>${workout.summary?durTxt(workout.summary.dur):"Listo"}</b><small class="hint">${workout.summary?workout.summary.sets+" series · "+fmt(workout.summary.vol)+" kg":""}</small></div><button class="chip off" id="verResumen">${ic("flag")}Resumen</button></section>`
-    :started?`<section class="card wsession${workout.pausedAt?" paused":""}"><div class="l"><span class="eyebrow">${workout.pausedAt?"En pausa":"En curso"}</span><b id="sesT">${dur(sesElapsed())}</b><small class="hint">${nsets} de ${tsets} series${workout.autoPaused?" · lo frené en 3 h":""}</small></div><div class="acts"><button class="iconbtn ${workout.pausedAt?"acc":"inset"}" id="pausar" aria-label="${workout.pausedAt?"Seguir":"Pausar"}">${ic(workout.pausedAt?"play":"pause")}</button><button class="primary ink" id="finish">${ic("flag")}Terminar</button></div></section>`
+    :started?`<section class="card wsession${workout.pausedAt?" paused":""}"><div class="l"><span class="eyebrow">${workout.pausedAt?"En pausa":"En curso"}</span><b id="sesT">${dur(sesElapsed())}</b><small class="hint">${nsets} de ${tsets} series${workout.autoPaused?" · lo frené en 3 h":""}</small></div><div class="acts"><button class="iconbtn inset" id="wDescartar" aria-label="Descartar entreno">${ic("trash")}</button><button class="iconbtn ${workout.pausedAt?"acc":"inset"}" id="pausar" aria-label="${workout.pausedAt?"Seguir":"Pausar"}">${ic(workout.pausedAt?"play":"pause")}</button><button class="primary ink" id="finish">${ic("flag")}Terminar</button></div></section>`
     :`<button class="primary" id="comenzar">${ic("play")}Comenzar entrenamiento</button>`;
   return `
   <div class="top"><div class="l"><span class="eyebrow fecha">${esc(fecha(wcur))} · semana ${weekNo}</span><h1 class="title">${esc(r.name)}</h1><small class="hint">${esc(r.goal)} · RIR 2${intention?" · Por "+esc(intention):""}</small></div>
@@ -509,7 +564,7 @@ function renderMas(){
   return `
   <div class="top"><div class="l"><span class="eyebrow">Tu personaje</span><h1 class="title">${esc(nom)}</h1></div><div class="r">${candleChip()}</div></div>
   <div class="card big${fondoFit()?" confondo":""}">${fondoFit()?`<img class="bg" src="${ilu(fondoFit())}" alt=""><span class="sh"></span>`:""}${personajeHTML("vivo",256)}</div>
-  <a class="plusrow" href="${DAILY_URL}#yo" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="n"><b>Personalizar en Scaeli Daily</b><small>Ropa, peinado, altura y fondo: es el mismo personaje en las dos apps.</small></span>${ic("right")}</a>
+  <a class="card eqcard" href="${DAILY_URL}#yo" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="ic">${ic("edit")}</span><span class="n"><b>Personalizar en Scaeli Daily</b><small>Ropa, peinado, altura y fondo: es el mismo personaje en las dos apps.</small></span>${ic("right")}</a>
   <div class="card"><div class="eyebrow" style="margin-bottom:10px">Tu nivel</div>
     <div class="nivel"><span class="nv"><svg viewBox="0 0 60 60" aria-hidden="true"><circle class="t" cx="30" cy="30" r="26"/><circle class="p" cx="30" cy="30" r="26" stroke-dasharray="163.4" stroke-dashoffset="${(163.4*(1-L.pct/100)).toFixed(1)}"/></svg><b>${L.i+1}</b></span>
       <span class="nx"><b class="nt">${esc(L.name)} · nivel ${L.i+1}</b><small>${L.to?fmt(progress.xp||0)+" XP · "+fmt(L.to-(progress.xp||0))+" para "+esc(LEVELS[L.i+1][0]):fmt(progress.xp||0)+" XP · nivel máximo"}</small><span class="bar"><i style="width:${L.pct}%"></i></span></span></div>
@@ -532,6 +587,9 @@ function renderMas(){
     <div class="r"><button class="ghost" type="submit">${ic("check")}Guardar</button><button class="ghost g" type="button" id="recalc">${ic("scale")}Recalcular</button></div></form></section>
   <section class="card tight list"><div class="row"><span class="eyebrow">Favoritos (${combos.length})</span></div>
     ${combos.length?combos.map(c=>`<div class="row"><div class="n"><b>${esc(c.name)}</b><small>${MEALS.find(m=>m[0]===c.meal)[1]} · ${c.items.length} ítems · ${fmt(totals(c.items).kcal)} kcal</small></div><button class="sm" data-delcombo="${c.id}" aria-label="Borrar favorito">${ic("trash")}</button></div>`).join(""):`<p class="empty">Guardá una comida con la estrella en Hoy.</p>`}</section>
+  ${grupoCardHTML()}
+  <section class="card tight list"><div class="row"><span class="eyebrow">Entrenamientos (${wHist.length})</span>${wHist.length>3?`<button class="lnkb" data-hall="1">Ver todos</button>`:""}</div>
+    ${wHist.length?wHist.slice(0,3).map(histRow).join(""):`<p class="empty">Cuando termines un entreno, queda acá con su resumen.</p>`}</section>
   ${eqCardHTML()}
   <section class="card tight list"><div class="row"><span class="eyebrow">Rutinas</span><button class="ghost" id="openRutinas" style="height:32px;font-size:12px">${ic("plus")}Biblioteca</button></div>
     ${routines.map(r=>`<div class="row" style="flex-direction:column;align-items:stretch;gap:0"><div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0 8px"><b style="font-weight:600">${esc(r.name)}</b><small class="hint">${r.day>=0?DOWS[r.day]:"libre"} · ${esc(r.goal)}</small></div>
@@ -683,6 +741,17 @@ function renderSheetBody(){
       <section class="card tight list">${R.ex.map(e=>`<div class="row"><div class="n"><b style="font-weight:500">${esc(e.name)}${e.pr==="peso"||e.pr==="1RM"?' <span class="prtag">Récord</span>':e.pr==="primero"?' <span class="prtag muted">Primera marca</span>':""}</b><small>${e.sets} ${e.sets===1?"serie":"series"}${e.w>0?" · mejor "+f1(e.w)+" kg × "+e.r:" · "+e.r+" reps"}</small></div>${e.vol>0?`<span class="k">${fmt(e.vol)}<small>kg</small></span>`:""}</div>`).join("")}</section>
       <p class="hint" style="text-align:center">Nivel ${L.i+1} · ${esc(L.name)}${L.to?" · "+fmt(L.to-(progress.xp||0))+" XP para "+esc(LEVELS[L.i+1][0]):""}</p>
       <button class="primary" id="x">${ic("check")}Amén</button></div>`;
+  } else if(sheet.view==="descartar"){
+    el.innerHTML=`<h3>Descartar entreno${X}</h3><p class="dialead">Se borran las series que cargaste hoy en «${esc(sheet.name||"")}». No suma experiencia ni récords.</p><button class="primary danger" id="wDiscard">${ic("trash")}Descartar</button><button class="primary ink" id="x">Seguir entrenando</button>`;
+  } else if(sheet.view==="hist"){const H=wHist;
+    el.innerHTML=`<h3>Entrenamientos${X}</h3><div class="scroll">${H.length?`<section class="card tight list">${H.map(histRow).join("")}</section>`:`<section class="card vacio-card"><span class="ic">${ic("gym")}</span><b>Todavía no terminaste ningún entreno</b><p class="hint">Cuando toques Terminar, cada entreno queda acá con su resumen.</p></section>`}</div>`;
+  } else if(sheet.view==="histver"){const w=wHist.find(x=>x.id===sheet.id);if(!w){closeSheet();return}const R=w.summary;
+    el.innerHTML=`<h3>${esc(fecha(w.id))}${X}</h3><div class="scroll resumen" style="gap:12px"><span class="eyebrow">${esc(R.name||"Entreno")}${R.intention?" · por "+esc(R.intention):""}</span>
+      <div class="preview"><div><b>${R.dur?durTxt(R.dur):"—"}</b><span>duración</span></div><div><b>${R.sets||0}</b><span>series</span></div><div><b>${fmt(R.vol||0)}</b><span>kg movidos</span></div><div><b>${R.xp!=null?"+"+R.xp:"—"}</b><span>XP</span></div></div>
+      ${R.prs&&R.prs.length?`<div class="prbox">${ic("badge")}<div><b>${R.prs.length===1?"Récord personal":R.prs.length+" récords personales"}</b><small>${R.prs.map(esc).join(" · ")}</small></div></div>`:""}
+      <section class="card tight list">${(R.ex||[]).map(e=>`<div class="row"><div class="n"><b style="font-weight:500">${esc(e.name)}</b><small>${e.sets} ${e.sets===1?"serie":"series"}${e.w>0?" · mejor "+f1(e.w)+" kg × "+e.r:" · "+e.r+" reps"}</small></div>${e.vol>0?`<span class="k">${fmt(e.vol)}<small>kg</small></span>`:""}</div>`).join("")}</section>
+      <button class="ghost g gsalir" id="histDel" data-hid="${w.id}">${sheet.confirm==="del"?"Tocá de nuevo para borrar":"Borrar este entreno"}</button></div>`;
+  } else if(sheet.view==="grupo"){el.innerHTML=grupoSheetHTML(X);
   } else if(sheet.view==="equipo"){const sel=sheet.sel||(sheet.sel=new Set(equipo||[]));
     el.innerHTML=`<h3>Mi equipo${X}</h3><div class="scroll" style="display:flex;flex-direction:column;gap:12px"><p class="dialead">Marcá lo que tenés. La app te muestra los ejercicios que podés hacer y arma los programas de casa con eso.</p>
       <div class="eqlist">${EQUIPOS.map(([k,n,d])=>`<button class="eqit" data-eq="${k}" aria-pressed="${sel.has(k)}"><span class="ck">${ic("check")}</span><span class="n"><b>${esc(n)}</b>${d?`<small>${esc(d)}</small>`:""}</span></button>`).join("")}</div>
@@ -729,6 +798,7 @@ function catListHTML(){const tab=sheet.tab||"mias";const q=norm(sheet.q||"");con
   const si=list.filter(puedo),no=list.filter(c=>!puedo(c));
   return si.map(c=>item(c)).join("")+(no.length?`<p class="sect" style="margin:14px 0 4px">Con otro equipo</p>`+no.map(c=>item(c,true)).join(""):"")}
 function eqCardHTML(compacto){return `<button class="card eqcard" data-eqopen="1"><span class="ic">${ic("gym")}</span><span class="n"><b>Mi equipo</b><small>${esc(eqTxt())}</small></span><span class="lnk">${equipo?"Editar":"Configurar"}</span></button>`}
+const histRow=w=>{const R=w.summary||{};return `<button class="row hrow" data-hver="${w.id}"><div class="n"><b>${esc(fecha(w.id))}</b><small>${esc(R.name||"Entreno")} · ${R.dur?durTxt(R.dur):"—"} · ${R.sets||0} series${R.prs&&R.prs.length?" · "+R.prs.length+" récord"+(R.prs.length>1?"s":""):""}</small></div>${ic("right")}</button>`};
 function shRutinas(){const tab=sheet.tab||"mias";const target=sheet.target?routines.find(x=>x.id===sheet.target):null;
   const tabs=`<div class="seg" style="margin-bottom:12px"><button data-rtab="mias" aria-pressed="${tab==="mias"}">Mías</button><button data-rtab="bib" aria-pressed="${tab==="bib"}">Programas</button><button data-rtab="cat" aria-pressed="${tab==="cat"||tab==="pick"}">${tab==="pick"?"Agregar":"Catálogo"}</button><button data-rtab="nueva" aria-pressed="${tab==="nueva"}">Nueva</button></div>`;
   let body="";
@@ -890,6 +960,17 @@ document.addEventListener("click",e=>{
   if(b.id==="openRutinas"){rutDraft={name:"",day:-1,ex:[]};openSheet({view:"rutinas",tab:"mias"});return}
   if(b.id==="addToRoutine"){const r=curRoutine();if(!r)return;rutDraft={name:"",day:-1,ex:[]};openSheet({view:"rutinas",tab:"pick",target:r.id,q:""});return}
   if(d.rtab){sheet.tab=d.rtab;sheet.target=null;sheet.confirm=null;sheet.catSel=null;renderSheetNow();return}
+  if(d.gopen){openSheet({view:"grupo",m:"inicio"});return}
+  if(d.gm){sheet.m=d.gm;sheet.err="";renderSheetNow();setTimeout(()=>{const i=$("#gNom")||$("#gCod");i&&i.focus()},60);return}
+  if(b.id==="gCrear"){const n=($("#gNom").value||"").trim().slice(0,40);if(!n){sheet.err="Poné un nombre.";renderSheetNow();return}(async()=>{try{const gid=await grupoBE.crear(n,miFichaG());await backend.setDoc("settings/grupo",{gid});toast("Grupo creado · código "+gid);sheet={view:"grupo"};renderSheetNow()}catch(e){sheet.err="No se pudo crear. Revisá la conexión.";renderSheetNow()}})();return}
+  if(b.id==="gUnir"){const c=($("#gCod").value||"").trim().toUpperCase();if(c.length!==8){sheet.err="El código tiene 8 letras.";renderSheetNow();return}(async()=>{try{const g=await grupoBE.leer(c);if(!g||g.tipo!=="entreno"){sheet.err=g?"Ese es un grupo de Scaeli Daily: unite desde Daily.":"No existe un grupo con ese código.";renderSheetNow();return}await grupoBE.setMiembro(c,miFichaG());await backend.setDoc("settings/grupo",{gid:c});toast("Entraste a «"+g.n+"»");sheet={view:"grupo"};renderSheetNow()}catch(e){sheet.err="No se pudo entrar. Revisá la conexión.";renderSheetNow()}})();return}
+  if(b.id==="gShare"){const t="Sumate a mi grupo «"+grupo.meta.n+"» en Scaeli Fit. Código: "+grupo.gid+" · https://ldiazvidela.github.io/scaeli-fit/";if(navigator.share)navigator.share({text:t}).catch(()=>{});else{try{navigator.clipboard.writeText(t);toast("Código copiado")}catch(e){toast("Código: "+grupo.gid)}}return}
+  if(b.id==="gSalir"){if(sheet.confirm!=="salir"){sheet.confirm="salir";renderSheetNow();return}const gid=grupo.gid;(async()=>{try{await grupoBE.salir(gid)}catch(e){}await backend.setDoc("settings/grupo",{gid:null});closeSheet();toast("Saliste del grupo")})();return}
+  if(d.hall){openSheet({view:"hist"});return}
+  if(d.hver){openSheet({view:"histver",id:d.hver});return}
+  if(b.id==="histDel"){if(sheet.confirm!=="del"){sheet.confirm="del";renderSheetNow();return}const id=d.hid;const w=wHist.find(x=>x.id===id);unawardWorkout(id,w&&w.summary&&w.summary.xp);write(backend.delDoc("workouts/"+id),"Entreno borrado");if(id===wcur){workout=null;stopTimer()}closeSheet();render();return}
+  if(b.id==="wDescartar"){const r=curRoutine();openSheet({view:"descartar",name:r?r.name:"",short:true});return}
+  if(b.id==="wDiscard"){stopTimer();workout=null;offerSkip=false;write(backend.delDoc("workouts/"+wcur),"Entreno descartado");closeSheet();render();return}
   if(d.eqopen){const back=sheet&&sheet.view==="rutinas"?{tab:sheet.tab}:null;openSheet({view:"equipo",back});return}
   if(d.eq){const k=d.eq;sheet.sel.has(k)?sheet.sel.delete(k):sheet.sel.add(k);b.setAttribute("aria-pressed",sheet.sel.has(k));return}
   if(b.id==="eqSave"){equipo=[...sheet.sel];write(backend.setDoc("settings/equipo",{list:equipo}),"Equipo guardado");const pr=routines.find(r=>r.prog);if(pr&&pr.eq!==equipo.slice().sort().join(","))setTimeout(()=>toast("Tu programa de casa se puede actualizar: Rutinas → Programas"),2200);const back=sheet.back;if(back){openSheet({view:"rutinas",tab:back.tab})}else closeSheet();render();return}
@@ -1018,7 +1099,7 @@ function saveFood(id,f){return backend.setDoc("foods/"+id,f)}
 function deleteFood(id){if(BASE.some(f=>f.id===id)){hidden.add(id);return backend.setDoc("settings/hidden",{list:[...hidden]})}return backend.delDoc("foods/"+id)}
 function renderLogin(){
   $("#nav").hidden=true;
-  $("#app").innerHTML=`<div class="login"><h1 class="logo"><img src="icons/fit-logo.png" alt="Scaeli Fit" style="border-radius:40px"></h1><p class="hint" style="font-size:15px;margin-top:-10px">Ordenar el cuerpo.</p>
+  $("#app").innerHTML=`<div class="login"><h1 class="logo"><img src="icons/fit-logo.png" alt="Scaeli Fit" style="width:220px;height:auto;border-radius:0"></h1><p class="hint" style="font-size:15px;margin-top:-10px">Ordenar el cuerpo.</p>
     <p style="margin:0;font-size:19px;font-weight:300;line-height:1.4;max-width:30ch">Comidas, entrenamiento ofrecido y descanso. Tu cuerpo al servicio de tu fe, guardado en tu cuenta.</p>
     <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px"><button class="entrar apple" id="loginApple" data-q="apple">${LOGO_APPLE}<span>Continuar con Apple</span></button><button class="entrar google" id="login" data-q="google">${LOGO_GOOGLE}<span>Continuar con Google</span></button><button class="ghost g" id="invitado" style="justify-content:center;height:48px;margin-top:4px">Probar sin cuenta</button></div>
     <p class="hint" id="status">${esc(statusTxt||"La misma cuenta que Scaeli Daily y el juego. Nada es público.")}</p><p class="hint"><a href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a></p></div>`;
@@ -1045,6 +1126,10 @@ function startSession(u,local){
   w(()=>backend.watchDoc("settings/progress",v=>{if(v)progress={xp:0,counts:{},days:[],best:0,badges:{},done:{},...v};if(view==="hoy"||view==="mas")render()}));
   w(()=>backend.watchDoc("settings/plus",v=>{plus=v||null;if(view==="hoy"||view==="mas")render()}));
   w(()=>backend.watchDoc("settings/fast",v=>{fast=v||null;if(view==="hoy")render()}));
+  w(()=>backend.watchCol("workouts",list=>{wHist=list.filter(x=>x.done&&x.summary).sort((a,b)=>b.id.localeCompare(a.id));grupoSync();if(view==="mas")render();if(sheet&&(sheet.view==="hist"||sheet.view==="grupo"))renderSheetNow()}));
+  grupoBE=local?gruposLocal("local"):gruposBackend(u.uid);
+  w(()=>backend.watchDoc("settings/grupo",v=>{const gid=v&&v.gid||null;if(gid!==grupo.gid)grupoAbrir(gid)}));
+  w(()=>()=>grupoCerrar());
   w(()=>backend.watchDoc("settings/equipo",v=>{equipo=v&&Array.isArray(v.list)?v.list:null;if(sheet&&sheet.view==="rutinas")renderSheetNow();if(view==="mas")render()}));
   w(()=>backend.watchDoc("settings/fasts",v=>{fasts=(v&&v.list)||[];if(view==="mas")render()}));
   w(()=>backend.watchDoc("daily_settings/profile",v=>{dprofile=v||{};pintarPersonajes()}));

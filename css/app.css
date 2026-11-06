@@ -442,3 +442,30 @@ html,body{overflow-x:hidden}
 .ptags .chip{flex:none;position:static;width:auto}
 .prog .ptags .chip{border:1px solid var(--line2);background:var(--surface);color:var(--muted);height:24px;padding:0 9px;font-size:10px}
 .prog .ptags .chip:not(.muted){border-color:var(--accent-line);background:var(--accent-dim);color:var(--accent)}
+
+/* ---- v13: grupo, historial, descartar ---- */
+.gform{display:flex;flex-direction:column;gap:12px}
+.gform input{height:52px;border-radius:14px;padding:0 16px;font-size:17px}
+.gform .err{color:var(--danger,#e07a6a);margin:0}
+.gsheet{display:flex;flex-direction:column;gap:12px}
+.gmision{display:flex;flex-direction:column;gap:6px}.gmision b{font-size:18px;font-weight:500}.gmision .hint{margin:0}
+.gmision .bar{height:6px;margin:6px 0 2px}.gmision.ok{border-color:var(--accent-line);background:var(--accent-dim)}
+.grow .rk{width:28px;height:28px;flex:none;border-radius:999px;display:grid;place-items:center;font-size:13px;font-weight:600;background:var(--inset);border:1px solid var(--line2)}
+.grow.yo .rk{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.grow{gap:12px}.grow .n{flex:1;min-width:0}
+.gcod{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.gcod .cod{font-size:28px;font-weight:300;letter-spacing:.22em;padding-left:.22em}
+.gcod .primary{width:100%}
+.gsalir{justify-content:center;color:var(--muted);height:46px}
+.hrow{width:100%;background:none;border:0;border-bottom:1px solid var(--line);color:inherit;font:inherit;text-align:left;padding:12px 0;display:flex;align-items:center;gap:10px}
+.hrow:last-child{border-bottom:0}.hrow .n{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.hrow .n b{font-weight:500}.hrow .n small{color:var(--muted);font-size:12px}
+.hrow>.i{width:16px;height:16px;color:var(--muted);flex:none}
+.lnkb{background:none;border:0;color:var(--accent);font:inherit;font-size:13px;font-weight:600;padding:4px 0}
+.primary.danger{background:#b4533f;color:#fff}
+.wsession .acts .iconbtn#wDescartar{width:40px;height:40px;color:var(--muted)}
+.wsession{flex-wrap:wrap;row-gap:14px;padding:18px 20px}
+.wsession .l{flex:1 1 100%}
+.wsession .acts{width:100%;display:flex;gap:10px}
+.wsession .acts .primary{flex:1;justify-content:center}
+.wsession .acts .iconbtn,.wsession .acts .iconbtn#wDescartar{width:52px;height:52px}
+.wsession .acts .iconbtn#wDescartar{color:var(--muted)}

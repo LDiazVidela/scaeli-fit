@@ -137,3 +137,12 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - **Mancuernas**: «kg c/u» en la columna y en el sugerido, saltos de hasta 2 kg y aviso de usar el peso más cercano y sumar repeticiones.
 - **Pulido**: barra de abajo con nombres; rutinas en una fila deslizable; Salir · Rutinas · Rezar en una fila; tarjeta de sesión en una línea; descanso con el ejercicio en chico; «Elegí» en vez de «— kg»; mensajes flotantes de una línea; Cuerpo y Escuchar con estado vacío; cita del ayuno con la referencia aparte; X del catálogo arriba a la derecha; ícono propio de proteína.
 - Caché del service worker: `scaeli-fit-v12`.
+
+## Versión 13 (2026-11-06)
+- **Descartar entreno**: botón con tacho en la tarjeta en curso → panel de confirmación; borra `workouts/{fecha}` sin XP ni récords.
+- **Historial**: Yo → Entrenamientos (últimos 3 y «Ver todos»), con resumen por día (rutina, duración, series, volumen, récords, XP) y «Borrar este entreno», que descuenta la XP (`unawardWorkout`). El resumen ahora guarda `name`, `intention` y `xp`.
+- **Grupo de perseverancia** (`settings/grupo` = `{gid}`; `grupos/{gid}` con `tipo:"entreno"`, que Daily oculta): crear, unirse con código de 8 letras, compartir, salir. Cada miembro publica `{n, s:{lunes:{e,m,o,x}}, hoy:{f,ok}}`. Misión semanal rotativa (3 entrenos, 120 min u 2 ofrecidos por persona, sumados entre todos) y ranking por XP de Fit. Sin cuenta, el grupo queda local (`scaeli-fit-grupos`). Las reglas de Firestore existentes ya lo permiten.
+- **Más rutinas de casa**: «solo mancuernas 3 días», «30 minutos» y «sin equipo 4 días» (fijas, no dependen de Mi equipo).
+- **Logo nuevo** (ilustración del arco con la mancuerna): ícono de inicio recortado al arco, sin texto; logo completo en el login.
+- **Prolijidad**: tarjeta del entreno en dos filas (tiempo arriba; descartar, pausa y Terminar abajo), «Personalizar en Scaeli Daily» como tarjeta, revisión de desbordes a 360/375/390 px.
+- Caché: `scaeli-fit-v13`.

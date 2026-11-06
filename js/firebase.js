@@ -120,3 +120,35 @@ export function localBackend() {
     _borrarTodo() { store = {}; save(); emit(); }
   };
 }
+
+/* ── Grupo de perseverancia de Fit: mismos grupos/{gid} que Daily pero con tipo:"entreno" (Daily los oculta).
+   Cada persona escribe SOLO su documento de miembro: grupos/{gid}/miembros/{uid} = {n, s:{lunes:{e,m,x}}, hoy:{f,ok}} ── */
+const GID_LETRAS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+export const nuevoGid = () => { const a = new Uint8Array(8); crypto.getRandomValues(a); return Array.from(a, (x) => GID_LETRAS[x % GID_LETRAS.length]).join(""); };
+export function gruposBackend(uid) {
+  const g = (gid) => doc(db, "grupos/" + gid), m = (gid, u) => doc(db, "grupos/" + gid + "/miembros/" + u), col = (gid) => collection(db, "grupos/" + gid + "/miembros");
+  return {
+    mode: "firestore",
+    async crear(nombre, miembro) { const gid = nuevoGid(); await setDoc(g(gid), { n: nombre, creador: uid, tipo: "entreno", t: Date.now() }); await setDoc(m(gid, uid), { ...miembro, t: Date.now() }); return gid; },
+    async leer(gid) { const s = await getDoc(g(gid)); return s.exists() ? { id: gid, ...s.data() } : null; },
+    watch(gid, cb) { let meta = null, L = null; const emit = () => cb(meta, L);
+      const u1 = onSnapshot(g(gid), (s) => { meta = s.exists() ? { id: gid, ...s.data() } : false; emit(); }, (e) => cb(null, null, e));
+      const u2 = onSnapshot(col(gid), (s) => { L = s.docs.map((d) => ({ uid: d.id, ...d.data() })); emit(); }, (e) => cb(null, null, e));
+      return () => { u1(); u2(); }; },
+    setMiembro(gid, data) { return setDoc(m(gid, uid), { ...data, t: Date.now() }, { merge: true }); },
+    async salir(gid) { await deleteDoc(m(gid, uid)); try { const s = await getDocs(col(gid)); if (s.empty) { const d = await getDoc(g(gid)); if (d.exists() && d.data().creador === uid) await deleteDoc(g(gid)); } } catch (e) {} },
+  };
+}
+export function gruposLocal(uid) { const K = "scaeli-fit-grupos"; let st = {}; try { st = JSON.parse(localStorage.getItem(K) || "{}"); } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(K, JSON.stringify(st)); } catch (e) {} }; const subs = [];
+  const emit = (gid) => subs.filter((s) => s.gid === gid).forEach((s) => { const G = st[gid]; s.cb(G ? { id: gid, ...G.meta } : false, G ? Object.entries(G.m).map(([u, d]) => ({ uid: u, ...d })) : []); });
+  return {
+    mode: "local",
+    async crear(nombre, miembro) { const gid = nuevoGid(); st[gid] = { meta: { n: nombre, creador: uid, tipo: "entreno", t: Date.now() }, m: { [uid]: { ...miembro, t: Date.now() } } }; save(); return gid; },
+    async leer(gid) { return st[gid] ? { id: gid, ...st[gid].meta } : null; },
+    watch(gid, cb) { const s = { gid, cb }; subs.push(s); setTimeout(() => emit(gid), 0); return () => { const i = subs.indexOf(s); if (i >= 0) subs.splice(i, 1); }; },
+    async setMiembro(gid, data) { const G = st[gid]; if (!G) return; G.m[uid] = { ...(G.m[uid] || {}), ...JSON.parse(JSON.stringify(data)), t: Date.now() }; save(); emit(gid); },
+    async salir(gid) { const G = st[gid]; if (!G) return; delete G.m[uid]; if (!Object.keys(G.m).length) delete st[gid]; save(); emit(gid); },
+    _sembrar(gid, miembros) { if (!st[gid]) return; Object.assign(st[gid].m, miembros); save(); emit(gid); },
+  };
+}

@@ -1,6 +1,6 @@
 # LEEME · Scaeli Fit (para arrancar un chat nuevo)
 
-Leé esto entero antes de tocar código. Estado al 4 de noviembre de 2026 · versión 12.
+Leé esto entero antes de tocar código. Estado al 6 de noviembre de 2026 · versión 13.
 
 ## Qué es
 Scaeli Fit es la app hermana de **Scaeli Daily** (oración) y del juego **Scaeli**. Sirve para nutrición y entrenamiento, con lo católico integrado en la estructura (ofrecer el entreno, rezar el Rosario entre series, ayuno eclesiástico, abstinencia), sin imágenes de santos. Las tres comparten el proyecto de Firebase `scaeli` y el mismo usuario (uid).
@@ -26,13 +26,14 @@ PWA sin compilación: módulos ES que se sirven tal cual.
 - `data/`: `foods.json` + `foods_extra.json` (alimentos argentinos y USDA), `catalogo.js` (101 ejercicios), `ilus.js` (ids con dibujo), `rosario.js`, `ejercicios.js` (sprites viejos, ya no se muestran).
 - `assets/ilus/ej/<id>-a.svg|-b.svg`: dibujos Everkinetic (CC BY-SA 4.0) como máscaras, en dos poses que se alternan. Mapa en `tools/ilus/mapa.json`. Las URL van absolutas (`ILU_BASE`). `press-hombros-maquina` no tiene dibujo a propósito.
 - `assets/ilus/daily_*.png`: fondos del personaje y misterios, copiados de Daily.
-- `sw.js`: caché `VERSION = "scaeli-fit-v12"`. **Subir una unidad en cada entrega.**
+- `sw.js`: caché `VERSION = "scaeli-fit-v13"`. **Subir una unidad en cada entrega.**
 - `firestore.rules`: reglas unificadas de las tres apps (`users`, `grupos` con `mensajes`, `codes`). Nunca publicar reglas sin las tres secciones; la copia maestra está en Daily.
 
 ## Datos en Firestore (`users/{uid}/…`)
-`days/{fecha}` (comidas, `type` gym/descanso, `check`, `vals {pasos,sueno,agua}`) · `workouts/{fecha}` (`routineId`, `sets`, `startedAt`, `pausedAt`, `pausedMs`, `autoPaused`, `offered`, `intention`, `done`, `summary`) · `body/{fecha}` · `foods`, `combos`, `recipes`, `tracks` · `settings/` `profile`, `targets`, `routines`, `loads`, `prs`, `progress` (XP), `plus`, `fast`, `fasts` (historial), `intents`, `hidden`, `equipo` · compartidos con Daily: `daily_settings/profile` (personaje, `fondo`, `rosSolo`) y `daily_settings/rosario` (avance del Rosario).
+`days/{fecha}` (comidas, `type` gym/descanso, `check`, `vals {pasos,sueno,agua}`) · `workouts/{fecha}` (`routineId`, `sets`, `startedAt`, `pausedAt`, `pausedMs`, `autoPaused`, `offered`, `intention`, `done`, `summary`) · `body/{fecha}` · `foods`, `combos`, `recipes`, `tracks` · `settings/` `profile`, `targets`, `routines`, `loads`, `prs`, `progress` (XP), `plus`, `fast`, `fasts` (historial), `intents`, `hidden`, `equipo`, `grupo` ({gid}) · compartidos con Daily: `daily_settings/profile` (personaje, `fondo`, `rosSolo`) y `daily_settings/rosario` (avance del Rosario).
 
-## Qué hace hoy (v12)
+## Qué hace hoy (v13)
+- **Grupo de perseverancia** propio de Fit (grupos con `tipo:"entreno"`): misión semanal, ranking por XP y quién entrenó hoy. **Historial** de entrenos con resumen y borrado; **Descartar** el entreno en curso. Programas de casa: full body 3, torso/piernas 4 (según equipo), solo mancuernas 3, 30 minutos y sin equipo 4.
 - **Mi equipo**: cada usuario marca lo que tiene; el catálogo prioriza lo posible y los programas de casa (full body 3 días, torso/piernas 4 días) se arman solos con ese equipo. Mancuernas en «kg c/u».
 - **Hoy**: calorías y macros por tipo de día, comidas con buscador rápido (solo se redibuja la lista, hasta 60 resultados) y «Cargar a mano». Favoritos, recetas y porciones caseras. Tarjeta **Tu día** (proteína automática; pasos, sueño y agua con panel explicativo y − / +; creatina con tilde). Ayuno Plus (16:8, 18:6, 20:4, OMAD, eclesiástico) con anillo, hora editable, historial y pantalla de «Ayuno cumplido». Calendario litúrgico (ayuno, abstinencia, tiempos).
 - **Entreno**: ofrecer el entreno con intención; Comenzar, Pausar/Seguir y Terminar, con tope de 3 h si queda abierto. Series con kg, reps, RIR y «me costó»; peso sugerido con doble progresión. Descanso con anillo, +30 s y Saltar. Dibujos animados por ejercicio y ficha. Récords (PR, 1RM estimado). Resumen al terminar. Rutinas: mías, programas (6), catálogo de 101 ejercicios y rutina nueva. Rosario compacto entre series (cuenta y misterio, «Ver oración» opcional).
@@ -57,6 +58,6 @@ PWA sin compilación: módulos ES que se sirven tal cual.
 - Activar Apple como proveedor en Firebase Authentication (requiere cuenta de Apple Developer).
 - Subir los íconos pixel art al repo de Daily.
 - Páginas legales propias de Fit (`terminos.html` y `privacidad.html` todavía son copias de Daily).
-- Grupo de entrenamiento sobre los `grupos` de Daily (`tipo:"entreno"`) y recomendador de rutinas por objetivo (Plus).
+- Recomendador de rutinas por objetivo (Plus). Muro de mensajes en el grupo de Fit (Daily ya lo tiene).
 - Dibujos fieles para los ejercicios sin ilustración (por ejemplo, press de hombros en máquina).
 - Lo que Lorenzo anote después de su primer entreno con la app (3/11).
