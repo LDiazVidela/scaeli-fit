@@ -146,3 +146,7 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - **Logo nuevo** (ilustración del arco con la mancuerna): ícono de inicio recortado al arco, sin texto; logo completo en el login.
 - **Prolijidad**: tarjeta del entreno en dos filas (tiempo arriba; descartar, pausa y Terminar abajo), «Personalizar en Scaeli Daily» como tarjeta, revisión de desbordes a 360/375/390 px.
 - Caché: `scaeli-fit-v13`.
+
+## Versión 14 (2026-11-06)
+- **Color de Fit: verde** (el de la mancuerna del ícono). `--accent` #9CCB3B en oscuro y #4E7F14 en claro. El dorado queda en `--fe` y se aplica solo a lo de la fe y Scaeli+ (ofrecer, Rosario y su botón, Scaeli+, ayuno cumplido) redefiniendo `--accent` dentro de esos contenedores; los paneles llevan `data-view` para eso.
+- Caché: `scaeli-fit-v14`.

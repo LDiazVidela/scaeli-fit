@@ -1,16 +1,18 @@
-/* Grafito + ámbar. Tipografía Bricolage Grotesque. Botones: un ícono o una palabra. */
+/* Grafito + verde (el de la mancuerna del ícono); dorado solo para lo de la fe y Scaeli+. Tipografía Bricolage Grotesque. Botones: un ícono o una palabra. */
 :root{
   --bg:#0C0D10; --surface:#15171C; --inset:#1E2027; --track:#22252C; --ink:#F3F1EC; --muted:#7E8087;
   --line:rgba(255,255,255,.06); --line2:rgba(255,255,255,.12);
-  --accent:#F2B544; --accent-ink:#0C0D10; --accent-dim:rgba(242,181,68,.12); --accent-line:rgba(242,181,68,.45);
-  --carb:#A9B4C4; --fat:#D9A58E; --over:#E8826A; --ok:#F2B544;
+  --accent:#9CCB3B; --accent-ink:#0C1006; --accent-dim:rgba(156,203,59,.12); --accent-line:rgba(156,203,59,.45);
+  --fe:#F2B544; --fe-ink:#0C0D10; --fe-dim:rgba(242,181,68,.12); --fe-line:rgba(242,181,68,.45);
+  --carb:#A9B4C4; --fat:#D9A58E; --over:#E8826A; --ok:#9CCB3B;
   --bordo:#400E1E; --bordo2:#1A1420; --paper:#ECEAE4; --paper-ink:#1B1C20;
   --font:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif; color-scheme:dark;
 }
 :root[data-theme="light"]{
   --bg:#F4F2EC; --surface:#FFFFFF; --inset:#F0EEE8; --track:#E6E3DC; --ink:#17181C; --muted:#6E7079;
-  --line:rgba(0,0,0,.06); --line2:rgba(0,0,0,.12); --accent:#C8841A; --accent-ink:#FFFFFF; --accent-dim:rgba(200,132,26,.12); --accent-line:rgba(200,132,26,.5);
-  --carb:#5F7799; --fat:#B06A4D; --over:#C2361B; --ok:#C8841A; --bordo:#5A1A2E; --bordo2:#EADFE2; color-scheme:light }
+  --line:rgba(0,0,0,.06); --line2:rgba(0,0,0,.12); --accent:#4E7F14; --accent-ink:#FFFFFF; --accent-dim:rgba(78,127,20,.12); --accent-line:rgba(78,127,20,.5);
+  --fe:#C8841A; --fe-ink:#FFFFFF; --fe-dim:rgba(200,132,26,.12); --fe-line:rgba(200,132,26,.5);
+  --carb:#5F7799; --fat:#B06A4D; --over:#C2361B; --ok:#4E7F14; --bordo:#5A1A2E; --bordo2:#EADFE2; color-scheme:light }
 
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -469,3 +471,6 @@ html,body{overflow-x:hidden}
 .wsession .acts .primary{flex:1;justify-content:center}
 .wsession .acts .iconbtn,.wsession .acts .iconbtn#wDescartar{width:52px;height:52px}
 .wsession .acts .iconbtn#wDescartar{color:var(--muted)}
+
+/* ---- v14: lo de la fe y Scaeli+ conserva el dorado ---- */
+#rosMiniT,.rosmini,.offer,.plusmas,.lockcard,.vela,.ofrecido,#sheetIn[data-view="rosario"],#sheetIn[data-view="plus"],#sheetIn[data-view="fastdone"]{--accent:var(--fe);--accent-ink:var(--fe-ink);--accent-dim:var(--fe-dim);--accent-line:var(--fe-line)}
