@@ -160,3 +160,7 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - **Rangos de fuerza** (Hierro → Bronce → Plata → Oro → Platino → Diamante) por grupo (pecho, espalda, piernas, posterior, hombros, brazos) y general: mejor 1RM estimado de los básicos × factor (mancuernas por mancuerna, máquinas) / peso corporal; umbrales ×0,65 para mujeres. Tarjeta en Yo con lo que falta para el próximo; «¡Subiste de rango!» en el resumen; escudo en el ranking del grupo (`rg`).
 - **Armame una rutina** (`armarPrograma`, `armarSesion`): objetivo, días, minutos y prioridad → programa completo (cuerpo completo / torso-piernas / PPL según días, la versión B elige variantes) o sesión suelta de hoy; usa Mi equipo. Sin IA.
 - Caché: `scaeli-fit-v15`.
+
+## Versión 16 (2026-11-07)
+- **Armame una rutina con varios músculos**: hasta 3 (`o.prios`), en la sesión de hoy y en el programa. En la sesión, el primero elegido lleva más ejercicios (peso 2, resto 1; ej. espalda y bíceps en 60 min = 3 + 2 + core). Se suman Bíceps y Tríceps como opciones.
+- Caché: `scaeli-fit-v16`.

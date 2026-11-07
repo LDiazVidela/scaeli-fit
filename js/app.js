@@ -164,8 +164,8 @@ const CASA_EXTRA=[
   fijo("cs4","Piernas 2",5,"Piernas y cardio",[["sentadilla-sin-peso",4,15,20],["burpees",3,8,12],["puente-gluteo",3,15,20],["saltos-tijera",3,30,40],["russian-twist",3,15,20]])]}];
 /* ---------- «Armame una rutina»: reglas de entrenamiento, sin IA (gratis, instantáneo, sin conexión) ---------- */
 const AR_OBJ=[["musculo","Ganar músculo"],["fuerza","Más fuerza"],["grasa","Bajar grasa"],["salud","Salud"]];
-const AR_PRIO=[["","Nada en especial"],["pecho","Pecho"],["espalda","Espalda"],["piernas","Piernas"],["gluteos","Glúteos"],["hombros","Hombros"],["brazos","Brazos"]];
-const AR_SLOTS={pecho:["pecho","pechoInc","aperturas"],espalda:["remo","tiron","remo2"],piernas:["sent","bulg","gemelo"],gluteos:["gluteo","bisagra"],hombros:["hombro","lateral","post"],brazos:["biceps","triceps","martillo"],core:["core","core2","core3"]};
+const AR_PRIO=[["","Nada en especial"],["pecho","Pecho"],["espalda","Espalda"],["piernas","Piernas"],["gluteos","Glúteos"],["hombros","Hombros"],["biceps","Bíceps"],["triceps","Tríceps"]];
+const AR_SLOTS={biceps:["biceps","martillo"],triceps:["triceps"],pecho:["pecho","pechoInc","aperturas"],espalda:["remo","tiron","remo2"],piernas:["sent","bulg","gemelo"],gluteos:["gluteo","bisagra"],hombros:["hombro","lateral","post"],brazos:["biceps","triceps","martillo"],core:["core","core2","core3"]};
 const AR_TPL={full:["sent","pecho","remo","hombro","bisagra","biceps","core","triceps"],torso:["pecho","remo","hombro","pechoInc","tiron","biceps","triceps","lateral"],piernas:["sent","bisagra","bulg","gluteo","gemelo","core","core2"],
   empuje:["pecho","hombro","pechoInc","lateral","triceps","aperturas","core"],tiron:["remo","tiron","remo2","post","biceps","martillo","core"]};
 const AR_DIAS={2:[1,4],3:[1,3,5],4:[1,2,4,5],5:[1,2,3,4,5],6:[1,2,3,4,5,6]};
@@ -174,18 +174,22 @@ function arEsquema(obj,principal){if(obj==="fuerza")return principal?[4,4,6]:[3,
 function armarPrograma(o){const n={30:4,45:5,60:6,75:7}[o.min]||5;const split=arSplit(o.dias);const dias=AR_DIAS[o.dias];
   const usados={};// cada plantilla comparte lo usado: la B elige variantes de lo que ya hizo la A
   const rutinas=split.map(([tpl,name],di)=>{let slots=AR_TPL[tpl].slice();
-    if(o.prio){const ps=AR_SLOTS[o.prio].filter(x=>!slots.slice(0,n).includes(x));const trabaja=tpl==="full"||AR_TPL[tpl].slice(0,n).some(x=>AR_SLOTS[o.prio].includes(x));if(trabaja&&ps.length)slots.splice(1,0,ps[di%ps.length])}
+    let pos=1;(o.prios||[]).forEach(pg=>{const ps=AR_SLOTS[pg].filter(x=>!slots.slice(0,n).includes(x));const trabaja=tpl==="full"||AR_TPL[tpl].slice(0,n).some(x=>AR_SLOTS[pg].includes(x));if(trabaja&&ps.length)slots.splice(pos++,0,ps[di%ps.length])});
     slots=slots.slice(0,n);const u=usados[tpl]||(usados[tpl]=new Set());const ex=[];
     slots.forEach((sl,i)=>{const id=pick(sl,u);if(!id||ex.some(e=>e.id===id))return;const tiempo=/plancha|bicho|farmer|soga|mountain/.test(id);let [st,lo,hi]=arEsquema(o.obj,i<2);
-      if(o.prio&&AR_SLOTS[o.prio].includes(sl))st+=1;const e=exDeCatalogo(id,st,tiempo?30:lo,tiempo?45:hi);if(o.obj==="grasa")e.rest=Math.min(e.rest||90,75);const c=CATALOGO.find(x=>x.id===id);if(c&&c.equipo==="mancuernas")e.step=Math.min(e.step||2,2);ex.push(e)});
+      if((o.prios||[]).some(pg=>AR_SLOTS[pg].includes(sl)))st+=1;const e=exDeCatalogo(id,st,tiempo?30:lo,tiempo?45:hi);if(o.obj==="grasa")e.rest=Math.min(e.rest||90,75);const c=CATALOGO.find(x=>x.id===id);if(c&&c.equipo==="mancuernas")e.step=Math.min(e.step||2,2);ex.push(e)});
     return{id:"ar"+di+Date.now().toString(36).slice(-4),name,day:dias[di],goal:{full:"Todo el cuerpo",torso:"Pecho, espalda y brazos",piernas:"Piernas y glúteos",empuje:"Pecho, hombros y tríceps",tiron:"Espalda y bíceps"}[tpl],ex}});
   const obj=AR_OBJ.find(x=>x[0]===o.obj)[1].toLowerCase();const [s1,l1,h1]=arEsquema(o.obj,false);
-  const why=`${o.dias} días (${o.dias<=3?"cuerpo completo":o.dias===4?"torso y piernas":o.dias===5?"torso, piernas, empuje y tirón":"empuje, tirón y piernas, dos veces"}), ${n} ejercicios para ${o.min} minutos, ${s1}×${l1}–${h1} para ${obj}${o.prio?"; "+AR_PRIO.find(x=>x[0]===o.prio)[1].toLowerCase()+" con un ejercicio y una serie extra":""}.`;
+  const why=`${o.dias} días (${o.dias<=3?"cuerpo completo":o.dias===4?"torso y piernas":o.dias===5?"torso, piernas, empuje y tirón":"empuje, tirón y piernas, dos veces"}), ${n} ejercicios para ${o.min} minutos, ${s1}×${l1}–${h1} para ${obj}${(o.prios||[]).length?"; "+prioTxt(o.prios)+" con ejercicios y series extra":""}.`;
   return{rutinas,why}}
-function armarSesion(o){const u=new Set();const g=o.prio||"pecho";const n={30:4,45:5,60:6,75:7}[o.min]||5;let slots=AR_SLOTS[g].slice();
-  const extra={pecho:["triceps","hombro"],espalda:["biceps","post"],piernas:["gluteo","bisagra","core"],gluteos:["bulg","sent","core"],hombros:["triceps","pecho"],brazos:["martillo","core"]}[g]||["core"];slots=slots.concat(extra,["core","core2"]).slice(0,n);
+const prioTxt=ps=>{const t=ps.map(k=>AR_PRIO.find(x=>x[0]===k)[1].toLowerCase());return t.length>1?t.slice(0,-1).join(", ")+" y "+t[t.length-1]:t[0]||""};
+/* varios músculos en una sesión: el primero elegido lleva más ejercicios (peso 2, el resto 1); si sobran lugares, core al final */
+const AR_MAS={pecho:["pecho","pechoInc","aperturas","pecho"],espalda:["remo","tiron","remo2","post"],piernas:["sent","bulg","gemelo","bisagra"],gluteos:["gluteo","bisagra","bulg"],hombros:["hombro","lateral","post"],brazos:["biceps","triceps","martillo"],biceps:["biceps","martillo"],triceps:["triceps"]};
+function armarSesion(o){const u=new Set();const gs=(o.prios&&o.prios.length?o.prios:["pecho"]).slice(0,3);const n={30:4,45:5,60:6,75:7}[o.min]||5;
+  const m=n>=6&&gs.length>1?n-1:n;const w=gs.map((_,i)=>i===0?2:1),W=w.reduce((a,b)=>a+b,0);const cnt=w.map(x=>Math.max(1,Math.floor(m*x/W)));let r=m-cnt.reduce((a,b)=>a+b,0);for(let i=cnt.length-1;r>0;i=(i-1+cnt.length)%cnt.length,r--)cnt[i]++;
+  const slots=[];gs.forEach((g,gi)=>{const L=AR_MAS[g]||AR_SLOTS[g];for(let k=0;k<cnt[gi];k++)slots.push(L[k%L.length])});while(slots.length<n)slots.push(slots.length%2?"core2":"core");
   const ex=[];slots.forEach((sl,i)=>{const id=pick(sl,u);if(!id||ex.some(e=>e.id===id))return;const tiempo=/plancha|bicho|farmer|soga|mountain/.test(id);const [st,lo,hi]=arEsquema(o.obj,i<2);ex.push(exDeCatalogo(id,st,tiempo?30:lo,tiempo?45:hi))});
-  return{id:"hoy-"+g,name:"Hoy · "+AR_PRIO.find(x=>x[0]===g)[1],day:-1,goal:"Sesión suelta",ex}}
+  return{id:"hoy-"+gs.join("-"),name:"Hoy · "+prioTxt(gs).replace(/^./,c=>c.toUpperCase()),day:-1,goal:"Sesión suelta",ex}}
 const todosProgramas=()=>programasCasa().concat(CASA_EXTRA,PROGRAMAS);
 const GRUPOS=[["pecho","Pecho"],["espalda","Espalda"],["hombros","Hombros"],["piernas","Piernas"],["gluteos","Glúteos"],["brazos","Brazos"],["core","Core"],["completo","Completo"]];
 let rutDraft={name:"",day:-1,ex:[]},rosMini=false,rosMiniTxt=false,lastRestEx=null,prs={};
@@ -818,7 +822,7 @@ function renderSheetBody(){
       <section class="card tight list">${R.ex.map(e=>`<div class="row"><div class="n"><b style="font-weight:500">${esc(e.name)}${e.pr==="peso"||e.pr==="1RM"?' <span class="prtag">Récord</span>':e.pr==="primero"?' <span class="prtag muted">Primera marca</span>':""}</b><small>${e.sets} ${e.sets===1?"serie":"series"}${e.w>0?" · mejor "+f1(e.w)+" kg × "+e.r:" · "+e.r+" reps"}</small></div>${e.vol>0?`<span class="k">${fmt(e.vol)}<small>kg</small></span>`:""}</div>`).join("")}</section>
       <p class="hint" style="text-align:center">Nivel ${L.i+1} · ${esc(L.name)}${L.to?" · "+fmt(L.to-(progress.xp||0))+" XP para "+esc(LEVELS[L.i+1][0]):""}</p>
       <button class="primary" id="x">${ic("check")}Amén</button></div>`;
-  } else if(sheet.view==="armar"){const o=sheet.o||(sheet.o={modo:"",obj:"musculo",dias:3,min:45,prio:""});const ch=(k,v,t)=>`<button data-ar="${k}" data-v="${v}" aria-pressed="${String(o[k])===String(v)}">${esc(t)}</button>`;
+  } else if(sheet.view==="armar"){const o=sheet.o||(sheet.o={modo:"",obj:"musculo",dias:3,min:45,prios:[]});const ch=(k,v,t)=>`<button data-ar="${k}" data-v="${v}" aria-pressed="${k==="prio"?(v?o.prios.includes(v):!o.prios.length):String(o[k])===String(v)}">${esc(t)}</button>`;
     if(!o.modo)el.innerHTML=`<h3>Armame una rutina${X}</h3><div class="scroll gform"><p class="dialead">Respondé unas preguntas y la app arma el entreno con tu equipo. Sin vueltas.</p>
       <button class="card eqcard" data-ar="modo" data-v="prog"><span class="ic">${ic("edit")}</span><span class="n"><b>Un programa completo</b><small>Para toda la semana, con tus días y tu objetivo.</small></span>${ic("right")}</button>
       <button class="card eqcard" data-ar="modo" data-v="hoy"><span class="ic">${ic("gym")}</span><span class="n"><b>Solo la sesión de hoy</b><small>«Quiero trabajar pecho hoy»: te arma una sesión suelta.</small></span>${ic("right")}</button></div>`;
@@ -830,7 +834,7 @@ function renderSheetBody(){
       ${o.modo==="prog"?`<span class="eyebrow">Objetivo</span><div class="chips">${AR_OBJ.map(([k,t])=>ch("obj",k,t)).join("")}</div>
       <span class="eyebrow">Días por semana</span><div class="chips">${[2,3,4,5,6].map(d=>ch("dias",d,d+" días")).join("")}</div>`:""}
       <span class="eyebrow">Minutos por sesión</span><div class="chips">${[30,45,60,75].map(m=>ch("min",m,m+" min")).join("")}</div>
-      <span class="eyebrow">${o.modo==="hoy"?"Qué querés trabajar":"Qué querés priorizar"}</span><div class="chips">${AR_PRIO.filter(x=>o.modo==="prog"||x[0]).map(([k,t])=>ch("prio",k,t)).join("")}</div>
+      <span class="eyebrow">${o.modo==="hoy"?"Qué querés trabajar":"Qué querés priorizar"}</span><small class="hint" style="margin:-6px 0 0">Podés elegir hasta 3${o.prios.length>1?" · el primero lleva más ejercicios":""}.</small><div class="chips">${AR_PRIO.filter(x=>o.modo==="prog"||x[0]).map(([k,t])=>ch("prio",k,t)).join("")}</div>
       ${eqCardHTML(true)}
       <button class="primary" id="arGo">${ic("check")}Armar</button></div>`;
   } else if(sheet.view==="exlist"){const r=curRoutine();
@@ -1074,8 +1078,10 @@ document.addEventListener("click",e=>{
   if(b.id==="wDescartar"){const r=curRoutine();openSheet({view:"descartar",name:r?r.name:"",short:true});return}
   if(b.id==="wDiscard"){stopTimer();workout=null;offerSkip=false;write(backend.delDoc("workouts/"+wcur),"Entreno descartado");closeSheet();render();return}
   if(d.armar){openSheet({view:"armar"});return}
-  if(d.ar){const o=sheet.o;if(d.ar==="modo"){o.modo=d.v;if(o.modo==="hoy"&&!o.prio)o.prio="pecho"}else if(d.ar==="rehacer"){sheet.res=null}else o[d.ar]=/^\d+$/.test(d.v)?+d.v:d.v;renderSheetNow();return}
-  if(b.id==="arGo"){const o=sheet.o;sheet.res=o.modo==="hoy"?{rutinas:[armarSesion(o)],why:"Una sesión de "+o.min+" minutos para "+AR_PRIO.find(x=>x[0]===o.prio)[1].toLowerCase()+", con lo que tenés en Mi equipo."}:armarPrograma(o);renderSheetNow();const sc=$("#sheetIn .scroll");if(sc)sc.scrollTop=0;return}
+  if(d.ar){const o=sheet.o;if(d.ar==="modo"){o.modo=d.v}else if(d.ar==="rehacer"){sheet.res=null}
+    else if(d.ar==="prio"){const v=d.v;if(!v)o.prios=[];else if(o.prios.includes(v)){o.prios=o.prios.filter(x=>x!==v)}else if(o.prios.length<3)o.prios.push(v);else toast("Hasta 3 músculos")}
+    else o[d.ar]=/^\d+$/.test(d.v)?+d.v:d.v;renderSheetNow();return}
+  if(b.id==="arGo"){const o=sheet.o;if(o.modo==="hoy"&&!o.prios.length){toast("Elegí al menos un músculo");return}sheet.res=o.modo==="hoy"?{rutinas:[armarSesion(o)],why:"Una sesión de "+o.min+" minutos para "+prioTxt(o.prios)+(o.prios.length>1?" (más ejercicios de "+prioTxt([o.prios[0]])+")":"")+", con lo que tenés en Mi equipo."}:armarPrograma(o);renderSheetNow();const sc=$("#sheetIn .scroll");if(sc)sc.scrollTop=0;return}
   if(b.id==="arUsar"){const o=sheet.o,R=sheet.res;if(o.modo==="hoy"){const rr=R.rutinas[0];routines=routines.filter(x=>x.id!==rr.id).concat([rr]);saveRoutines();usarRutina(rr.id);closeSheet();toast("Listo: "+rr.name)}else{routines=JSON.parse(JSON.stringify(R.rutinas)).map(r=>({...r,prog:"armada"}));saveRoutines("Programa armado");closeSheet();render()}return}
   if(d.eqopen){const back=sheet&&sheet.view==="rutinas"?{tab:sheet.tab}:null;openSheet({view:"equipo",back});return}
   if(d.eq){const k=d.eq;sheet.sel.has(k)?sheet.sel.delete(k):sheet.sel.add(k);b.setAttribute("aria-pressed",sheet.sel.has(k));return}
