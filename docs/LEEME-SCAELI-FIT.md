@@ -1,6 +1,6 @@
 # LEEME · Scaeli Fit (para arrancar un chat nuevo)
 
-Leé esto entero antes de tocar código. Estado al 7 de noviembre de 2026 · versión 17 (color verde; dorado solo para lo de la fe y Scaeli+, variable `--fe`).
+Leé esto entero antes de tocar código. Estado al 7 de noviembre de 2026 · versión 18 (color verde; dorado solo para lo de la fe y Scaeli+, variable `--fe`).
 
 ## Qué es
 Scaeli Fit es la app hermana de **Scaeli Daily** (oración) y del juego **Scaeli**. Sirve para nutrición y entrenamiento, con lo católico integrado en la estructura (ofrecer el entreno, rezar el Rosario entre series, ayuno eclesiástico, abstinencia), sin imágenes de santos. Las tres comparten el proyecto de Firebase `scaeli` y el mismo usuario (uid).
@@ -26,7 +26,7 @@ PWA sin compilación: módulos ES que se sirven tal cual.
 - `data/`: `foods.json` + `foods_extra.json` (alimentos argentinos y USDA), `catalogo.js` (101 ejercicios), `ilus.js` (ids con dibujo), `rosario.js`, `ejercicios.js` (sprites viejos, ya no se muestran).
 - `assets/ilus/ej/<id>-a.svg|-b.svg`: dibujos Everkinetic (CC BY-SA 4.0) como máscaras, en dos poses que se alternan. Mapa en `tools/ilus/mapa.json`. Las URL van absolutas (`ILU_BASE`). `press-hombros-maquina` no tiene dibujo a propósito.
 - `assets/ilus/daily_*.png`: fondos del personaje y misterios, copiados de Daily.
-- `sw.js`: caché `VERSION = "scaeli-fit-v17"`. **Subir una unidad en cada entrega.**
+- `sw.js`: caché `VERSION = "scaeli-fit-v18"`. **Subir una unidad en cada entrega.**
 - `firestore.rules`: reglas unificadas de las tres apps (`users`, `grupos` con `mensajes`, `codes`). Nunca publicar reglas sin las tres secciones; la copia maestra está en Daily.
 
 ## Datos en Firestore (`users/{uid}/…`)

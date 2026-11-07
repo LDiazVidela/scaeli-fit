@@ -170,3 +170,11 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - **Pantalla completa más limpia**: el descanso va dentro de la barra fija (anillo + franja con +30 s y Saltar), sin la tarjeta duplicada; barra más baja; Anterior con borde; leyenda de Hecha/Costó solo hasta el primer entreno terminado y sin el «Primera vez…» repetido.
 - **Sugeridos por serie**: cada serie copia peso y reps de la última cargada (`baseSerie`), también al confirmar con Hecha.
 - Caché: `scaeli-fit-v17` (incluye `data/tecnica.js`).
+
+## Versión 18 (2026-11-07)
+- **Resumen con scroll**: el resumen (y «Ayuno cumplido») se desplaza dentro del panel; con un panel abierto el fondo no se mueve (`body.sheet-open`).
+- **Rangos más exigentes**: umbrales de estándares de fuerza (Bronce = novato, Plata = intermedio 1–2 años, Oro = avanzado, Platino = élite amateur, Diamante = competidor); 1RM para rangos con hasta 10 reps (`e1rmR`); explicación del sistema en la tarjeta.
+- **Dominadas y fondos asistidos** (`CORP`, `settings/asist`): botón «Asistida»; la columna pasa a «ayuda kg». Volumen y récord usan la carga real (peso corporal − ayuda); el récord es la menor ayuda; la progresión baja la ayuda. Sin asistencia, la columna es «lastre kg».
+- **Coach**: consejo después de cada serie según RIR, reps y «Costó», y «Tu coach» en el resumen.
+- **Objetivos explicados** (`OBJETIVOS`): Definir (−20 %), Recomposición (−10 % descanso, mantenimiento al entrenar), Volumen (+10 %) y Mantener. El consejo semanal de Cuerpo se adapta al objetivo.
+- Caché: `scaeli-fit-v18`.

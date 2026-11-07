@@ -569,3 +569,18 @@ body.foco .wrap{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
 .tecin ol{margin:0 0 8px;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.4}
 .tecin .err{display:flex;gap:6px;align-items:flex-start;margin:0;font-size:13px;color:var(--over);line-height:1.4}.tecin .err .i{width:15px;height:15px;flex:none;margin-top:2px}
 .frest{box-sizing:border-box;width:100%;min-width:0;flex:1 1 100%}
+
+/* ---- v18: resumen con scroll, objetivos, asistida, coach ---- */
+body.sheet-open{overflow:hidden}
+.sheet{overscroll-behavior:contain}
+.resumen.scroll{flex:1;min-height:0;overflow-y:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.objs{display:flex;flex-direction:column;gap:8px}
+.obj{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:12px 14px;border-radius:16px;border:1px solid var(--line2);background:var(--inset);color:var(--ink);font:inherit}
+.obj .ck{width:24px;height:24px;flex:none;border-radius:999px;border:1.5px solid var(--line2);display:grid;place-items:center;color:transparent;margin-top:2px}.obj .ck .i{width:14px;height:14px}
+.obj .n{display:flex;flex-direction:column;gap:3px;min-width:0}.obj b{font-size:15px;font-weight:600}.obj small{font-size:13px;color:var(--muted);line-height:1.4}.obj small.q{font-size:12px;opacity:.85}
+.obj[aria-pressed="true"]{border-color:var(--accent-line);background:var(--accent-dim)}.obj[aria-pressed="true"] .ck{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.asistbtn{height:28px;font-size:11px;margin-top:6px;padding:0 10px;gap:4px}.asistbtn .i{width:13px;height:13px}
+.coach{display:flex;gap:8px;align-items:flex-start;margin:0;padding:10px 12px;border-radius:12px;background:var(--accent-dim);border:1px solid var(--accent-line);font-size:13px;line-height:1.45;color:var(--ink)}
+.coach .i{width:16px;height:16px;flex:none;color:var(--accent);margin-top:1px}
+.coachbox{display:flex;flex-direction:column;gap:8px}.coachbox .eyebrow{display:flex;align-items:center;gap:6px;color:var(--accent)}.coachbox .eyebrow .i{width:14px;height:14px}
+.coachbox p{margin:0;font-size:14px;line-height:1.5}
