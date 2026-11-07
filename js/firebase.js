@@ -49,6 +49,8 @@ export const watchAuth = (cb) => onAuthStateChanged(auth, cb);
 export const finishRedirect = () => getRedirectResult(auth).catch(() => null);
 
 /* Capa de datos: todo lo de una persona vive en users/{uid}/... */
+const limpiar = (v) => { if (Array.isArray(v)) return v.map((x) => (x === undefined ? null : limpiar(x)));
+  if (v && typeof v === "object" && Object.getPrototypeOf(v) === Object.prototype) { const o = {}; for (const k in v) if (v[k] !== undefined) o[k] = limpiar(v[k]); return o; } return v; };
 export function userBackend(uid, onError) {
   const path = (p) => doc(db, "users/" + uid + "/" + p);
   const col = (c) => collection(db, "users/" + uid + "/" + c);
@@ -57,7 +59,8 @@ export function userBackend(uid, onError) {
     mode: "firestore", uid,
     watchDoc(p, cb) { return onSnapshot(path(p), (s) => cb(s.exists() ? s.data() : null), err); },
     watchCol(c, cb) { return onSnapshot(col(c), (s) => cb(s.docs.map((d) => ({ id: d.id, ...d.data() }))), err); },
-    setDoc(p, data) { return setDoc(path(p), data); },
+    // Firestore rechaza (y tira error en el acto) cualquier campo «undefined»: se limpian antes de guardar
+    setDoc(p, data) { try { return setDoc(path(p), limpiar(data)); } catch (e) { return Promise.reject(e); } },
     delDoc(p) { return deleteDoc(path(p)); },
     async importAll(dump) {
       // dump = { days:{id:doc}, workouts:{}, body:{}, combos:{}, recipes:{}, foods:{}, tracks:{}, settings:{} }

@@ -150,3 +150,13 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 ## Versión 14 (2026-11-06)
 - **Color de Fit: verde** (el de la mancuerna del ícono). `--accent` #9CCB3B en oscuro y #4E7F14 en claro. El dorado queda en `--fe` y se aplica solo a lo de la fe y Scaeli+ (ofrecer, Rosario y su botón, Scaeli+, ayuno cumplido) redefiniendo `--accent` dentro de esos contenedores; los paneles llevan `data-view` para eso.
 - Caché: `scaeli-fit-v14`.
+
+## Versión 15 (2026-11-07)
+- **Modo entreno** (`focoActivo()`): con la sesión en marcha, pantalla completa (sin barra de abajo), barra fija con cronómetro, anillo de descanso y pausa; un ejercicio por vez (`exIdx`) con puntos de avance, Anterior / Siguiente, «Ver todos» (panel `exlist`, también para agregar ejercicio) y Rezar · Descartar · Terminar. La flecha sale sin cortar el entreno; el botón ↑ de la tarjeta vuelve. Pantalla siempre encendida (Wake Lock).
+- **Series confirmadas**: una serie cuenta solo con «Hecha» (`ok:true`; las viejas sin `ok` cuentan si tienen reps, helper `hecha()`). Los valores sugeridos van en gris; confirmada, la fila queda fija y verde (tocar de nuevo para editar). El fuego pasó a **«Costó»**, con una línea que lo explica.
+- **Descanso persistente** (`scaeli-fit-timer` en localStorage): si el sistema cierra la app, al volver sigue con el tiempo real o avisa «Descanso listo».
+- **Guardado en Firestore**: `userBackend.setDoc` limpia los campos `undefined` (Firestore tiraba error y no guardaba, por ejemplo al agregar un ejercicio a mitad del entreno).
+- **Oración antes de entrenar** centrada y a pantalla completa.
+- **Rangos de fuerza** (Hierro → Bronce → Plata → Oro → Platino → Diamante) por grupo (pecho, espalda, piernas, posterior, hombros, brazos) y general: mejor 1RM estimado de los básicos × factor (mancuernas por mancuerna, máquinas) / peso corporal; umbrales ×0,65 para mujeres. Tarjeta en Yo con lo que falta para el próximo; «¡Subiste de rango!» en el resumen; escudo en el ranking del grupo (`rg`).
+- **Armame una rutina** (`armarPrograma`, `armarSesion`): objetivo, días, minutos y prioridad → programa completo (cuerpo completo / torso-piernas / PPL según días, la versión B elige variantes) o sesión suelta de hoy; usa Mi equipo. Sin IA.
+- Caché: `scaeli-fit-v15`.
