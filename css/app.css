@@ -547,3 +547,25 @@ body.foco .wrap{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
 .hero{padding-left:20px;padding-right:20px}
 .fbar{padding-left:16px;padding-right:16px}
 .offer>.top{max-width:none;width:auto}
+
+/* ---- v17: pantalla completa más limpia y técnica ---- */
+.fbar{flex-wrap:wrap;row-gap:8px;padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:10px;margin-top:calc(-26px - env(safe-area-inset-top,0px))}
+@media not all and (display-mode:standalone){.fbar{margin-top:-16px}}
+.fbar .fses b{font-size:24px}
+.frest{flex:1 1 100%;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px;border-radius:14px;background:var(--accent-dim);border:1px solid var(--accent-line)}
+.frest .eyebrow{color:var(--accent)}
+.frest small{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.sm2{height:32px;padding:0 12px;font-size:12px;flex:none}
+.fnav .primary{height:50px;font-size:16px}
+.fnav #exPrev{background:none;border:1px solid var(--line2);color:var(--ink)}
+.fnav #exPrev:disabled{opacity:.3}
+.fextra .chip{height:40px}
+.tec{border:1px solid var(--line2);border-radius:14px;overflow:hidden}
+.tecbtn{width:100%;display:flex;align-items:center;gap:8px;padding:10px 12px;background:none;border:0;color:var(--ink);font:inherit;font-size:14px;font-weight:600;text-align:left}
+.tecbtn span{flex:1}.tecbtn .i{width:18px;height:18px;color:var(--accent)}.tecbtn .i:last-child{color:var(--muted);transition:transform .2s}
+.tec.open .tecbtn .i:last-child{transform:rotate(90deg)}
+.tecin{display:none;padding:0 14px 12px}
+.tec.open .tecin{display:block}
+.tecin ol{margin:0 0 8px;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.4}
+.tecin .err{display:flex;gap:6px;align-items:flex-start;margin:0;font-size:13px;color:var(--over);line-height:1.4}.tecin .err .i{width:15px;height:15px;flex:none;margin-top:2px}
+.frest{box-sizing:border-box;width:100%;min-width:0;flex:1 1 100%}

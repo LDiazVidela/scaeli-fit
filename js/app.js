@@ -15,6 +15,7 @@ function pintarPersonajes(){if(!PJ.cargado())return;document.querySelectorAll("c
 import { loadSprite, SpriteAnim, EJERCICIOS } from "./sprite.js";
 import { CATALOGO } from "../data/catalogo.js";
 import { ILUS } from "../data/ilus.js";
+import { TECNICA } from "../data/tecnica.js";
 
 /* Sprite por id de ejercicio de la rutina (los ids viejos de la app se mapean por el catálogo). */
 const SPRITE_BY_APP={};CATALOGO.forEach(c=>{const sp=EJERCICIOS[c.id]?c.id:(c.sprite&&EJERCICIOS[c.sprite]?c.sprite:null);if(sp){SPRITE_BY_APP[c.id]=sp;if(c.app)SPRITE_BY_APP[c.app]=sp}});
@@ -552,8 +553,9 @@ function renderEntreno(){
     return `<div class="fbar"><button class="iconbtn ghost" id="focoSalir" aria-label="Salir de pantalla completa (el entreno sigue)">${ic("left")}</button>
       <div class="fses"><span class="eyebrow">${workout.pausedAt?"En pausa":esc(r.name)}</span><b id="sesT">${dur(sesElapsed())}</b><small>${nsets} de ${tsets} series</small></div>
       <button class="ring sm" id="ringBtn" aria-label="${timer?"Parar el descanso":"Empezar un descanso"}"><svg viewBox="0 0 68 68" aria-hidden="true"><circle cx="34" cy="34" r="29" fill="none" stroke="var(--track)" stroke-width="5"/><circle class="p" cx="34" cy="34" r="29" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="182" stroke-dashoffset="182"/></svg><b>0:00</b></button>
-      <button class="iconbtn ${workout.pausedAt?"acc":"inset"}" id="pausar" aria-label="${workout.pausedAt?"Seguir":"Pausar"}">${ic(workout.pausedAt?"play":"pause")}</button></div>
-    ${restCard()}${rosMini?rosMiniHTML():""}
+      <button class="iconbtn ${workout.pausedAt?"acc":"inset"}" id="pausar" aria-label="${workout.pausedAt?"Seguir":"Pausar"}">${ic(workout.pausedAt?"play":"pause")}</button>
+      ${timer?`<div class="frest"><span class="eyebrow">Descanso</span><small>${esc(timer.name)}</small><button class="chip off sm2" id="rest30">+30 s</button><button class="chip off sm2" id="restSkip">Saltar</button></div>`:""}</div>
+    ${rosMini?rosMiniHTML():""}
     <div class="fpos"><span class="eyebrow">Ejercicio ${exIdx+1} de ${r.ex.length}</span><button class="lnkb" id="exTodos">Ver todos</button></div>
     <div class="fdots">${r.ex.map((x,i)=>`<button data-exir="${i}" class="${i===exIdx?"on":""}${wsets(x.id).filter(hecha).length>=x.sets?" ok":""}" aria-label="Ir a ${esc(x.name)}"></button>`).join("")}</div>
     ${ex?exCardHTML(ex,true):""}
@@ -574,20 +576,26 @@ function renderEntreno(){
   <button class="nowbar" id="openListen" style="text-align:left;width:100%"><div class="n"><b>${cur_track?esc(cur_track.name):"Escuchar"}</b><small>${cur_track?(playing?"Sonando":"En pausa")+" · música "+(trackIdx+1)+" de "+tracks.length:"Música y rosario para el entreno"}</small></div>
     <div class="acts">${cur_track?`<span class="iconbtn ink" data-pp="1" role="button" aria-label="${playing?"Pausar":"Reproducir"}" style="width:36px;height:36px">${ic(playing?"pause":"play")}</span>`:""}<span class="iconbtn" style="width:36px;height:36px;color:var(--muted)" aria-hidden="true">${ic("rosary")}</span></div></button>`;
 }
+const tecDe=ex=>TECNICA[CAT_BY_APP[ex.id]||ex.id]||TECNICA[iluId(ex)]||null;
+let tecOpen=false;
+const tecHTML=(ex,abierta)=>{const T=tecDe(ex);if(!T)return "";return `<div class="tec${abierta?" open":""}"><button class="tecbtn" data-tec="1" aria-expanded="${!!abierta}">${ic("info")}<span>Técnica</span>${ic("right")}</button><div class="tecin"><ol>${T.slice(0,3).map(x=>`<li>${esc(x)}</li>`).join("")}</ol><p class="err">${ic("x")}<span>Evitá: ${esc(T[3])}</span></p></div></div>`};
+/* valores sugeridos de cada serie: copian la última serie cargada (peso y reps), si no, lo sugerido */
+function baseSerie(ex,i){const ss=wsets(ex.id);let w=null,r=null;for(let k=i-1;k>=0;k--){const x=ss[k]||{};if(w==null&&x.w>0)w=x.w;if(r==null&&x.r>0)r=x.r;if(w!=null&&r!=null)break}const sg=suggest(ex);return{w:w!=null?w:(sg.w!=null?sg.w:null),r:r!=null?r:ex.lo}}
 function exCardHTML(ex,foco,first){const ss=wsets(ex.id);const sg=suggest(ex);const L=loads[ex.id];const rows=[];
-    for(let i=0;i<Math.max(ex.sets,ss.length);i++){const s=ss[i]||{};const prev=ss[i-1]||{};const w=s.w!=null?s.w:(prev.w!=null?prev.w:(sg.w!=null?sg.w:""));const done=hecha(s);const ro=done?" readonly":"";
+    for(let i=0;i<Math.max(ex.sets,ss.length);i++){const s=ss[i]||{};const B=baseSerie(ex,i);const w=B.w!=null?B.w:"";const done=hecha(s);const ro=done?" readonly":"";
       rows.push(`<span class="no">${i+1}</span>
         <input type="number" inputmode="decimal" step="any" class="${done?"":"empty"}"${ro} data-set="${ex.id}" data-i="${i}" data-k="w" value="${esc(s.w!=null?s.w:"")}" placeholder="${esc(w)}" aria-label="Peso serie ${i+1}">
-        <input type="number" inputmode="numeric" class="${done?"":"empty"}"${ro} data-set="${ex.id}" data-i="${i}" data-k="r" value="${esc(s.r!=null?s.r:"")}" placeholder="${esc(prev.r>0?prev.r:ex.lo)}" aria-label="Reps serie ${i+1}">
+        <input type="number" inputmode="numeric" class="${done?"":"empty"}"${ro} data-set="${ex.id}" data-i="${i}" data-k="r" value="${esc(s.r!=null?s.r:"")}" placeholder="${esc(B.r)}" aria-label="Reps serie ${i+1}">
         <input type="number" inputmode="numeric" class="${done?"":"empty"}"${ro} data-set="${ex.id}" data-i="${i}" data-k="rir" value="${esc(s.rir!=null?s.rir:"")}" placeholder="2" aria-label="RIR serie ${i+1}">
         <button class="costo" data-hard="${ex.id}" data-i="${i}" aria-pressed="${!!s.hard}" aria-label="La serie me costó">Costó</button>
         <button class="hecha" data-ok="${ex.id}" data-i="${i}" aria-pressed="${done}" aria-label="${done?"Serie hecha: tocá para editarla":"Confirmar serie"}">${done?ic("check"):"Hecha"}</button>`)}
     const il=iluId(ex);const live=!!(timer&&timer.exId===ex.id);const pr=prs[ex.id];const nd=ss.filter(hecha).length;
     return `<section class="ex${foco?" foco":""}${nd>=ex.sets?" completo":""}"><div class="hd"><div class="ttl">${il?`<button class="exthumb${live?" live":""}" data-ficha="${ex.id}" aria-label="Ver ${esc(ex.name)}">${iluHTML(il)}</button>`:""}<div><b>${esc(ex.name)}${pr&&pr.w>0?` <span class="prtag" title="Récord">${f1(pr.w)}</span>`:""}</b><small>${ex.sets} × ${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}${esTiempo(ex)?" s":""} · descanso ${mmss(restOf(ex))}</small></div></div>
       <div class="sug${sg.hold?" hold":""}"><span class="eyebrow">Sugerido</span>${sg.w!=null?`<span class="v">${f1(sg.w)}<small> ${esTiempo(ex)?"s":porMancuerna(ex)?"kg c/u":"kg"}</small></span>`:`<span class="v vacio">${esTiempo(ex)?"Anotá":"Elegí"}</span>`}</div></div>
+      ${tecHTML(ex,foco?tecOpen:false)}
       <div class="sets"><span></span><span class="th">${esTiempo(ex)?"seg":porMancuerna(ex)?"kg c/u":"kg"}</span><span class="th">reps</span><span class="th">rir</span><span></span><span></span>${rows.join("")}</div>
-      ${foco||first?`<p class="leyenda">Cargá peso y reps y tocá <b>Hecha</b> al terminar cada serie. <b>Costó</b>: la serie te dejó al límite, así la próxima vez el peso no sube.</p>`:""}
-      <div class="next">${esc(sg.why)}${L?" Última: "+f1(L.w)+" × "+(L.reps||[]).join("/")+".":""}</div></section>`}
+      ${(foco||first)&&!wHist.length?`<p class="leyenda">Cargá peso y reps y tocá <b>Hecha</b> al terminar cada serie. <b>Costó</b>: la serie te dejó al límite, así la próxima vez el peso no sube.</p>`:""}
+      ${foco&&!L&&!wHist.length?"":`<div class="next">${esc(sg.why)}${L?" Última: "+f1(L.w)+" × "+(L.reps||[]).join("/")+".":""}</div>`}</section>`}
 function weekAvgs(){const by={};bodyRows.forEach(r=>{if(r.weight>0)by[r.date]=r.weight});const out=[];
   for(let w=0;w<13;w++){let s=0,n=0;for(let i=0;i<7;i++){const d=addDays(PLAN_START,w*7+i);if(by[d]){s+=by[d];n++}}out.push(n?s/n:null)}return out}
 function renderCuerpo(){
@@ -799,6 +807,7 @@ function renderSheetBody(){
   else if(sheet.view==="ficha"){const ex=sheet.ex;const il=iluId(ex);const c=CATALOGO.find(x=>x.id===(il||CAT_BY_APP[ex.id]||ex.id))||{};const L=loads[ex.id];const pr=prs[ex.id];
     el.innerHTML=`<h3>${esc(ex.name)}${X}</h3><div class="scroll" style="display:flex;flex-direction:column;gap:14px">
       ${il?`<div class="ficha">${iluHTML(il,"big")}<small>${esc((c.musc||[]).join(" · ")||"técnica")}</small></div>`:""}
+      ${tecHTML(ex,true)}
       <div class="preview"><div><b>${ex.sets}</b><span>series</span></div><div><b>${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}</b><span>${esTiempo(ex)?"seg":"reps"}</span></div><div><b>${mmss(restOf(ex))}</b><span>descanso</span></div><div><b>${L?f1(L.w):"—"}</b><span>última kg</span></div></div>
       ${pr?`<div class="preview"><div><b>${f1(pr.w)}</b><span>récord kg</span></div><div><b>${pr.r||"—"}</b><span>reps</span></div><div><b>${pr.e1rm?fmt(pr.e1rm):"—"}</b><span>1RM est.</span></div><div><b>${pr.date?pr.date.slice(5).split("-").reverse().join("/"):"—"}</b><span>fecha</span></div></div>`:""}
       <p class="hint">${esc(suggest(ex).why)} Dejá 2 repeticiones en el tanque; si una serie costó, marcá la llama y la app no te sube el peso.</p></div>`;
@@ -1069,10 +1078,11 @@ document.addEventListener("click",e=>{
   if(d.hall){openSheet({view:"hist"});return}
   if(d.hver){openSheet({view:"histver",id:d.hver});return}
   if(b.id==="histDel"){if(sheet.confirm!=="del"){sheet.confirm="del";renderSheetNow();return}const id=d.hid;const w=wHist.find(x=>x.id===id);unawardWorkout(id,w&&w.summary&&w.summary.xp);write(backend.delDoc("workouts/"+id),"Entreno borrado");if(id===wcur){workout=null;stopTimer()}closeSheet();render();return}
+  if(d.tec){const t=b.closest(".tec");const o=!t.classList.contains("open");t.classList.toggle("open",o);b.setAttribute("aria-expanded",o);if(t.closest(".ex.foco"))tecOpen=o;return}
   if(b.id==="focoSalir"){focoOff=true;render();window.scrollTo(0,0);return}
   if(b.id==="focoOn"){focoOff=false;const r=curRoutine();if(r)exIdx=primerPendiente(r);render();window.scrollTo(0,0);return}
-  if(b.id==="exPrev"){exIdx=Math.max(0,exIdx-1);render();window.scrollTo(0,0);return}
-  if(b.id==="exNext"){const r=curRoutine();exIdx=Math.min(r.ex.length-1,exIdx+1);render();window.scrollTo(0,0);return}
+  if(b.id==="exPrev"){tecOpen=false;exIdx=Math.max(0,exIdx-1);render();window.scrollTo(0,0);return}
+  if(b.id==="exNext"){tecOpen=false;const r=curRoutine();exIdx=Math.min(r.ex.length-1,exIdx+1);render();window.scrollTo(0,0);return}
   if(d.exir!==undefined){exIdx=+d.exir;closeSheet();render();window.scrollTo(0,0);return}
   if(b.id==="exTodos"){openSheet({view:"exlist"});return}
   if(b.id==="wDescartar"){const r=curRoutine();openSheet({view:"descartar",name:r?r.name:"",short:true});return}
@@ -1161,7 +1171,7 @@ document.addEventListener("click",e=>{
   else if(b.id==="offer"){const txt=($("#intencion").value||"").trim();saveWorkout(w=>{w.offered=true;w.intention=txt},txt?"Ofrecido por "+txt:"Ofrecido");if(txt)saveIntents([txt,...intents.filter(x=>x!==txt)])}
   else if(d.delint){saveIntents(intents.filter(x=>x!==d.delint));render()}
   else if(d.hard){setInput(d.hard,+d.i,"hard")}
-  else if(d.ok){const ex=curRoutine().ex.find(x=>x.id===d.ok);const ss=wsets(d.ok);const i=+d.i;const s=ss[i]||{};const prev=ss[i-1]||{};const sg=suggest(ex);
+  else if(d.ok){const ex=curRoutine().ex.find(x=>x.id===d.ok);const ss=wsets(d.ok);const i=+d.i;const s=ss[i]||{};const B=baseSerie(ex,i);const prev={w:B.w,r:B.r};const sg=suggest(ex);
     let completed=false;saveWorkout(w=>{if(!w.startedAt)w.startedAt=Date.now();const arr=w.sets[d.ok]=w.sets[d.ok]||[];while(arr.length<=i)arr.push({});const t=arr[i];if(hecha(t)){t.ok=false}else{const pw=s.w>0?s.w:(prev.w>0?prev.w:sg.w);if(pw>0)t.w=pw;t.r=s.r>0?s.r:(prev.r>0?prev.r:ex.lo);if(t.rir==null)t.rir=2;t.ok=true;completed=true}});
     if(completed){startTimer(ex);const all=wsets(d.ok).filter(hecha).length>=ex.sets;if(all&&focoActivo())toast("Ejercicio completo · tocá Siguiente")}else stopTimer()}
   else if(b.id==="finish")finishWorkout();

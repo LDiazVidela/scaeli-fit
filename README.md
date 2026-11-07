@@ -164,3 +164,9 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 ## Versión 16 (2026-11-07)
 - **Armame una rutina con varios músculos**: hasta 3 (`o.prios`), en la sesión de hoy y en el programa. En la sesión, el primero elegido lleva más ejercicios (peso 2, resto 1; ej. espalda y bíceps en 60 min = 3 + 2 + core). Se suman Bíceps y Tríceps como opciones.
 - Caché: `scaeli-fit-v16`.
+
+## Versión 17 (2026-11-07)
+- **Técnica de los 101 ejercicios** (`data/tecnica.js`: 3 claves + error común). Plegable «Técnica» bajo el nombre del ejercicio (abierta o cerrada se recuerda en el modo entreno; en la ficha va abierta).
+- **Pantalla completa más limpia**: el descanso va dentro de la barra fija (anillo + franja con +30 s y Saltar), sin la tarjeta duplicada; barra más baja; Anterior con borde; leyenda de Hecha/Costó solo hasta el primer entreno terminado y sin el «Primera vez…» repetido.
+- **Sugeridos por serie**: cada serie copia peso y reps de la última cargada (`baseSerie`), también al confirmar con Hecha.
+- Caché: `scaeli-fit-v17` (incluye `data/tecnica.js`).
