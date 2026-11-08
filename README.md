@@ -178,3 +178,11 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - **Coach**: consejo después de cada serie según RIR, reps y «Costó», y «Tu coach» en el resumen.
 - **Objetivos explicados** (`OBJETIVOS`): Definir (−20 %), Recomposición (−10 % descanso, mantenimiento al entrenar), Volumen (+10 %) y Mantener. El consejo semanal de Cuerpo se adapta al objetivo.
 - Caché: `scaeli-fit-v18`.
+
+## Versión 19 (2026-11-08)
+- **Modo entreno a pantalla completa**: la barra de arriba es fija (`position:fixed`, alto medido en `--fbarh`) y arranca pegada a la hora del teléfono; «1 de 6», los puntos y «Ver todos» en una línea; ejercicio más compacto.
+- **Rezar en el modo entreno**: el Rosario es una franja fija abajo (`body.foco .rosmini`), tocable y sin tapar el ejercicio.
+- **Mancuernas**: se cargan por mancuerna («kg c/u») y el volumen cuenta el par (×2). La tarjeta aclara «10 kg c/u = 20 kg en total».
+- **Calorías estimadas** en el resumen (MET 3,5 / 5 / 6 según RIR promedio × peso × horas activas), con la aclaración de que ya están contadas en la meta de los días de gym.
+- «¡Subiste de rango!» solo desde Bronce (Hierro no cuenta como subida).
+- Caché: `scaeli-fit-v19`.

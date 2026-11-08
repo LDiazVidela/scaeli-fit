@@ -584,3 +584,22 @@ body.sheet-open{overflow:hidden}
 .coach .i{width:16px;height:16px;flex:none;color:var(--accent);margin-top:1px}
 .coachbox{display:flex;flex-direction:column;gap:8px}.coachbox .eyebrow{display:flex;align-items:center;gap:6px;color:var(--accent)}.coachbox .eyebrow .i{width:14px;height:14px}
 .coachbox p{margin:0;font-size:14px;line-height:1.5}
+
+/* ---- v19: modo entreno a pantalla completa de verdad ---- */
+body.foco{padding-top:calc(var(--fbarh,90px) + 10px)}
+body.foco .fbar{position:fixed;top:0;left:0;right:0;margin:0;z-index:30;padding:calc(8px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+@media (display-mode:standalone){body.foco{padding-top:calc(var(--fbarh,90px) + 10px)}}
+body.foco .fbar .fses b{font-size:22px}
+.fpos{display:flex;align-items:center;gap:12px;margin:0}
+.fpos .fdots{flex:1;margin:0;justify-content:center}
+.fpos .eyebrow{flex:none}
+.ex.foco{padding:16px;gap:12px}
+.ex.foco .hd b{font-size:18px;line-height:1.2}
+.ex.foco .exthumb{width:60px;height:60px}
+.ex.foco .sug .v{font-size:20px}
+/* Rosario en el modo entreno: franja fija abajo, no tapa nada */
+body.foco .rosmini{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:29;margin:0;max-height:38vh;overflow:auto;box-shadow:0 -10px 30px rgba(0,0,0,.45);background:var(--surface)}
+body.foco .rosmini .txt.open{max-height:20vh;overflow:auto}
+body.foco-ros{padding-bottom:calc(46vh + env(safe-area-inset-bottom,0px))}
+.kcalest{display:flex;gap:10px;align-items:flex-start;margin:0;padding:12px 14px;border-radius:14px;background:var(--inset);border:1px solid var(--line2);font-size:13px;line-height:1.45;color:var(--muted)}
+.kcalest b{color:var(--ink);font-size:15px}.kcalest .i{width:18px;height:18px;flex:none;color:var(--accent);margin-top:1px}

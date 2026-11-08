@@ -391,13 +391,17 @@ function finishWorkout(){const r=curRoutine();if(!r||!workout)return;const nl={.
       const item={id:ex.id,name:ex.name,sets:all.length,w:wMin,r:bx.r||0,vol,asist:true};const old=np[ex.id]||{};const e1=Math.max(...all.map(x=>e1rm(cargaEf(ex,x.w),x.r)));
       if(!old.asist||wMin<old.w||e1>(old.e1rm||0)*1.001){np[ex.id]={w:wMin,r:bx.r||0,e1rm:Math.max(e1,old.asist?old.e1rm||0:0),date:wcur,asist:true};if(old.asist){item.pr="peso";res.prs.push(ex.name)}else item.pr="primero"}
       res.ex.push(item);const top=all.length>=ex.sets&&all.every(x=>x.r>=ex.hi&&(x.rir==null||x.rir>=2));nl[ex.id]={w:wMin,date:wcur,top,hard:all.some(x=>x.hard),reps:all.map(x=>x.r),asist:true};return}
-    const best=all.reduce((a,s)=>(s.w||0)*(s.r||0)>(a.w||0)*(a.r||0)||(s.w||0)>(a.w||0)?s:a,all[0]);const vol=Math.round(all.reduce((a,x)=>a+cargaEf(ex,x.w)*(x.r||0),0));res.vol+=vol;
+    const best=all.reduce((a,s)=>(s.w||0)*(s.r||0)>(a.w||0)*(a.r||0)||(s.w||0)>(a.w||0)?s:a,all[0]);const mult=porMancuerna(ex)?2:1;// mancuernas: se cargan por mancuerna, el volumen cuenta el par
+    const vol=Math.round(all.reduce((a,x)=>a+cargaEf(ex,x.w)*mult*(x.r||0),0));res.vol+=vol;
     const item={id:ex.id,name:ex.name,sets:all.length,w:best.w||0,r:best.r||0,vol};
     const old=np[ex.id]||{};const w=Math.max(...all.map(s=>s.w||0));const bestE=Math.max(...all.map(s=>e1rm(s.w,s.r)));
     if(w>0&&(w>(old.w||0)||bestE>(old.e1rm||0)*1.001)){const tipo=w>(old.w||0)?"peso":"1RM";np[ex.id]={w:Math.max(w,old.w||0),r:(all.find(s=>s.w===w)||{}).r||0,e1rm:Math.max(bestE,old.e1rm||0),date:wcur};if(old.w||old.e1rm){item.pr=tipo;res.prs.push(ex.name)}else{item.pr="primero"}}
     res.ex.push(item);
     const ss=all.filter(s=>s.w>0);if(!ss.length)return;const top=ss.length>=ex.sets&&ss.every(s=>s.r>=ex.hi&&(s.rir==null||s.rir>=2));nl[ex.id]={w,date:wcur,top,hard:ss.some(s=>s.hard),reps:ss.map(s=>s.r)}});
-  res.coach=coachResumen(r);const rAntes=rangos();loads=nl;prs=np;const rDesp=rangos();res.rangos=rDesp.grupos.filter(g=>{const a=rAntes.grupos.find(x=>x.k===g.k);return g.idx>(a?a.idx:-1)&&g.idx>=0}).map(g=>g.n+" · "+RANGOS[g.idx][0]);stopTimer();const offered=!!(workout.offered&&workout.intention);res.name=r.name;if(workout.intention)res.intention=workout.intention;
+  res.coach=coachResumen(r);
+  {// calorías estimadas: MET de fuerza (3,5 suave · 5 moderado · 6 intenso según el RIR promedio) × peso × horas entrenadas
+    const rirs=[];r.ex.forEach(ex=>wsets(ex.id).filter(hecha).forEach(x=>{if(x.rir!=null)rirs.push(x.rir)}));const avg=rirs.length?rirs.reduce((a,b)=>a+b,0)/rirs.length:2;const met=avg<=1?6:avg<=2.5?5:3.5;
+    res.kcal=Math.round(met*pesoCorp()*(res.dur/36e5)/10)*10}const rAntes=rangos();loads=nl;prs=np;const rDesp=rangos();res.rangos=rDesp.grupos.filter(g=>{const a=rAntes.grupos.find(x=>x.k===g.k);return g.idx>(a?a.idx:-1)&&g.idx>=1}).map(g=>g.n+" · "+RANGOS[g.idx][0]);stopTimer();const offered=!!(workout.offered&&workout.intention);res.name=r.name;if(workout.intention)res.intention=workout.intention;
   const before=progress.xp||0;award("workout",wcur,offered?XP.offered:0);if(offered)award("offered",wcur);res.xp=(progress.xp||0)-before;
   saveWorkout(w=>{w.done=true;w.summary=res},null,true);write(backend.setDoc("settings/loads",nl));write(backend.setDoc("settings/prs",np));
   openSheet({view:"resumen",res,intention:workout.intention});render()}
@@ -577,8 +581,7 @@ function renderEntreno(){
       <button class="iconbtn ${workout.pausedAt?"acc":"inset"}" id="pausar" aria-label="${workout.pausedAt?"Seguir":"Pausar"}">${ic(workout.pausedAt?"play":"pause")}</button>
       ${timer?`<div class="frest"><span class="eyebrow">Descanso</span><small>${esc(timer.name)}</small><button class="chip off sm2" id="rest30">+30 s</button><button class="chip off sm2" id="restSkip">Saltar</button></div>`:""}</div>
     ${rosMini?rosMiniHTML():""}
-    <div class="fpos"><span class="eyebrow">Ejercicio ${exIdx+1} de ${r.ex.length}</span><button class="lnkb" id="exTodos">Ver todos</button></div>
-    <div class="fdots">${r.ex.map((x,i)=>`<button data-exir="${i}" class="${i===exIdx?"on":""}${wsets(x.id).filter(hecha).length>=x.sets?" ok":""}" aria-label="Ir a ${esc(x.name)}"></button>`).join("")}</div>
+    <div class="fpos"><span class="eyebrow">${exIdx+1} de ${r.ex.length}</span><div class="fdots">${r.ex.map((x,i)=>`<button data-exir="${i}" class="${i===exIdx?"on":""}${wsets(x.id).filter(hecha).length>=x.sets?" ok":""}" aria-label="Ir a ${esc(x.name)}"></button>`).join("")}</div><button class="lnkb" id="exTodos">Ver todos</button></div>
     ${ex?exCardHTML(ex,true):""}
     <div class="fnav"><button class="primary ink" id="exPrev" ${exIdx===0?"disabled":""}>${ic("left")}Anterior</button>${ult&&fin?`<button class="primary" id="finish">${ic("flag")}Terminar</button>`:`<button class="primary${fin?"":" ink"}" id="exNext" ${ult?"disabled":""}>Siguiente${ic("right")}</button>`}</div>
     <div class="fextra"><button class="chip ${rosMini?"":"off"}" id="rosMiniT" aria-pressed="${rosMini}">${ic("rosary")}Rezar</button><button class="chip off" id="wDescartar">${ic("trash")}Descartar</button><button class="chip off" id="finish">${ic("flag")}Terminar</button></div>`}
@@ -637,6 +640,7 @@ function exCardHTML(ex,foco,first){const ss=wsets(ex.id);const sg=suggest(ex);co
       <div class="sug${sg.hold?" hold":""}"><span class="eyebrow">Sugerido</span>${sg.w!=null?`<span class="v">${f1(sg.w)}<small> ${esTiempo(ex)?"s":porMancuerna(ex)?"kg c/u":"kg"}</small></span>`:`<span class="v vacio">${esTiempo(ex)?"Anotá":"Elegí"}</span>`}</div></div>
       ${tecHTML(ex,foco?tecOpen:false)}
       <div class="sets"><span></span><span class="th">${esTiempo(ex)?"seg":esCorp(ex)?(esAsist(ex)?"ayuda kg":"lastre kg"):porMancuerna(ex)?"kg c/u":"kg"}</span><span class="th">reps</span><span class="th">rir</span><span></span><span></span>${rows.join("")}</div>
+      ${porMancuerna(ex)?(()=>{const B=baseSerie(ex,ss.length?Math.min(ss.length,ex.sets-1):0);return B.w>0?`<p class="leyenda">${f1(B.w)} kg c/u = ${f1(B.w*2)} kg en total. Cargá el peso de cada mancuerna.</p>`:`<p class="leyenda">Cargá el peso de cada mancuerna (si usás 10 y 10, poné 10).</p>`})():""}
       ${coachMsg[ex.id]?`<p class="coach">${ic("info")}<span>${esc(coachMsg[ex.id])}</span></p>`:""}
       ${esAsist(ex)?`<p class="leyenda">Asistida: anotá los kg que te ayudan (máquina o banda). Cuanta menos ayuda, más fuerza: la app te va a pedir bajarla.</p>`:""}
       ${(foco||first)&&!wHist.length?`<p class="leyenda">Cargá peso y reps y tocá <b>Hecha</b> al terminar cada serie. <b>Costó</b>: la serie te dejó al límite, así la próxima vez el peso no sube.</p>`:""}
@@ -743,7 +747,8 @@ function mountSprites(root){anims.forEach(a=>a.stop());anims=[];
   (root||document).querySelectorAll("canvas[data-sprite]").forEach(cv=>{const id=cv.dataset.sprite;loadSprite(id).then(sp=>{if(!cv.isConnected)return;const live=cv.dataset.live==="1";const scale=+cv.dataset.scale||1;
     const a=new SpriteAnim(cv,sp,{scale,crop:true,start:live?undefined:(sp.cfg.quieto??sp.cfg.inicio??0),end:live?undefined:(sp.cfg.quieto??sp.cfg.inicio??0),autoplay:live});if(!live){a.frame=sp.cfg.quieto??sp.cfg.inicio??0;a.draw()}anims.push(a)}).catch(()=>{})})}
 function afterRender(){
-  document.body.classList.toggle("foco",focoActivo());wakeAjustar();
+  document.body.classList.toggle("foco",focoActivo());document.body.classList.toggle("foco-ros",focoActivo()&&rosMini);wakeAjustar();
+  {const fb=document.querySelector(".fbar");if(fb)document.documentElement.style.setProperty("--fbarh",fb.offsetHeight+"px")}
   mountSprites($("#app"));pintarPersonajes();
   const tfi=$("#tfile");if(tfi)tfi.onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)uploadTrack(f)};
   const imp=$("#importFile");if(imp)imp.onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{const dump=JSON.parse(await f.text());const cols=["days","workouts","body","combos","recipes","foods","tracks","settings"];const clean={};cols.forEach(c=>{if(dump[c]&&typeof dump[c]==="object")clean[c]=dump[c]});
@@ -875,6 +880,7 @@ function renderSheetBody(){
     const nm=$("#rutName");if(nm)nm.oninput=e=>{rutDraft.name=e.target.value;const sv=$("#rutSave");if(sv)sv.disabled=!(rutDraft.name.trim()&&rutDraft.ex.length)};
   } else if(sheet.view==="resumen"){const R=sheet.res;const L=levelOf(progress.xp||0);
     el.innerHTML=`<div class="resumen scroll"><span class="eyebrow">${sheet.intention?"Ofrecido por "+esc(sheet.intention):"Entreno terminado"}</span><h2 class="fh" style="margin:0">Bien hecho.</h2>
+      ${R.kcal>0?`<p class="kcalest">${ic("flame")}<span><b>≈ ${fmt(R.kcal)} kcal</b> quemadas · estimación según tu peso, el tiempo y la intensidad. Ya están contadas en tu meta de los días de gym: no sumes más comida por esto.</span></p>`:""}
       <div class="preview"><div><b>${R.dur?durTxt(R.dur):"—"}</b><span>duración</span></div><div><b>${R.sets}</b><span>series</span></div><div><b>${fmt(R.vol)}</b><span>kg movidos</span></div><div><b>${R.xp!=null?"+"+R.xp:"—"}</b><span>XP</span></div></div>
       ${R.rangos&&R.rangos.length?`<div class="prbox rangoup">${escudo(rangos().gen,34)}<div><b>¡Subiste de rango!</b><small>${R.rangos.map(esc).join(" · ")}</small></div></div>`:""}
       ${R.prs&&R.prs.length?`<div class="prbox">${ic("badge")}<div><b>${R.prs.length===1?"Récord personal":R.prs.length+" récords personales"}</b><small>${R.prs.map(esc).join(" · ")}</small></div></div>`:""}
