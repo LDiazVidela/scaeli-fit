@@ -307,11 +307,14 @@ function entryFor(f,q,unit,meal){const grams=unit?q*f.unitG:q;const m=macrosFor(
 let wUnsub=null;
 function openWorkout(d){wcur=d;workout=null;offerSkip=false;render();if(!backend)return;if(wUnsub)wUnsub();wUnsub=backend.watchDoc("workouts/"+d,v=>{if(wcur===d){workout=v;render()}})}
 function routineFor(d){const w=parse(d).getDay();return routines.find(r=>r.day===w)||null}
-function curRoutine(){const ids=[workout&&workout.routineId,routineSel,(routineFor(wcur)||{}).id];for(const id of ids){const r=id&&routines.find(x=>x.id===id);if(r)return r}return null}
+function curRoutineBase(){const ids=[workout&&workout.routineId,routineSel,(routineFor(wcur)||{}).id];for(const id of ids){const r=id&&routines.find(x=>x.id===id);if(r)return r}return null}
+/* Cambios de ejercicio en medio del entreno (workout.cambios[idEnLaRutina] = {antes, nuevo}): el anterior queda con las series que ya hiciste y el nuevo sigue con las que faltan */
+function curRoutine(){const r=curRoutineBase();const C=workout&&workout.routineId===(r&&r.id)&&workout.cambios;if(!r||!C||!Object.keys(C).length)return r;
+  return{...r,ex:r.ex.flatMap(e=>{const c=C[e.id];if(!c)return[e];return(c.antes?[c.antes]:[]).concat([c.nuevo||e])})}}
 function wsets(exId){return (workout&&workout.sets&&workout.sets[exId])||[]}
 function restOf(ex){return ex.rest>0?ex.rest:(ex.step>=5?180:90)}
 function saveWorkout(mut,msg,quiet){const r=curRoutine();if(!r)return;
-  const w={date:wcur,routineId:r.id,sets:JSON.parse(JSON.stringify((workout&&workout.sets)||{})),done:!!(workout&&workout.done),intention:(workout&&workout.intention)||"",offered:!!(workout&&workout.offered),startedAt:(workout&&workout.startedAt)||null,pausedAt:(workout&&workout.pausedAt)||null,pausedMs:(workout&&workout.pausedMs)||0,extra:(workout&&workout.extra)||{},autoPaused:!!(workout&&workout.autoPaused),summary:(workout&&workout.summary)||null};
+  const w={date:wcur,routineId:r.id,sets:JSON.parse(JSON.stringify((workout&&workout.sets)||{})),done:!!(workout&&workout.done),intention:(workout&&workout.intention)||"",offered:!!(workout&&workout.offered),startedAt:(workout&&workout.startedAt)||null,pausedAt:(workout&&workout.pausedAt)||null,pausedMs:(workout&&workout.pausedMs)||0,extra:(workout&&workout.extra)||{},cambios:(workout&&workout.cambios)||{},autoPaused:!!(workout&&workout.autoPaused),summary:(workout&&workout.summary)||null};
   mut(w);workout=w;if(!quiet)render();write(backend.setDoc("workouts/"+wcur,w),msg)}
 const esTiempo=ex=>!!(ex.tiempo||(ex.step===0&&/plancha|seg|hollow|farmer|soga|escalador|mountain/i.test(ex.name)));
 function suggest(ex){const L=loads[ex.id];
@@ -658,6 +661,24 @@ function cuerpoCardHTML(){const rec=fatiga();const cans=Object.entries(rec).filt
     ${cans.length?`<div class="cans">${cans.map(([m,v])=>`<button class="mchip" data-musc="${m}"><i style="background:${colRec(v)}"></i>${esc(MUSC[m][0])} ${v} %</button>`).join("")}</div>`:""}
     <button class="primary" id="recomendar">${ic("check")}Recomendame el de hoy</button>
     <p class="hint" style="margin:0">Es una estimación con tus series, el RIR y «Costó»: los músculos chicos se recuperan en unas 48 h y los grandes en 72 h.</p></section>`}
+/* ---------- Cambiar un ejercicio: recomendados del mismo músculo, filtrables por lo que tenés a mano ---------- */
+const CAMB_EQ=[["","Mi equipo"],["mancuernas","Mancuernas"],["barra","Barra"],["maquina","Máquina"],["polea","Polea"],["peso-corporal","Sin peso"]];
+function alternativas(ex,eq,q){const cid=CAT_BY_APP[ex.id]||ex.id;const c0=CATALOGO.find(x=>x.id===cid)||{};const M0=muscDe(ex.id);const r=curRoutine();const usados=new Set((r?r.ex:[]).map(e=>CAT_BY_APP[e.id]||e.id));
+  const sim=c=>{const M=muscDe(c.id);let s=0,n0=0;Object.entries(M0).forEach(([m,w])=>{n0+=w;s+=Math.min(w,M[m]||0)});return n0?s/n0:0};
+  let L=CATALOGO.filter(c=>c.id!==cid&&!usados.has(c.id)).map(c=>({c,s:sim(c)+(c.grupo===c0.grupo?.2:0)}));
+  if(q){const w=norm(q).split(/\s+/);L=L.filter(x=>w.every(t=>norm(x.c.nombre).includes(t)))}else L=L.filter(x=>x.s>=.45);
+  if(eq)L=L.filter(x=>x.c.equipo===eq);else L=L.filter(x=>puedo(x.c));
+  return L.sort((a,b)=>b.s-a.s).map(x=>x.c)}
+function cambiarEj(exId,nuevoCid,siempre){const r=curRoutine(),base=curRoutineBase();const ex=r.ex.find(x=>x.id===exId);if(!ex||!base)return;
+  const hechas=wsets(exId).filter(hecha).length;const tot=nSerOf(ex);const resto=Math.max(1,tot-hechas);const c=CATALOGO.find(x=>x.id===nuevoCid);
+  const tiempo=/plancha|bicho|farmer|soga|mountain/.test(nuevoCid);const nuevo=exDeCatalogo(nuevoCid,resto,tiempo?30:ex.lo,tiempo?45:ex.hi);if(!nuevo)return;
+  const antes=hechas?{...ex,sets:hechas,cambiado:true}:null;
+  // la clave es el id que figura en la rutina base (si el ejercicio ya venía de un cambio, se reemplaza ese cambio)
+  const key=Object.keys((workout&&workout.cambios)||{}).find(k=>{const cc=workout.cambios[k];return(cc.nuevo&&cc.nuevo.id===exId)})||exId;
+  if(siempre){const rr=routines.find(x=>x.id===base.id);const i=rr.ex.findIndex(e=>e.id===key);if(i>=0){rr.ex[i]={...exDeCatalogo(nuevoCid,ex.sets,tiempo?30:ex.lo,tiempo?45:ex.hi)};saveRoutines()}
+    saveWorkout(w=>{w.cambios=w.cambios||{};const prev=w.cambios[key];delete w.cambios[key];const ant=prev&&prev.antes?prev.antes:antes;w.cambios[nuevoCid]={antes:ant,nuevo:{...nuevo}}})}
+  else saveWorkout(w=>{w.cambios=w.cambios||{};const prev=w.cambios[key];w.cambios[key]={antes:prev&&prev.antes?prev.antes:antes,nuevo}});
+  const r2=curRoutine();const j=r2.ex.findIndex(e=>e.id===nuevoCid);if(j>=0)exIdx=j;coachMsg[nuevoCid]=null;toast("Cambiado por "+(c?c.nombre:nuevoCid))}
 /* ---------- Coach: un consejo después de cada serie, según reps, RIR y «Costó» ---------- */
 function coachSerie(ex,i,x){if(!x)return null;const ult=i>=nSerOf(ex)-1;const t=esTiempo(ex);
   if(x.rir===0&&!ult)return "Llegaste al fallo antes de la última serie. "+(esAsist(ex)?"Sumá un poco de ayuda":"Bajá un 5–10 % el peso")+" para las que quedan: así cuidás la técnica y el músculo rinde más.";
@@ -691,7 +712,7 @@ function exCardHTML(ex,foco,first){const ss=wsets(ex.id);const sg=suggest(ex);co
     const il=iluId(ex);const live=!!(timer&&timer.exId===ex.id);const pr=prs[ex.id];const nd=ss.filter(hecha).length;
     return `<section class="ex${foco?" foco":""}${nd>=nSerOf(ex)?" completo":""}"><div class="hd"><div class="ttl">${il?`<button class="exthumb${live?" live":""}" data-ficha="${ex.id}" aria-label="Ver ${esc(ex.name)}">${iluHTML(il)}</button>`:""}<div><b>${esc(ex.name)}${pr&&pr.w>=0&&(pr.w>0||pr.asist)?` <span class="prtag" title="Récord">${pr.asist?(pr.w>0?f1(pr.w)+" ayuda":"sin ayuda"):f1(pr.w)}</span>`:""}</b><small>${ex.sets} × ${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}${esTiempo(ex)?" s":""} · descanso ${mmss(restOf(ex))}</small>${esCorp(ex)?`<button class="chip asistbtn ${esAsist(ex)?"":"off"}" data-asist="${ex.id}" aria-pressed="${esAsist(ex)}">${esAsist(ex)?ic("check"):""}Asistida</button>`:""}</div></div>
       <div class="sug${sg.hold?" hold":""}"><span class="eyebrow">Sugerido</span>${sg.w!=null?`<span class="v">${f1(sg.w)}<small> ${esTiempo(ex)?"s":porMancuerna(ex)?"kg c/u":"kg"}</small></span>`:`<span class="v vacio">${esTiempo(ex)?"Anotá":"Elegí"}</span>`}</div></div>
-      ${tecHTML(ex,foco?tecOpen:false)}
+      <div class="exherr">${tecHTML(ex,foco?tecOpen:false)}${ex.cambiado?`<span class="chip muted sm">Cambiado</span>`:`<button class="cambiar" data-cambiar="${ex.id}">${ic("swap")}Cambiar</button>`}</div>
       <div class="sets"><span></span><span class="th">${esTiempo(ex)?"seg":esCorp(ex)?(esAsist(ex)?"ayuda kg":"lastre kg"):porMancuerna(ex)?"kg c/u":"kg"}</span><span class="th">reps</span><span class="th">rir</span><span></span><span></span>${rows.join("")}</div>
       ${workout&&workout.startedAt&&!workout.done?`<div class="setsmas"><button class="chip off" data-smas="${ex.id}">${ic("plus")}Serie</button>${nSer>1?`<button class="chip off" data-smenos="${ex.id}">${ic("minus")}Serie</button>`:""}</div>`:""}
       ${porMancuerna(ex)?(()=>{const B=baseSerie(ex,ss.length?Math.min(ss.length,ex.sets-1):0);return B.w>0?`<p class="leyenda">${f1(B.w)} kg c/u = ${f1(B.w*2)} kg en total. Cargá el peso de cada mancuerna.</p>`:`<p class="leyenda">Cargá el peso de cada mancuerna (si usás 10 y 10, poné 10).</p>`})():""}
@@ -957,6 +978,13 @@ function renderSheetBody(){
       <span class="eyebrow">${o.modo==="hoy"?"Qué querés trabajar":"Qué querés priorizar"}</span><small class="hint" style="margin:-6px 0 0">Podés elegir hasta 3${o.prios.length>1?" · el primero lleva más ejercicios":""}.</small><div class="chips">${AR_PRIO.filter(x=>o.modo==="prog"||x[0]).map(([k,t])=>ch("prio",k,t)).join("")}</div>
       ${eqCardHTML(true)}
       <button class="primary" id="arGo">${ic("check")}Armar</button></div>`;
+  } else if(sheet.view==="cambiar"){const ex=curRoutine().ex.find(x=>x.id===sheet.exId);if(!ex){closeSheet();return}const eq=sheet.eq||"";
+    el.innerHTML=`<h3>Cambiar ejercicio${X}</h3><div class="scroll gform"><p class="dialead" style="font-size:15px">En lugar de <b>${esc(ex.name)}</b>. ${wsets(ex.id).filter(hecha).length?"Las series que ya hiciste quedan guardadas.":""}</p>
+      <span class="eyebrow">Con qué contás ahora</span><div class="chips">${CAMB_EQ.map(([k,t])=>`<button data-ceq="${k}" aria-pressed="${eq===k}">${esc(t)}</button>`).join("")}</div>
+      <input type="search" id="cq" placeholder="Buscar otro ejercicio…" value="${esc(sheet.q||"")}" autocomplete="off">
+      <div id="clist">${cambListHTML()}</div>
+      <button class="eqit" id="cSiempre" aria-pressed="${!!sheet.siempre}"><span class="ck">${ic("check")}</span><span class="n"><b>Usarlo siempre en esta rutina</b><small>Si no, el cambio vale solo para hoy.</small></span></button></div>`;
+    $("#cq").oninput=e=>{sheet.q=e.target.value;const cl=$("#clist");if(cl)cl.innerHTML=cambListHTML()};
   } else if(sheet.view==="exlist"){const r=curRoutine();
     el.innerHTML=`<h3>Ejercicios${X}</h3><div class="scroll"><section class="card tight list">${(r?r.ex:[]).map((x,i)=>{const n=wsets(x.id).filter(hecha).length;return `<button class="row hrow" data-exir="${i}"><div class="n"><b>${i+1}. ${esc(x.name)}</b><small>${n} de ${nSerOf(x)} series${n>=nSerOf(x)?" · listo":""}</small></div>${n>=nSerOf(x)?ic("check"):ic("right")}</button>`}).join("")}</section>
       <button class="ghost g" id="addToRoutine" style="justify-content:center;width:100%;margin-top:12px">${ic("plus")}Agregar ejercicio</button></div>`;
@@ -1020,6 +1048,9 @@ function catListHTML(){const tab=sheet.tab||"mias";const q=norm(sheet.q||"");con
 const armarCardHTML=()=>`<button class="card eqcard armar" data-armar="1"><span class="ic">${ic("plus")}</span><span class="n"><b>Armame una rutina</b><small>Contestás 4 preguntas y la app arma tu programa, o solo la sesión de hoy.</small></span>${ic("right")}</button>`;
 function eqCardHTML(compacto){return `<button class="card eqcard" data-eqopen="1"><span class="ic">${ic("gym")}</span><span class="n"><b>Mi equipo</b><small>${esc(eqTxt())}</small></span><span class="lnk">${equipo?"Editar":"Configurar"}</span></button>`}
 const histRow=w=>{const R=w.summary||{};return `<button class="row hrow" data-hver="${w.id}"><div class="n"><b>${esc(fecha(w.id))}</b><small>${esc(R.name||"Entreno")} · ${R.dur?durTxt(R.dur):"—"} · ${R.sets||0} series${R.prs&&R.prs.length?" · "+R.prs.length+" récord"+(R.prs.length>1?"s":""):""}</small></div>${ic("right")}</button>`};
+function cambListHTML(){const ex=curRoutine().ex.find(x=>x.id===sheet.exId);if(!ex)return "";const L=alternativas(ex,sheet.eq||"",sheet.q||"");const top=sheet.q?L.slice(0,30):L.slice(0,6);
+  if(!top.length)return `<p class="empty">${sheet.q?"No hay coincidencias.":"No hay alternativas con ese equipo. Probá otro o buscá por nombre."}</p>`;
+  return `${sheet.q?"":`<span class="eyebrow">Recomendados</span>`}<div class="list">${top.map(c=>`<button class="food" data-cpick="${c.id}">${ILUS.has(c.id)?iluHTML(c.id,"mini"):`<span class="mini"></span>`}<span><b>${esc(c.nombre)}</b><small>${esc(c.equipo.replace("-"," "))}${(muscDe(c.id)&&Object.keys(muscDe(c.id))[0])?" · "+esc(MUSC[Object.keys(muscDe(c.id))[0]][0].toLowerCase()):""}</small></span>${ic("right")}</button>`).join("")}</div>`}
 function shRutinas(){const tab=sheet.tab||"mias";const target=sheet.target?routines.find(x=>x.id===sheet.target):null;
   const tabs=`<div class="seg" style="margin-bottom:12px"><button data-rtab="mias" aria-pressed="${tab==="mias"}">Mías</button><button data-rtab="bib" aria-pressed="${tab==="bib"}">Programas</button><button data-rtab="cat" aria-pressed="${tab==="cat"||tab==="pick"}">${tab==="pick"?"Agregar":"Catálogo"}</button><button data-rtab="nueva" aria-pressed="${tab==="nueva"}">Nueva</button></div>`;
   let body="";
@@ -1198,6 +1229,10 @@ document.addEventListener("click",e=>{
   if(b.id==="histDel"){if(sheet.confirm!=="del"){sheet.confirm="del";renderSheetNow();return}const id=d.hid;const w=wHist.find(x=>x.id===id);unawardWorkout(id,w&&w.summary&&w.summary.xp);write(backend.delDoc("workouts/"+id),"Entreno borrado");if(id===wcur){workout=null;stopTimer()}closeSheet();render();return}
   if(d.smas||d.smenos){const id=d.smas||d.smenos;const ex=curRoutine().ex.find(x=>x.id===id);saveWorkout(w=>{w.extra=w.extra||{};const cur=w.extra[id]||0;const ss=(w.sets[id]||[]);const usadas=ss.filter(x=>x&&(x.r>0||x.w>0)).length;
       if(d.smas)w.extra[id]=cur+1;else{const nuevo=cur-1;if(ex.sets+nuevo<usadas){toast("Esa serie ya tiene datos: borrá los números primero");return}if(ex.sets+nuevo<1)return;w.extra[id]=nuevo;if(ss.length>ex.sets+nuevo)ss.length=ex.sets+nuevo}});return}
+  if(d.cambiar){openSheet({view:"cambiar",exId:d.cambiar,eq:"",q:"",siempre:false});return}
+  if(d.ceq!==undefined){sheet.eq=d.ceq;renderSheetNow();return}
+  if(b.id==="cSiempre"){sheet.siempre=!sheet.siempre;b.setAttribute("aria-pressed",sheet.siempre);return}
+  if(d.cpick){const {exId,siempre}=sheet;closeSheet();cambiarEj(exId,d.cpick,siempre);render();window.scrollTo(0,0);return}
   if(d.musc){const m=d.musc;const v=fatiga()[m];const u=ultimaVez(m);const R=MUSC[m][1];const falta=v>=100?0:Math.ceil((100-v)/100*R);
     toast(`${MUSC[m][0]} ${v} % · ${falta?"listo en ~"+falta+" h":"listo"}${u?" · lo entrenaste "+(u===today()?"hoy":"el "+fecha(u).toLowerCase()):""}`);return}
   if(b.id==="recomendar"){const R=recomendar();const o={modo:"hoy",obj:(profile&&profile.goal==="ganar")?"musculo":"musculo",dias:3,min:45,prios:R.prios};openSheet({view:"armar",o,res:{rutinas:[armarSesion(o)],why:R.why}});return}

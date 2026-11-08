@@ -193,3 +193,8 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - **Series**: «+ Serie» y «− Serie» por ejercicio (`workout.extra`); las series hechas se pueden editar sin perder el tilde.
 - **Tu cuerpo hoy**: mapa de músculos de frente y espalda (`data/cuerpo.js`, react-body-highlighter, MIT) coloreado por recuperación estimada (`fatiga()`: cada serie confirmada carga fatiga según `muscDe()`, más con RIR 0–1 o «Costó»; recuperación 48 h músculos chicos, 72 h grandes). Tocar un músculo dice cuándo está listo. «Recomendame el de hoy» elige los grupos más recuperados y hace más tiempo sin entrenar y arma la sesión; aviso si la rutina del día carga un músculo por debajo del 60 %.
 - Caché: `scaeli-fit-v20` (incluye `data/cuerpo.js`).
+
+## Versión 21 (2026-11-08)
+- **Cambiar ejercicio en medio del entreno** sin salir de la pantalla: botón «Cambiar» junto a «Técnica». Recomendados del mismo músculo (`alternativas()`: similitud de músculos con `muscDe` + mismo grupo, sin repetir los de la rutina), filtrables por «Con qué contás ahora» (Mi equipo, Mancuernas, Barra, Máquina, Polea, Sin peso) o buscando por nombre. Por defecto vale solo por hoy (`workout.cambios[idEnRutina] = {antes, nuevo}`, aplicado en `curRoutine()`); «Usarlo siempre en esta rutina» reemplaza también en la rutina. Las series ya hechas quedan en el ejercicio anterior (marcado «Cambiado») y el nuevo sigue con las que faltan.
+- En el modo entreno, los paneles quedan por encima de la barra fija.
+- Caché: `scaeli-fit-v21`.

@@ -628,3 +628,13 @@ body.foco-ros{padding-bottom:calc(46vh + env(safe-area-inset-bottom,0px))}
 .mchip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:none;color:var(--ink);font:inherit;font-size:12px;font-weight:600}
 .mchip i{width:8px;height:8px;border-radius:99px;display:block}
 .toast{white-space:normal;text-align:center;line-height:1.35}
+
+/* ---- v21: cambiar ejercicio ---- */
+.exherr{display:flex;gap:8px;align-items:stretch}
+.exherr .tec{flex:1;min-width:0}
+.cambiar{flex:none;display:flex;align-items:center;gap:6px;padding:0 14px;height:44px;border-radius:14px;border:1px solid var(--line2);background:none;color:var(--ink);font:inherit;font-size:14px;font-weight:600}
+.cambiar .i{width:16px;height:16px;color:var(--accent)}
+.exherr .chip.sm{align-self:center}
+.tec.open{flex-basis:100%}
+.exherr:has(.tec.open){flex-wrap:wrap}
+body.foco .sheet{z-index:41}body.foco #scrim,body.foco .scrim{z-index:40}
