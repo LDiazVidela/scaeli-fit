@@ -16,6 +16,7 @@ import { loadSprite, SpriteAnim, EJERCICIOS } from "./sprite.js";
 import { CATALOGO } from "../data/catalogo.js";
 import { ILUS } from "../data/ilus.js";
 import { TECNICA } from "../data/tecnica.js";
+import { CUERPO_FRENTE, CUERPO_ESPALDA } from "../data/cuerpo.js";
 
 /* Sprite por id de ejercicio de la rutina (los ids viejos de la app se mapean por el catálogo). */
 const SPRITE_BY_APP={};CATALOGO.forEach(c=>{const sp=EJERCICIOS[c.id]?c.id:(c.sprite&&EJERCICIOS[c.sprite]?c.sprite:null);if(sp){SPRITE_BY_APP[c.id]=sp;if(c.app)SPRITE_BY_APP[c.app]=sp}});
@@ -310,7 +311,7 @@ function curRoutine(){const ids=[workout&&workout.routineId,routineSel,(routineF
 function wsets(exId){return (workout&&workout.sets&&workout.sets[exId])||[]}
 function restOf(ex){return ex.rest>0?ex.rest:(ex.step>=5?180:90)}
 function saveWorkout(mut,msg,quiet){const r=curRoutine();if(!r)return;
-  const w={date:wcur,routineId:r.id,sets:JSON.parse(JSON.stringify((workout&&workout.sets)||{})),done:!!(workout&&workout.done),intention:(workout&&workout.intention)||"",offered:!!(workout&&workout.offered),startedAt:(workout&&workout.startedAt)||null,pausedAt:(workout&&workout.pausedAt)||null,pausedMs:(workout&&workout.pausedMs)||0,autoPaused:!!(workout&&workout.autoPaused),summary:(workout&&workout.summary)||null};
+  const w={date:wcur,routineId:r.id,sets:JSON.parse(JSON.stringify((workout&&workout.sets)||{})),done:!!(workout&&workout.done),intention:(workout&&workout.intention)||"",offered:!!(workout&&workout.offered),startedAt:(workout&&workout.startedAt)||null,pausedAt:(workout&&workout.pausedAt)||null,pausedMs:(workout&&workout.pausedMs)||0,extra:(workout&&workout.extra)||{},autoPaused:!!(workout&&workout.autoPaused),summary:(workout&&workout.summary)||null};
   mut(w);workout=w;if(!quiet)render();write(backend.setDoc("workouts/"+wcur,w),msg)}
 const esTiempo=ex=>!!(ex.tiempo||(ex.step===0&&/plancha|seg|hollow|farmer|soga|escalador|mountain/i.test(ex.name)));
 function suggest(ex){const L=loads[ex.id];
@@ -440,7 +441,8 @@ const focoActivo=()=>view==="entreno"&&!!(workout&&workout.startedAt&&!workout.d
 function wakeAjustar(force){const on=focoActivo()&&document.visibilityState==="visible";
   if(on&&(!wakeLk||force)&&navigator.wakeLock){navigator.wakeLock.request("screen").then(l=>{wakeLk=l;l.addEventListener("release",()=>{wakeLk=null})}).catch(()=>{})}
   else if(!on&&wakeLk){try{wakeLk.release()}catch(e){}wakeLk=null}}
-const primerPendiente=r=>{const i=r.ex.findIndex(ex=>wsets(ex.id).filter(hecha).length<ex.sets);return i<0?0:i};
+const nSerOf=ex=>Math.max(1,ex.sets+((workout&&workout.extra&&workout.extra[ex.id])||0));
+const primerPendiente=r=>{const i=r.ex.findIndex(ex=>wsets(ex.id).filter(hecha).length<nSerOf(ex));return i<0?0:i};
 /* El descanso se guarda en el teléfono: si el sistema cierra la app en segundo plano, al volver sigue con el tiempo real. */
 const TKEY="scaeli-fit-timer";
 const timerGuardar=()=>{try{timer?localStorage.setItem(TKEY,JSON.stringify(timer)):localStorage.removeItem(TKEY)}catch(e){}};
@@ -462,15 +464,16 @@ function restCard(){if(!timer)return "";return `<section class="card restcard"><
 /* Rosario compacto para rezar entre series: usa el mismo avance compartido con Daily. */
 function rosMiniHTML(){const act=rosario&&rosario.f===today()?rosario:null;const hk=misteriosHoy();const hecho=(progress.done||{})["rosary:"+today()];
   if(!act||act.fase==="intro"||act.fase==="fin")return `<section class="card rosmini"><img class="cv" src="${ilu(hk)}" alt=""><div class="n"><span class="eyebrow">Santo Rosario</span><b>${esc(MISTERIOS[hk].n)}</b><small>${hecho?"Hoy ya lo rezaste. Podés rezarlo de nuevo.":"Una cuenta por descanso: tocá para pasarla."}</small></div><div class="acts"><button class="iconbtn acc" data-rosempezar="${hk}" aria-label="Empezar">${ic("play")}</button><button class="sm" id="rosMiniX" aria-label="Cerrar">${ic("x")}</button></div></section>`;
-  const r=act,M=MISTERIOS[r.set],i=r.mis,mis=M.m[i],fin=r.fase==="salve"||r.fase==="papa";let ora,n=0,c=0;
-  if(r.fase==="anuncio")ora="Contemplá el misterio";else if(r.fase==="salve")ora="Salve";
-  else if(r.fase==="papa"){ora=r.c===0?"Padrenuestro":r.c<=3?"Avemaría":"Gloria";n=3;c=r.c>=1&&r.c<=3?r.c:(r.c>3?3:0)}
-  else{ora=r.fase==="padre"?"Padrenuestro":r.fase==="ave"?"Avemaría":"Gloria";n=10;c=r.fase==="ave"?r.c:r.fase==="gloria"?10:0}
-  const beads=n?`<span class="beads">${Array.from({length:n},(_,k)=>`<i class="${k<c?"on":""}"></i>`).join("")}</span>`:"";
-  const med=(ROS_MED[r.set]||[])[i];const contempla=fin?(r.fase==="papa"?"Por el Papa y la Iglesia.":"Dios te salve, Reina y Madre."):(med?med[0].replace(/^«|»$/g,""):mis[1]);
+  const r=act,M=MISTERIOS[r.set],i=r.mis,mis=M.m[i],fin=r.fase==="salve"||r.fase==="papa",ini=r.fase==="credo"||r.fase==="ini";let ora,n=0,c=0,glo=false,pad=false;
+  if(r.fase==="anuncio")ora="Contemplá el misterio";else if(r.fase==="salve")ora="Salve";else if(r.fase==="credo")ora="Credo";
+  else if(r.fase==="papa"||r.fase==="ini"){ora=r.c===0?"Padrenuestro":r.c<=3?"Avemaría":"Gloria";n=3;c=r.c>=1&&r.c<=3?r.c:(r.c>3?3:0);glo=r.c>3;pad=r.c===0}
+  else{ora=r.fase==="padre"?"Padrenuestro":r.fase==="ave"?"Avemaría":"Gloria";n=10;c=r.fase==="ave"?r.c:r.fase==="gloria"?10:0;glo=r.fase==="gloria";pad=r.fase==="padre"}
+  // la cuenta grande del Padrenuestro, las Avemarías y la del Gloria al final
+  const beads=n?`<span class="beads"><i class="pn${pad?" on":""}"></i>${Array.from({length:n},(_,k)=>`<i class="${k<c?"on":""}"></i>`).join("")}<i class="gl${glo?" on":""}" title="Gloria"></i></span>`:"";
+  const med=(ROS_MED[r.set]||[])[i];const contempla=ini?(r.fase==="credo"?"Creo en Dios Padre todopoderoso…":"Por la fe, la esperanza y la caridad."):fin?(r.fase==="papa"?"Por las intenciones del Santo Padre y por la Iglesia.":"Dios te salve, Reina y Madre."):(med?med[0].replace(/^«|»$/g,""):mis[1]);
   // solo la cuenta y la contemplación: el texto de la oración queda escondido, salvo que se pida con «Ver oración»
-  const oracion=rosMiniTxt&&r.fase!=="anuncio"?`<small class="txt open">${esc(oraTxt(ora))}</small>`:"";
-  return `<section class="card rosmini on"><button class="tap" data-rosav="1"><span class="n"><span class="eyebrow">${fin?"Para terminar":"Misterio "+(i+1)+" de 5"}</span><b>${fin?esc(ora):esc(mis[0])}</b><small class="med">${esc(contempla)}</small>${beads}<span class="cnt">${esc(ora)}${n?` · ${c} de ${n}`:""}</span>${oracion}<span class="go">${ic("right")}Tocá para pasar la cuenta</span></span></button>
+  const oracion=rosMiniTxt&&r.fase!=="anuncio"?`<small class="txt open">${esc(oraTxt(ora==="Credo"?"Credo de los Apóstoles":ora))}</small>`:"";
+  return `<section class="card rosmini on"><button class="tap" data-rosav="1"><span class="n"><span class="eyebrow">${r.fase==="papa"?"Por el Papa y la Iglesia":fin?"Para terminar":ini?"Para empezar":"Misterio "+(i+1)+" de 5"}</span><b>${fin||ini?esc(ora==="Credo"?"Creo en Dios":ora):esc(mis[0])}</b><small class="med">${esc(contempla)}</small>${beads}<span class="cnt">${esc(ora)}${n?` · ${c} de ${n}`:""}</span>${oracion}<span class="go">${ic("right")}Tocá para pasar la cuenta</span></span></button>
     <div class="acts"><button class="sm" data-rosatras="1" aria-label="Atrás">${ic("left")}</button>${r.fase!=="anuncio"?`<button class="chip off" id="rosMiniTxt" aria-pressed="${rosMiniTxt}">${rosMiniTxt?"Ocultar":"Ver oración"}</button>`:""}<button class="sm" data-rosario="1" aria-label="Pantalla completa">${ic("up")}</button><button class="sm" id="rosMiniX" aria-label="Cerrar">${ic("x")}</button></div></section>`}
 /* Al pasar una cuenta se redibuja solo la tarjeta del rosario, no la pantalla: los dibujos y el cronómetro no parpadean. */
 function rosMiniRefresh(){const el=document.querySelector(".rosmini");if(!el)return false;const t=document.createElement("div");t.innerHTML=rosMiniHTML();el.replaceWith(t.firstElementChild);return true}
@@ -485,7 +488,7 @@ function renderNow(){
   if(!user){renderLogin();return}
   const sy=window.scrollY;
   document.querySelectorAll(".nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.view===view?"page":"false"));
-  const app=$("#app");
+  const app=$("#app");app.classList.toggle("entra",renderNow._view!==view);// la animación de entrada solo al cambiar de pestaña, no en cada toque
   if(view==="hoy")app.innerHTML=renderHoy();else if(view==="entreno")app.innerHTML=renderEntreno();else if(view==="cuerpo")app.innerHTML=renderCuerpo();else if(view==="escuchar")app.innerHTML=renderListen();else app.innerHTML=renderMas();
   afterRender();paintTimer();if(renderNow._view===view)window.scrollTo(0,sy);renderNow._view=view;
 }
@@ -564,7 +567,7 @@ function renderEntreno(){
   const rt=`<div class="rtabs scrollx" role="group" aria-label="Rutina">${routines.map(x=>`<button data-rsel="${x.id}" aria-pressed="${!!(r&&r.id===x.id)}">${esc(x.name)}</button>`).join("")}<button class="more" id="openRutinas" aria-label="Biblioteca de rutinas">${ic("plus")}</button></div>`;
   const nav=`<div class="r"><button class="iconbtn inset" id="wprev" aria-label="Día anterior">${ic("left")}</button><button class="iconbtn inset" id="wnext" aria-label="Día siguiente">${ic("right")}</button>${wcur!==today()?`<button class="iconbtn inset" id="wtoday" aria-label="Ir a hoy">${ic("today")}</button>`:""}</div>`;
   const rezar=`<button class="chip ${rosMini?"":"off"}" id="rosMiniT" aria-pressed="${rosMini}">${ic("rosary")}Rezar</button>`;
-  if(!r)return `<div class="top"><div class="l"><span class="eyebrow fecha">${esc(fecha(wcur))} · semana ${weekNo} de 13</span><h1 class="title">Descanso</h1></div>${nav}</div><p class="hint">Hoy no hay rutina asignada. Elegí una si querés entrenar igual, o que la app te arme una.</p>${rt}${armarCardHTML()}<div class="wacts">${rezar}</div>${rosMini?rosMiniHTML():""}`;
+  if(!r)return `<div class="top"><div class="l"><span class="eyebrow fecha">${esc(fecha(wcur))} · semana ${weekNo} de 13</span><h1 class="title">Descanso</h1></div>${nav}</div><p class="hint">Hoy no hay rutina asignada. Elegí una si querés entrenar igual, o que la app te arme una.</p>${rt}${cuerpoCardHTML()}${armarCardHTML()}<div class="wacts">${rezar}</div>${rosMini?rosMiniHTML():""}`;
   if(needsOffer()){const pr=PRAYERS[daysBetween(PLAN_START,wcur)%PRAYERS.length];
     return `<div class="hero"><div class="offer"><div class="top"><span class="eyebrow">${esc(DOW[parse(wcur).getDay()])} · ${esc(r.name)}</span><button class="iconbtn ghost" id="offerSkip" aria-label="Saltar">${ic("x")}</button></div>
       <div style="display:flex;flex-direction:column;gap:28px"><span class="dot"></span><p class="pr">${esc(pr)}</p><p class="sub">Ordenar el cuerpo desde la templanza, no desde la vanagloria.</p></div>
@@ -572,16 +575,16 @@ function renderEntreno(){
         ${intents.length?`<div class="chips">${intents.slice(0,6).map(i=>`<button data-intent="${esc(i)}">${esc(i)}</button>`).join("")}</div>`:""}
         <button class="primary" id="offer" style="margin-top:8px">${ic("cross")}Ofrecer</button><button class="lnk" id="openRutinas" style="margin:4px auto 0">Elegir otra rutina</button></div></div></div>`}
   const done=!!(workout&&workout.done);const intention=workout&&workout.intention;const started=!!(workout&&workout.startedAt);const enCurso=!done&&(started||Object.keys((workout&&workout.sets)||{}).length>0);
-  const nsets=r.ex.reduce((a,ex)=>a+wsets(ex.id).filter(hecha).length,0),tsets=r.ex.reduce((a,ex)=>a+ex.sets,0);
+  const nsets=r.ex.reduce((a,ex)=>a+wsets(ex.id).filter(hecha).length,0),tsets=r.ex.reduce((a,ex)=>a+nSerOf(ex),0);
   const cur_track=tracks[trackIdx];
-  if(focoActivo()){if(exIdx>=r.ex.length)exIdx=Math.max(0,r.ex.length-1);const ex=r.ex[exIdx];const ndEx=ex?wsets(ex.id).filter(hecha).length:0;const fin=ex&&ndEx>=ex.sets;const ult=exIdx>=r.ex.length-1;
+  if(focoActivo()){if(exIdx>=r.ex.length)exIdx=Math.max(0,r.ex.length-1);const ex=r.ex[exIdx];const ndEx=ex?wsets(ex.id).filter(hecha).length:0;const fin=ex&&ndEx>=nSerOf(ex);const ult=exIdx>=r.ex.length-1;
     return `<div class="fbar"><button class="iconbtn ghost" id="focoSalir" aria-label="Salir de pantalla completa (el entreno sigue)">${ic("left")}</button>
       <div class="fses"><span class="eyebrow">${workout.pausedAt?"En pausa":esc(r.name)}</span><b id="sesT">${dur(sesElapsed())}</b><small>${nsets} de ${tsets} series</small></div>
       <button class="ring sm" id="ringBtn" aria-label="${timer?"Parar el descanso":"Empezar un descanso"}"><svg viewBox="0 0 68 68" aria-hidden="true"><circle cx="34" cy="34" r="29" fill="none" stroke="var(--track)" stroke-width="5"/><circle class="p" cx="34" cy="34" r="29" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="182" stroke-dashoffset="182"/></svg><b>0:00</b></button>
       <button class="iconbtn ${workout.pausedAt?"acc":"inset"}" id="pausar" aria-label="${workout.pausedAt?"Seguir":"Pausar"}">${ic(workout.pausedAt?"play":"pause")}</button>
       ${timer?`<div class="frest"><span class="eyebrow">Descanso</span><small>${esc(timer.name)}</small><button class="chip off sm2" id="rest30">+30 s</button><button class="chip off sm2" id="restSkip">Saltar</button></div>`:""}</div>
     ${rosMini?rosMiniHTML():""}
-    <div class="fpos"><span class="eyebrow">${exIdx+1} de ${r.ex.length}</span><div class="fdots">${r.ex.map((x,i)=>`<button data-exir="${i}" class="${i===exIdx?"on":""}${wsets(x.id).filter(hecha).length>=x.sets?" ok":""}" aria-label="Ir a ${esc(x.name)}"></button>`).join("")}</div><button class="lnkb" id="exTodos">Ver todos</button></div>
+    <div class="fpos"><span class="eyebrow">${exIdx+1} de ${r.ex.length}</span><div class="fdots">${r.ex.map((x,i)=>`<button data-exir="${i}" class="${i===exIdx?"on":""}${wsets(x.id).filter(hecha).length>=nSerOf(x)?" ok":""}" aria-label="Ir a ${esc(x.name)}"></button>`).join("")}</div><button class="lnkb" id="exTodos">Ver todos</button></div>
     ${ex?exCardHTML(ex,true):""}
     <div class="fnav"><button class="primary ink" id="exPrev" ${exIdx===0?"disabled":""}>${ic("left")}Anterior</button>${ult&&fin?`<button class="primary" id="finish">${ic("flag")}Terminar</button>`:`<button class="primary${fin?"":" ink"}" id="exNext" ${ult?"disabled":""}>Siguiente${ic("right")}</button>`}</div>
     <div class="fextra"><button class="chip ${rosMini?"":"off"}" id="rosMiniT" aria-pressed="${rosMini}">${ic("rosary")}Rezar</button><button class="chip off" id="wDescartar">${ic("trash")}Descartar</button><button class="chip off" id="finish">${ic("flag")}Terminar</button></div>`}
@@ -594,6 +597,7 @@ function renderEntreno(){
   <div class="rrow">${rt}${nav}</div>
   <div class="wacts"><button class="chip off" id="wlater" aria-label="${enCurso?"Salir y seguir después":"Salir"}">${ic("out")}Salir</button><button class="chip off" id="openRutinas">${ic("edit")}Rutinas</button>${rezar}</div>
   ${sesion}${restCard()}${rosMini?rosMiniHTML():""}
+  ${!started?avisoRutina(r)+cuerpoCardHTML():""}
   ${r.ex.map((ex,i)=>exCardHTML(ex,false,i===0)).join("")}
   <button class="ghost g" id="addToRoutine" style="justify-content:center">${ic("plus")}Agregar ejercicio</button>
   ${started&&!done?`<button class="primary" id="finish">${ic("flag")}Terminar</button>`:""}
@@ -606,8 +610,56 @@ let asist={},coachMsg={};
 const esCorp=ex=>CORP.has(CAT_BY_APP[ex.id]||ex.id);
 const esAsist=ex=>esCorp(ex)&&!!asist[ex.id];
 const cargaEf=(ex,w)=>esCorp(ex)?(esAsist(ex)?Math.max(0,pesoCorp()-(w||0)):pesoCorp()+(w||0)):(w||0);
+/* ---------- Tu cuerpo hoy: fatiga por músculo según el historial (estilo Gravl) ----------
+   Cada serie confirmada carga fatiga a los músculos que trabaja (más si fue exigente) y se va recuperando:
+   músculos chicos en ~48 h, grandes en ~72 h. Es una estimación para orientar, no una medición. */
+const MUSC={chest:["Pecho",72],"front-deltoids":["Hombro delantero",48],"back-deltoids":["Hombro trasero",48],biceps:["Bíceps",48],triceps:["Tríceps",48],forearm:["Antebrazo",36],abs:["Abdomen",36],obliques:["Oblicuos",36],
+  trapezius:["Trapecio",48],"upper-back":["Espalda",72],"lower-back":["Zona lumbar",72],gluteal:["Glúteos",72],quadriceps:["Cuádriceps",72],hamstring:["Isquios",72],adductor:["Aductores",48],abductors:["Abductores",48],calves:["Gemelos",48]};
+function muscDe(id){const c=CATALOGO.find(x=>x.id===(CAT_BY_APP[id]||id))||{};const k=c.id||id,g=c.grupo||"";
+  if(/encogimientos/.test(k))return{trapezius:1};if(/face-pull|pajaros|posterior-hombro/.test(k))return{"back-deltoids":1,trapezius:.4};
+  if(/elevaciones-laterales/.test(k))return{"front-deltoids":.6,"back-deltoids":.4};if(/elevaciones-frontales/.test(k))return{"front-deltoids":1};if(/remo-al-menton/.test(k))return{trapezius:.6,"front-deltoids":.6};
+  if(/aperturas|pec-deck/.test(k))return{chest:1,"front-deltoids":.3};if(/fondos-paralelas/.test(k))return{chest:.8,triceps:.8,"front-deltoids":.4};
+  if(g==="pecho")return{chest:1,"front-deltoids":.5,triceps:.5};
+  if(/peso-muerto$|peso-muerto-sumo/.test(k))return{hamstring:.8,gluteal:.8,"lower-back":.8,"upper-back":.4,trapezius:.4,quadriceps:.4};
+  if(/hiperextensiones/.test(k))return{"lower-back":1,gluteal:.4,hamstring:.4};
+  if(g==="espalda")return /pull-over/.test(k)?{"upper-back":1,chest:.4}:{"upper-back":1,biceps:.5,"back-deltoids":.4,trapezius:.3};
+  if(g==="hombros")return{"front-deltoids":1,triceps:.4,"back-deltoids":.2};
+  if(/curl-muneca/.test(k))return{forearm:1};if(/curl/.test(k)&&g==="brazos")return{biceps:1,forearm:.4};if(g==="brazos")return{triceps:1};
+  if(/gemelos/.test(k))return{calves:1};if(/aductores/.test(k))return{adductor:1};if(/abductores/.test(k))return{abductors:1};
+  if(/rumano|buenos-dias|curl-femoral/.test(k))return{hamstring:1,gluteal:.6,"lower-back":.4};if(/extension-cuadriceps/.test(k))return{quadriceps:1};
+  if(g==="gluteos"||/hip-thrust|puente|patada|kettlebell-swing/.test(k))return{gluteal:1,hamstring:.5};
+  if(g==="piernas")return{quadriceps:1,gluteal:.6,adductor:.3,hamstring:.2};
+  if(/russian|lateral|flexion-lateral|pallof|bicicleta/.test(k))return{obliques:1,abs:.5};if(g==="core")return{abs:1,obliques:.4};
+  if(/thruster/.test(k))return{quadriceps:.7,"front-deltoids":.7,triceps:.3};if(/farmer/.test(k))return{forearm:1,trapezius:.6};
+  if(g==="completo")return{quadriceps:.4,chest:.3,abs:.3};return{}}
+function fatiga(){const now=Date.now();const F={};const docs=wHist.slice(0,20).concat(workout&&workout.startedAt&&!workout.done?[{...workout,id:wcur}]:[]);
+  docs.forEach(w=>{const t0=w.startedAt||parse(w.id).getTime()+18*36e5;const h=(now-t0)/36e5;if(h<0||h>96)return;
+    Object.entries(w.sets||{}).forEach(([id,arr])=>{const M=muscDe(id);(arr||[]).forEach(x=>{if(!hecha(x))return;const int=(x.rir!=null&&x.rir<=1?1.3:x.rir!=null&&x.rir>=3?.7:1)+(x.hard?.2:0);
+      Object.entries(M).forEach(([m,wt])=>{const R=(MUSC[m]||[,72])[1];const rest=Math.max(0,1-h/R);if(rest<=0)return;F[m]=(F[m]||0)+12*wt*int*rest})})})});
+  const out={};Object.keys(MUSC).forEach(m=>{out[m]=Math.max(0,Math.round(100-Math.min(100,F[m]||0)))});return out}
+function ultimaVez(m){for(const w of wHist){if(Object.entries(w.sets||{}).some(([id,arr])=>(muscDe(id)[m]||0)>=.5&&(arr||[]).some(hecha)))return w.id}return null}
+const colRec=v=>v<50?"var(--over)":v<80?"var(--fe)":"var(--accent)";
+function cuerpoSVG(rec){const pl=(items)=>items.map(([m,ps])=>{const v=m==="left-soleus"||m==="right-soleus"?rec.calves:rec[m];const deco=v==null;return ps.map(p=>`<polygon points="${p}" fill="${deco?"var(--track)":colRec(v)}" fill-opacity="${deco?.5:.9}" ${deco?"":`data-musc="${m==="left-soleus"||m==="right-soleus"?"calves":m}"`}/>`).join("")}).join("");
+  return `<div class="cuerpo"><svg viewBox="0 0 100 200" aria-label="Frente">${pl(CUERPO_FRENTE)}</svg><svg viewBox="0 0 100 200" aria-label="Espalda">${pl(CUERPO_ESPALDA)}</svg></div>`}
+const REC_GRUPOS=[["pecho",["chest"]],["espalda",["upper-back"]],["piernas",["quadriceps","hamstring"]],["gluteos",["gluteal"]],["hombros",["front-deltoids","back-deltoids"]],["biceps",["biceps"]],["triceps",["triceps"]]];
+const PAREJA={pecho:"triceps",espalda:"biceps",piernas:"gluteos",gluteos:"piernas",hombros:"triceps",biceps:"espalda",triceps:"pecho"};
+function recomendar(){const rec=fatiga();const sc=REC_GRUPOS.map(([g,ms])=>{const v=Math.min(...ms.map(m=>rec[m]));const u=ms.map(ultimaVez).filter(Boolean).sort()[0];const dias=u?Math.round((parse(today())-parse(u))/864e5):9;return{g,v,dias,score:v+Math.min(dias,7)*6}});
+  const lista=sc.filter(x=>x.v>=80&&!["biceps","triceps"].includes(x.g)).sort((a,b)=>b.score-a.score);const pri=(lista[0]||sc.sort((a,b)=>b.score-a.score)[0]);
+  const par=sc.find(x=>x.g===PAREJA[pri.g]);const prios=[pri.g].concat(par&&par.v>=70?[par.g]:[]);
+  const nom=g=>AR_PRIO.find(x=>x[0]===g)[1].toLowerCase();const cans=sc.filter(x=>x.v<60).map(x=>nom(x.g)+" "+x.v+" %");
+  const why=`Hoy toca ${prioTxt(prios)}: ${pri.v>=100?"están 100 % recuperados":"están al "+pri.v+" %"}${pri.dias<9?" y no los entrenás hace "+pri.dias+" "+(pri.dias===1?"día":"días"):""}.${cans.length?" Todavía cansados: "+cans.join(", ")+".":""}`;
+  return{prios,why}}
+function avisoRutina(r){if(!r||!r.ex.length)return "";const rec=fatiga();const prin={};r.ex.slice(0,3).forEach(ex=>{Object.entries(muscDe(ex.id)).forEach(([m,w])=>{if(w>=1)prin[m]=1})});
+  const bajos=Object.keys(prin).filter(m=>rec[m]<60);if(!bajos.length)return "";return `<p class="coach">${ic("info")}<span>${bajos.map(m=>MUSC[m][0]).join(" y ")} ${bajos.length>1?"están":"está"} al ${Math.min(...bajos.map(m=>rec[m]))} %. Bajá una serie en esos ejercicios o tocá «Recomendame el de hoy».</span></p>`}
+function cuerpoCardHTML(){const rec=fatiga();const cans=Object.entries(rec).filter(([m,v])=>v<80).sort((a,b)=>a[1]-b[1]).slice(0,4);
+  return `<section class="card cuerpocard"><div class="hd"><span class="eyebrow">Tu cuerpo hoy</span><small class="hint">${cans.length?"Tocá un músculo para ver cuándo está listo.":"Todo recuperado: podés entrenar lo que quieras."}</small></div>
+    ${cuerpoSVG(rec)}
+    <div class="ley"><span><i style="background:var(--over)"></i>Cansado</span><span><i style="background:var(--fe)"></i>Casi listo</span><span><i style="background:var(--accent)"></i>Listo</span></div>
+    ${cans.length?`<div class="cans">${cans.map(([m,v])=>`<button class="mchip" data-musc="${m}"><i style="background:${colRec(v)}"></i>${esc(MUSC[m][0])} ${v} %</button>`).join("")}</div>`:""}
+    <button class="primary" id="recomendar">${ic("check")}Recomendame el de hoy</button>
+    <p class="hint" style="margin:0">Es una estimación con tus series, el RIR y «Costó»: los músculos chicos se recuperan en unas 48 h y los grandes en 72 h.</p></section>`}
 /* ---------- Coach: un consejo después de cada serie, según reps, RIR y «Costó» ---------- */
-function coachSerie(ex,i,x){if(!x)return null;const ult=i>=ex.sets-1;const t=esTiempo(ex);
+function coachSerie(ex,i,x){if(!x)return null;const ult=i>=nSerOf(ex)-1;const t=esTiempo(ex);
   if(x.rir===0&&!ult)return "Llegaste al fallo antes de la última serie. "+(esAsist(ex)?"Sumá un poco de ayuda":"Bajá un 5–10 % el peso")+" para las que quedan: así cuidás la técnica y el músculo rinde más.";
   if(x.hard&&i===0)return "Si la primera ya costó, mantené el peso y priorizá la técnica. La próxima vez no sube.";
   if(!t&&x.r>0&&x.r<ex.lo)return `No llegaste al mínimo (${ex.lo} reps). ${esAsist(ex)?"Sumá ayuda":"Bajá un escalón el peso"} en la próxima serie.`;
@@ -628,7 +680,8 @@ const tecHTML=(ex,abierta)=>{const T=tecDe(ex);if(!T)return "";return `<div clas
 /* valores sugeridos de cada serie: copian la última serie cargada (peso y reps), si no, lo sugerido */
 function baseSerie(ex,i){const ss=wsets(ex.id);let w=null,r=null;for(let k=i-1;k>=0;k--){const x=ss[k]||{};if(w==null&&x.w>0)w=x.w;if(r==null&&x.r>0)r=x.r;if(w!=null&&r!=null)break}const sg=suggest(ex);return{w:w!=null?w:(sg.w!=null?sg.w:null),r:r!=null?r:ex.lo}}
 function exCardHTML(ex,foco,first){const ss=wsets(ex.id);const sg=suggest(ex);const L=loads[ex.id];const rows=[];
-    for(let i=0;i<Math.max(ex.sets,ss.length);i++){const s=ss[i]||{};const B=baseSerie(ex,i);const w=B.w!=null?B.w:"";const done=hecha(s);const ro=done?" readonly":"";
+    const nSer=Math.max(ex.sets+((workout&&workout.extra&&workout.extra[ex.id])||0),ss.filter(x=>x&&(x.r>0||x.w>0)).length,1);
+    for(let i=0;i<nSer;i++){const s=ss[i]||{};const B=baseSerie(ex,i);const w=B.w!=null?B.w:"";const done=hecha(s);const ro="";
       rows.push(`<span class="no">${i+1}</span>
         <input type="number" inputmode="decimal" step="any" class="${done?"":"empty"}"${ro} data-set="${ex.id}" data-i="${i}" data-k="w" value="${esc(s.w!=null?s.w:"")}" placeholder="${esc(w)}" aria-label="Peso serie ${i+1}">
         <input type="number" inputmode="numeric" class="${done?"":"empty"}"${ro} data-set="${ex.id}" data-i="${i}" data-k="r" value="${esc(s.r!=null?s.r:"")}" placeholder="${esc(B.r)}" aria-label="Reps serie ${i+1}">
@@ -636,10 +689,11 @@ function exCardHTML(ex,foco,first){const ss=wsets(ex.id);const sg=suggest(ex);co
         <button class="costo" data-hard="${ex.id}" data-i="${i}" aria-pressed="${!!s.hard}" aria-label="La serie me costó">Costó</button>
         <button class="hecha" data-ok="${ex.id}" data-i="${i}" aria-pressed="${done}" aria-label="${done?"Serie hecha: tocá para editarla":"Confirmar serie"}">${done?ic("check"):"Hecha"}</button>`)}
     const il=iluId(ex);const live=!!(timer&&timer.exId===ex.id);const pr=prs[ex.id];const nd=ss.filter(hecha).length;
-    return `<section class="ex${foco?" foco":""}${nd>=ex.sets?" completo":""}"><div class="hd"><div class="ttl">${il?`<button class="exthumb${live?" live":""}" data-ficha="${ex.id}" aria-label="Ver ${esc(ex.name)}">${iluHTML(il)}</button>`:""}<div><b>${esc(ex.name)}${pr&&pr.w>=0&&(pr.w>0||pr.asist)?` <span class="prtag" title="Récord">${pr.asist?(pr.w>0?f1(pr.w)+" ayuda":"sin ayuda"):f1(pr.w)}</span>`:""}</b><small>${ex.sets} × ${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}${esTiempo(ex)?" s":""} · descanso ${mmss(restOf(ex))}</small>${esCorp(ex)?`<button class="chip asistbtn ${esAsist(ex)?"":"off"}" data-asist="${ex.id}" aria-pressed="${esAsist(ex)}">${esAsist(ex)?ic("check"):""}Asistida</button>`:""}</div></div>
+    return `<section class="ex${foco?" foco":""}${nd>=nSerOf(ex)?" completo":""}"><div class="hd"><div class="ttl">${il?`<button class="exthumb${live?" live":""}" data-ficha="${ex.id}" aria-label="Ver ${esc(ex.name)}">${iluHTML(il)}</button>`:""}<div><b>${esc(ex.name)}${pr&&pr.w>=0&&(pr.w>0||pr.asist)?` <span class="prtag" title="Récord">${pr.asist?(pr.w>0?f1(pr.w)+" ayuda":"sin ayuda"):f1(pr.w)}</span>`:""}</b><small>${ex.sets} × ${ex.lo}${ex.hi!==ex.lo?"–"+ex.hi:""}${esTiempo(ex)?" s":""} · descanso ${mmss(restOf(ex))}</small>${esCorp(ex)?`<button class="chip asistbtn ${esAsist(ex)?"":"off"}" data-asist="${ex.id}" aria-pressed="${esAsist(ex)}">${esAsist(ex)?ic("check"):""}Asistida</button>`:""}</div></div>
       <div class="sug${sg.hold?" hold":""}"><span class="eyebrow">Sugerido</span>${sg.w!=null?`<span class="v">${f1(sg.w)}<small> ${esTiempo(ex)?"s":porMancuerna(ex)?"kg c/u":"kg"}</small></span>`:`<span class="v vacio">${esTiempo(ex)?"Anotá":"Elegí"}</span>`}</div></div>
       ${tecHTML(ex,foco?tecOpen:false)}
       <div class="sets"><span></span><span class="th">${esTiempo(ex)?"seg":esCorp(ex)?(esAsist(ex)?"ayuda kg":"lastre kg"):porMancuerna(ex)?"kg c/u":"kg"}</span><span class="th">reps</span><span class="th">rir</span><span></span><span></span>${rows.join("")}</div>
+      ${workout&&workout.startedAt&&!workout.done?`<div class="setsmas"><button class="chip off" data-smas="${ex.id}">${ic("plus")}Serie</button>${nSer>1?`<button class="chip off" data-smenos="${ex.id}">${ic("minus")}Serie</button>`:""}</div>`:""}
       ${porMancuerna(ex)?(()=>{const B=baseSerie(ex,ss.length?Math.min(ss.length,ex.sets-1):0);return B.w>0?`<p class="leyenda">${f1(B.w)} kg c/u = ${f1(B.w*2)} kg en total. Cargá el peso de cada mancuerna.</p>`:`<p class="leyenda">Cargá el peso de cada mancuerna (si usás 10 y 10, poné 10).</p>`})():""}
       ${coachMsg[ex.id]?`<p class="coach">${ic("info")}<span>${esc(coachMsg[ex.id])}</span></p>`:""}
       ${esAsist(ex)?`<p class="leyenda">Asistida: anotá los kg que te ayudan (máquina o banda). Cuanta menos ayuda, más fuerza: la app te va a pedir bajarla.</p>`:""}
@@ -738,7 +792,7 @@ function renderMas(){
   <section class="card tight list"><div class="row"><span class="eyebrow">Intenciones recientes</span></div>${intents.length?intents.map(i=>`<div class="row"><b style="font-weight:500">${esc(i)}</b><button class="sm" data-delint="${esc(i)}" aria-label="Borrar">${ic("x")}</button></div>`).join(""):`<p class="empty">Aparecen al ofrecer un entrenamiento.</p>`}</section>
   <section class="card pad" style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Tus datos</span>
     <p class="hint">Exportá una copia de todo en un archivo, o importá el archivo de la versión anterior de la app.</p>
-    <p class="hint" style="font-size:11px">Dibujos de ejercicios: <a href="https://github.com/everkinetic/data" target="_blank" rel="noopener">Everkinetic</a>, CC BY-SA 4.0.</p>
+    <p class="hint" style="font-size:11px">Dibujos de ejercicios: <a href="https://github.com/everkinetic/data" target="_blank" rel="noopener">Everkinetic</a>, CC BY-SA 4.0. Mapa de músculos: <a href="https://github.com/giavinh79/react-body-highlighter" target="_blank" rel="noopener">react-body-highlighter</a>, MIT.</p>
     <div class="r"><button class="ghost g" id="exportData">${ic("db")}Exportar</button><label class="ghost g" for="importFile">${ic("upload")}Importar<input id="importFile" type="file" accept="application/json,.json" hidden></label></div>
     <p class="hint" id="status" style="${statusErr?"color:var(--over)":""}">${esc(statusTxt)}</p></section>`;
 }
@@ -904,7 +958,7 @@ function renderSheetBody(){
       ${eqCardHTML(true)}
       <button class="primary" id="arGo">${ic("check")}Armar</button></div>`;
   } else if(sheet.view==="exlist"){const r=curRoutine();
-    el.innerHTML=`<h3>Ejercicios${X}</h3><div class="scroll"><section class="card tight list">${(r?r.ex:[]).map((x,i)=>{const n=wsets(x.id).filter(hecha).length;return `<button class="row hrow" data-exir="${i}"><div class="n"><b>${i+1}. ${esc(x.name)}</b><small>${n} de ${x.sets} series${n>=x.sets?" · listo":""}</small></div>${n>=x.sets?ic("check"):ic("right")}</button>`}).join("")}</section>
+    el.innerHTML=`<h3>Ejercicios${X}</h3><div class="scroll"><section class="card tight list">${(r?r.ex:[]).map((x,i)=>{const n=wsets(x.id).filter(hecha).length;return `<button class="row hrow" data-exir="${i}"><div class="n"><b>${i+1}. ${esc(x.name)}</b><small>${n} de ${nSerOf(x)} series${n>=nSerOf(x)?" · listo":""}</small></div>${n>=nSerOf(x)?ic("check"):ic("right")}</button>`}).join("")}</section>
       <button class="ghost g" id="addToRoutine" style="justify-content:center;width:100%;margin-top:12px">${ic("plus")}Agregar ejercicio</button></div>`;
   } else if(sheet.view==="descartar"){
     el.innerHTML=`<h3>Descartar entreno${X}</h3><p class="dialead">Se borran las series que cargaste hoy en «${esc(sheet.name||"")}». No suma experiencia ni récords.</p><button class="primary danger" id="wDiscard">${ic("trash")}Descartar</button><button class="primary ink" id="x">Seguir entrenando</button>`;
@@ -1050,33 +1104,39 @@ function rosAnillo(n,hechos,actual,padre,centro,sub){const R=104,c=130,pos=k=>{c
   s+='<rect x="119" y="'+(c-R-11)+'" width="22" height="22" rx="6" class="cu p '+padre+'"/>'+(padre==="on"?'<rect x="111" y="'+(c-R-19)+'" width="38" height="38" rx="12" class="halo"/>':'');
   return s+'</svg><div class="acentro'+(centro?"":" solo")+'"><b>'+centro+'</b><span>'+sub+'</span></div>'}
 function shRosario(){const act=rosario&&rosario.f===today()?rosario:null,r=act&&act.fase!=="fin"&&act.fase!=="intro"?act:null;if(!r)return rosIntro(act);
-  const M=MISTERIOS[r.set],i=r.mis,mis=M.m[i],med=(ROS_MED[r.set]||[])[i],solo=!!(dprofile&&dprofile.rosSolo),fin=r.fase==="salve"||r.fase==="papa";
+  const M=MISTERIOS[r.set],i=r.mis,mis=M.m[i],med=(ROS_MED[r.set]||[])[i],solo=!!(dprofile&&dprofile.rosSolo),fin=r.fase==="salve"||r.fase==="papa",ini=r.fase==="credo"||r.fase==="ini";
   const etiqueta=fin?"Para terminar":ORD_M[i]+" misterio "+(ADJ[r.set]||"");
-  const top='<div class="ftop"><button class="iconbtn ghost g" id="x" aria-label="Salir">'+ic("x")+'</button><div class="fprog">'+[0,1,2,3,4].map(k=>'<i class="'+(k<i||fin?"ya":k===i?"on":"")+'"></i>').join("")+'</div><span class="ft">'+(fin?"Para terminar":"Misterio "+(i+1)+" de 5")+'</span></div>';
+  const top='<div class="ftop"><button class="iconbtn ghost g" id="x" aria-label="Salir">'+ic("x")+'</button><div class="fprog">'+[0,1,2,3,4].map(k=>'<i class="'+(k<i||fin?"ya":k===i?"on":"")+'"></i>').join("")+'</div><span class="ft">'+(fin?"Para terminar":ini?"Para empezar":"Misterio "+(i+1)+" de 5")+'</span></div>';
   const pie=(der)=>'<div class="fpie"><button class="lnk" data-rosatras="1">'+ic("left")+' Atrás</button>'+der+'</div>';
   if(r.fase==="anuncio")return top+'<div class="scroll fcuerpo ros2"><div class="rmis"><img src="'+ilu(r.set)+'" alt=""><span class="g"></span><div class="tx"><div class="fla">'+esc(etiqueta)+'</div><h2 class="fh">'+esc(mis[0])+'</h2></div></div>'+
      (med?'<p class="rmed">«'+esc(med[0].replace(/^«|»$/g,""))+'»</p><p class="rcita">'+esc(med[1])+'</p><p class="rfruto"><span>Fruto</span>'+esc(med[2])+'</p>':'<p class="rcita">'+esc(mis[1])+'</p>')+'<p class="fhint">Contemplá la escena un momento, en silencio, antes de empezar.</p></div>'+
      pie('<button class="primary" data-rosav="1">Comenzar la decena</button>');
+  if(r.fase==="credo")return top.replace(/Misterio 1 de 5|Para terminar/,"Para empezar")+'<div class="scroll fcuerpo ros2"><div class="fla">Para empezar</div><h2 class="fh">Creo en Dios</h2><p class="rora">'+esc(oraTxt("Credo de los Apóstoles"))+'</p></div>'+pie('<button class="primary" data-rosav="1">Amén</button>');
   if(r.fase==="salve")return top+'<div class="scroll fcuerpo ros2"><div class="fla">Para terminar</div><h2 class="fh">Dios te salve, Reina y Madre</h2><p class="rora">'+esc(oraTxt("Salve"))+'</p></div>'+pie('<button class="primary" data-rosav="1">Amén</button>');
   let ora,anillo;
-  if(r.fase==="papa"){const c=r.c;ora=c===0?"Padrenuestro":c<=3?"Avemaría":"Gloria";anillo=rosAnillo(3,c===0?0:Math.min(3,c-1+(c>3?1:0)),c>=1&&c<=3?c-1:-1,c===0?"on":"ya",c>=1&&c<=3?String(c):"",c>=1&&c<=3?"de 3 · Avemaría":ora)}
+  if(r.fase==="papa"||r.fase==="ini"){const c=r.c;ora=c===0?"Padrenuestro":c<=3?"Avemaría":"Gloria";anillo=rosAnillo(3,c===0?0:Math.min(3,c-1+(c>3?1:0)),c>=1&&c<=3?c-1:-1,c===0?"on":"ya",c>=1&&c<=3?String(c):"",c>=1&&c<=3?"de 3 · Avemaría":ora)}
   else{ora=r.fase==="padre"?"Padrenuestro":r.fase==="ave"?"Avemaría":"Gloria";
     anillo=rosAnillo(10,r.fase==="ave"?r.c-1:r.fase==="gloria"?10:0,r.fase==="ave"?r.c-1:-1,r.fase==="padre"?"on":"ya",r.fase==="ave"?String(r.c):"",r.fase==="ave"?"de 10 · Avemaría":ora)}
   const texto=solo?'':'<p class="rora">'+esc(oraTxt(ora))+'</p>'+(ora==="Gloria"&&r.fase==="gloria"?'<p class="rora jac">'+esc(ROS_FATIMA)+'</p>':'');
-  return top+'<div class="scroll fcuerpo ros2"><div class="rcab">'+(r.fase==="papa"?'Por el Papa y la Iglesia':esc(mis[0]))+'</div>'+
+  return top+'<div class="scroll fcuerpo ros2"><div class="rcab">'+(r.fase==="papa"?'Por el Papa y la Iglesia':r.fase==="ini"?'Por la fe, la esperanza y la caridad':esc(mis[0]))+'</div>'+
     '<button class="rtap'+(solo?" solo":"")+'" data-rosav="1" aria-label="Pasar la cuenta">'+anillo+'</button><p class="rhint">Tocá el rosario para pasar la cuenta</p>'+texto+
     '<button class="lnk solo-t" data-rossolo="1">'+(solo?"Mostrar las oraciones":"Solo el contador")+'</button></div>'+
     pie('<button class="lnk" id="x">Seguir después</button>')}
 async function rosAvanzar(){let r={...(rosario||rosNuevo())};if(r.f!==today())r=rosNuevo(r.set);
-  if(r.fase==="intro")r.fase="anuncio";
+  if(r.fase==="intro"){r.fase="credo";r.c=0}
+  else if(r.fase==="credo"){if(dprofile&&dprofile.rosCorto){r.fase="anuncio";r.mis=0}else{r.fase="ini";r.c=0}}
+  else if(r.fase==="ini"){if(r.c<4)r.c++;else{r.fase="anuncio";r.mis=0;r.c=0}}
   else if(r.fase==="anuncio"){r.fase="padre";r.c=0}
   else if(r.fase==="padre"){r.fase="ave";r.c=1}
   else if(r.fase==="ave"){if(r.c<10)r.c++;else r.fase="gloria"}
   else if(r.fase==="gloria"){if(r.mis<4){r.mis++;r.fase="anuncio";r.c=0}else{r.fase="salve"}}
   else if(r.fase==="salve"){r.fase="papa";r.c=0}
-  else if(r.fase==="papa"){if(r.c<4)r.c++;else{r.fase="fin";toast("Rezaste el Santo Rosario");award("rosary",today())}}
+  else if(r.fase==="papa"){if(r.c<4)r.c++;else{r.fase="fin";toast("Rezaste el Santo Rosario");award("rosary",today());rosarioADaily()}}
   await rosGuardar(r);if(r.fase==="fin"&&sheet&&sheet.view==="rosario")closeSheet()}
-async function rosAtras(){let r={...rosario};if(r.fase==="papa"){if(r.c>0)r.c--;else r.fase="salve"}else if(r.fase==="salve"){r.fase="gloria";r.mis=4}else if(r.fase==="ave"){if(r.c>1)r.c--;else r.fase="padre"}else if(r.fase==="gloria"){r.fase="ave";r.c=10}else if(r.fase==="padre"){r.fase="anuncio"}else if(r.fase==="anuncio"&&r.mis>0){r.mis--;r.fase="gloria"}else if(r.fase==="anuncio"){r.fase="intro";if(sheet)sheet.rset=r.set}await rosGuardar(r)}
+async function rosAtras(){let r={...rosario};if(r.fase==="papa"){if(r.c>0)r.c--;else r.fase="salve"}else if(r.fase==="salve"){r.fase="gloria";r.mis=4}else if(r.fase==="ave"){if(r.c>1)r.c--;else r.fase="padre"}else if(r.fase==="gloria"){r.fase="ave";r.c=10}else if(r.fase==="padre"){r.fase="anuncio"}else if(r.fase==="anuncio"&&r.mis>0){r.mis--;r.fase="gloria"}else if(r.fase==="anuncio"){if(dprofile&&dprofile.rosCorto)r.fase="credo";else{r.fase="ini";r.c=4}}else if(r.fase==="ini"){if(r.c>0)r.c--;else r.fase="credo"}else if(r.fase==="credo"){r.fase="intro";if(sheet)sheet.rset=r.set}await rosGuardar(r)}
+/* el Rosario terminado en Fit cuenta en Scaeli Daily: mismo registro que usa Daily (daily_days/{fecha}: r, rn, t) */
+const leerUna=p=>new Promise(res=>{let u=null,listo=false;u=backend.watchDoc(p,v=>{if(listo)return;listo=true;res(v);setTimeout(()=>{try{u&&u()}catch(e){}},0)});setTimeout(()=>{if(!listo){listo=true;res(null);try{u&&u()}catch(e){}}},5000)});
+async function rosarioADaily(){try{const k="daily_days/"+today();const d=(await leerUna(k))||{};const n=(d.rn||(d.r?1:0))+1;await backend.setDoc(k,{...d,r:1,rn:n,t:Date.now()})}catch(e){}}
 
 function mysteriesFor(d){const w=parse(d).getDay();return w===1||w===6?"gozosos":w===2||w===5?"dolorosos":w===4?"luminosos":"gloriosos"}
 const PN="Padre nuestro, que estás en el cielo, santificado sea tu Nombre; venga a nosotros tu Reino; hágase tu voluntad en la tierra como en el cielo. Danos hoy nuestro pan de cada día; perdona nuestras ofensas, como también nosotros perdonamos a los que nos ofenden; no nos dejes caer en la tentación, y líbranos del mal. Amén.";
@@ -1110,7 +1170,7 @@ async function uploadTrack(file){if(!backend)return;toast("Subiendo "+file.name+
 function setInput(exId,i,k,val){saveWorkout(w=>{if(!w.startedAt)w.startedAt=Date.now();const arr=w.sets[exId]=w.sets[exId]||[];while(arr.length<=i)arr.push({});const s=arr[i];if(s.ok===undefined)s.ok=false;if(k==="hard"){s.hard=!s.hard}else{const n=parseFloat(String(val).replace(",","."));s[k]=isNaN(n)?null:n}},null,k!=="hard")}
 function saveIntents(list){intents=list.slice(0,12);write(backend.setDoc("settings/intents",{list:intents}))}
 document.addEventListener("click",e=>{
-  const b=e.target.closest("button,[role=button]");if(!b)return;const d=b.dataset;
+  const b=e.target.closest("button,[role=button],[data-musc]");if(!b)return;const d=b.dataset;
   if(d.view){view=d.view;closeSheet();if(view==="entreno"&&!workout)openWorkout(wcur);else render();return}
   if(d.rosario){openSheet({view:"rosario",full:true});return}
   if(b.id==="rosMiniT"){rosMini=!rosMini;render();return}
@@ -1136,6 +1196,11 @@ document.addEventListener("click",e=>{
   if(d.hall){openSheet({view:"hist"});return}
   if(d.hver){openSheet({view:"histver",id:d.hver});return}
   if(b.id==="histDel"){if(sheet.confirm!=="del"){sheet.confirm="del";renderSheetNow();return}const id=d.hid;const w=wHist.find(x=>x.id===id);unawardWorkout(id,w&&w.summary&&w.summary.xp);write(backend.delDoc("workouts/"+id),"Entreno borrado");if(id===wcur){workout=null;stopTimer()}closeSheet();render();return}
+  if(d.smas||d.smenos){const id=d.smas||d.smenos;const ex=curRoutine().ex.find(x=>x.id===id);saveWorkout(w=>{w.extra=w.extra||{};const cur=w.extra[id]||0;const ss=(w.sets[id]||[]);const usadas=ss.filter(x=>x&&(x.r>0||x.w>0)).length;
+      if(d.smas)w.extra[id]=cur+1;else{const nuevo=cur-1;if(ex.sets+nuevo<usadas){toast("Esa serie ya tiene datos: borrá los números primero");return}if(ex.sets+nuevo<1)return;w.extra[id]=nuevo;if(ss.length>ex.sets+nuevo)ss.length=ex.sets+nuevo}});return}
+  if(d.musc){const m=d.musc;const v=fatiga()[m];const u=ultimaVez(m);const R=MUSC[m][1];const falta=v>=100?0:Math.ceil((100-v)/100*R);
+    toast(`${MUSC[m][0]} ${v} % · ${falta?"listo en ~"+falta+" h":"listo"}${u?" · lo entrenaste "+(u===today()?"hoy":"el "+fecha(u).toLowerCase()):""}`);return}
+  if(b.id==="recomendar"){const R=recomendar();const o={modo:"hoy",obj:(profile&&profile.goal==="ganar")?"musculo":"musculo",dias:3,min:45,prios:R.prios};openSheet({view:"armar",o,res:{rutinas:[armarSesion(o)],why:R.why}});return}
   if(d.asist){const id=d.asist;asist={...asist,[id]:!asist[id]};write(backend.setDoc("settings/asist",{map:asist}),asist[id]?"Asistida: anotá los kg de ayuda":"Con lastre o sin peso");render();return}
   if(d.tec){const t=b.closest(".tec");const o=!t.classList.contains("open");t.classList.toggle("open",o);b.setAttribute("aria-expanded",o);if(t.closest(".ex.foco"))tecOpen=o;return}
   if(b.id==="focoSalir"){focoOff=true;render();window.scrollTo(0,0);return}
@@ -1169,7 +1234,7 @@ document.addEventListener("click",e=>{
   if(d.radd){const e=exDeCatalogo(d.radd);if(sheet.tab==="pick"){const rr=routines.find(x=>x.id===sheet.target);if(rr){if(rr.ex.some(x=>x.id===e.id))return toast("Ya está en la rutina");rr.ex.push(e);saveRoutines("Agregado: "+e.name);render()}}else{if(rutDraft.ex.some(x=>x.id===e.id))return toast("Ya está en la lista");rutDraft.ex.push(e);toast("Agregado: "+e.name);renderSheetNow()}return}
   if(b.id==="rutSave"){const d2=rutDraft;if(!(d2.name.trim()&&d2.ex.length))return;const id=newId("r");routines.push({id,name:d2.name.trim(),day:d2.day,goal:"Propia",ex:d2.ex});saveRoutines("Rutina guardada");closeSheet();usarRutina(id);return}
   if(d.roselegir){sheet.rset=d.roselegir;renderSheetNow();return}
-  if(d.rosempezar){const r=rosNuevo(d.rosempezar);r.fase="anuncio";rosGuardar(r);return}
+  if(d.rosempezar){const r=rosNuevo(d.rosempezar);r.fase="credo";rosGuardar(r);return}
   if(d.rosav){rosAvanzar();return}
   if(d.rosatras){rosAtras();return}
   if(d.rossolo){dprofile={...(dprofile||{}),rosSolo:!(dprofile&&dprofile.rosSolo)};backend.setDoc("daily_settings/profile",dprofile);renderSheetNow();return}
@@ -1232,7 +1297,7 @@ document.addEventListener("click",e=>{
   else if(d.hard){setInput(d.hard,+d.i,"hard")}
   else if(d.ok){const ex=curRoutine().ex.find(x=>x.id===d.ok);const ss=wsets(d.ok);const i=+d.i;const s=ss[i]||{};const B=baseSerie(ex,i);const prev={w:B.w,r:B.r};const sg=suggest(ex);
     coachMsg[d.ok]=null;let completed=false;saveWorkout(w=>{if(!w.startedAt)w.startedAt=Date.now();const arr=w.sets[d.ok]=w.sets[d.ok]||[];while(arr.length<=i)arr.push({});const t=arr[i];if(hecha(t)){t.ok=false}else{const pw=s.w>0?s.w:(prev.w>0?prev.w:sg.w);if(pw>0)t.w=pw;t.r=s.r>0?s.r:(prev.r>0?prev.r:ex.lo);if(t.rir==null)t.rir=2;t.ok=true;completed=true}});
-    if(completed){coachMsg[ex.id]=coachSerie(ex,i,wsets(d.ok)[i]);startTimer(ex);const all=wsets(d.ok).filter(hecha).length>=ex.sets;if(all&&focoActivo())toast("Ejercicio completo · tocá Siguiente")}else stopTimer()}
+    if(completed){coachMsg[ex.id]=coachSerie(ex,i,wsets(d.ok)[i]);startTimer(ex);const all=wsets(d.ok).filter(hecha).length>=nSerOf(ex);if(all&&focoActivo())toast("Ejercicio completo · tocá Siguiente")}else stopTimer()}
   else if(b.id==="finish")finishWorkout();
   else if(b.id==="openListen"&&!e.target.closest("[data-pp]")){view="escuchar";closeSheet();render();window.scrollTo(0,0)}
   else if(d.pp){togglePlay()}else if(d.tprev){playTrack((trackIdx-1+tracks.length)%tracks.length)}else if(d.tnext){playTrack((trackIdx+1)%tracks.length)}

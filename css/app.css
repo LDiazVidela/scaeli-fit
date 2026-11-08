@@ -603,3 +603,28 @@ body.foco .rosmini .txt.open{max-height:20vh;overflow:auto}
 body.foco-ros{padding-bottom:calc(46vh + env(safe-area-inset-bottom,0px))}
 .kcalest{display:flex;gap:10px;align-items:flex-start;margin:0;padding:12px 14px;border-radius:14px;background:var(--inset);border:1px solid var(--line2);font-size:13px;line-height:1.45;color:var(--muted)}
 .kcalest b{color:var(--ink);font-size:15px}.kcalest .i{width:18px;height:18px;flex:none;color:var(--accent);margin-top:1px}
+
+/* ---- v20: rosario completo, series editables, Tu cuerpo hoy ---- */
+.wrap>*{animation:none}
+@media (prefers-reduced-motion:no-preference){.wrap.entra>*{animation:in .18s ease both}}
+.rosmini .beads{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.rosmini .beads i{width:9px;height:9px;border-radius:999px;background:var(--track);display:block}
+.rosmini .beads i.on{background:var(--accent)}
+.rosmini .beads i.pn,.rosmini .beads i.gl{width:13px;height:13px;border:1.5px solid var(--accent-line);background:none}
+.rosmini .beads i.pn.on,.rosmini .beads i.gl.on{background:var(--accent);border-color:var(--accent)}
+.rosmini .beads i.gl{margin-left:4px}
+.setsmas{display:flex;gap:8px;justify-content:center}
+.setsmas .chip{height:34px;font-size:12px}
+.cuerpocard{display:flex;flex-direction:column;gap:12px}
+.cuerpocard .hd{display:flex;flex-direction:column;gap:2px}.cuerpocard .hd .hint{margin:0}
+.cuerpo{display:grid;grid-template-columns:1fr 1fr;gap:8px;justify-items:center}
+.cuerpo svg{width:100%;max-width:150px;height:auto}
+.cuerpo polygon{stroke:var(--surface);stroke-width:.6;stroke-linejoin:round;transition:fill .3s}
+.cuerpo polygon[data-musc]{cursor:pointer}
+.cuerpocard .ley{display:flex;justify-content:center;gap:14px;font-size:11px;color:var(--muted)}
+.cuerpocard .ley span{display:flex;align-items:center;gap:5px}.cuerpocard .ley i{width:8px;height:8px;border-radius:99px;display:block}
+.cuerpocard .cans{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.cuerpocard .cans .chip{cursor:pointer}
+.mchip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:none;color:var(--ink);font:inherit;font-size:12px;font-weight:600}
+.mchip i{width:8px;height:8px;border-radius:99px;display:block}
+.toast{white-space:normal;text-align:center;line-height:1.35}

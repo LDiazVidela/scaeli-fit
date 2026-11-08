@@ -186,3 +186,10 @@ codes/PRUEBA-7D        { label: "prueba", days: 7, max: 20, uses: 0, until: "202
 - **Calorías estimadas** en el resumen (MET 3,5 / 5 / 6 según RIR promedio × peso × horas activas), con la aclaración de que ya están contadas en la meta de los días de gym.
 - «¡Subiste de rango!» solo desde Bronce (Hierro no cuenta como subida).
 - Caché: `scaeli-fit-v19`.
+
+## Versión 20 (2026-11-08)
+- **Rosario completo y sincronizado**: Credo y las cuentas iniciales (Padrenuestro, 3 Avemarías por la fe, la esperanza y la caridad, y Gloria), salvo que en Daily se haya elegido el Rosario corto (`dprofile.rosCorto`); el final «Por el Papa y la Iglesia» se nombra en la tarjeta; cuentas grandes del Padrenuestro y del Gloria. Al terminarlo en Fit se marca en Daily con su mismo registro (`daily_days/{fecha}`: `r`, `rn`, `t`, sin pisar lo demás).
+- **Sin parpadeo**: la animación de entrada se aplica solo al cambiar de pestaña (`.wrap.entra`), no en cada toque.
+- **Series**: «+ Serie» y «− Serie» por ejercicio (`workout.extra`); las series hechas se pueden editar sin perder el tilde.
+- **Tu cuerpo hoy**: mapa de músculos de frente y espalda (`data/cuerpo.js`, react-body-highlighter, MIT) coloreado por recuperación estimada (`fatiga()`: cada serie confirmada carga fatiga según `muscDe()`, más con RIR 0–1 o «Costó»; recuperación 48 h músculos chicos, 72 h grandes). Tocar un músculo dice cuándo está listo. «Recomendame el de hoy» elige los grupos más recuperados y hace más tiempo sin entrenar y arma la sesión; aviso si la rutina del día carga un músculo por debajo del 60 %.
+- Caché: `scaeli-fit-v20` (incluye `data/cuerpo.js`).
