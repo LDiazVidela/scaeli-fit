@@ -27,7 +27,7 @@ PWA sin compilación: módulos ES que se sirven tal cual.
 - `assets/ilus/ej/<id>-a.svg|-b.svg`: dibujos Everkinetic (CC BY-SA 4.0) como máscaras, en dos poses que se alternan. Mapa en `tools/ilus/mapa.json`. Las URL van absolutas (`ILU_BASE`). `press-hombros-maquina` no tiene dibujo a propósito.
 - `assets/ilus/daily_*.png`: fondos del personaje y misterios, copiados de Daily.
 - `sw.js`: caché `VERSION = "scaeli-fit-v21"`. **Subir una unidad en cada entrega.**
-- `firestore.rules`: reglas unificadas de las tres apps (`users`, `grupos` con `mensajes`, `codes`). Nunca publicar reglas sin las tres secciones; la copia maestra está en Daily.
+- `firestore.rules`: reglas unificadas de las tres apps (`users`, `grupos` con `mensajes`, `codes` y, desde el 13/11, `ranking` para el ranking de grupos de Daily). Nunca publicar reglas sin las cuatro secciones; la copia maestra está en Daily.
 
 ## Datos en Firestore (`users/{uid}/…`)
 `days/{fecha}` (comidas, `type` gym/descanso, `check`, `vals {pasos,sueno,agua}`) · `workouts/{fecha}` (`routineId`, `sets`, `startedAt`, `pausedAt`, `pausedMs`, `autoPaused`, `offered`, `intention`, `done`, `summary`) · `body/{fecha}` · `foods`, `combos`, `recipes`, `tracks` · `settings/` `profile`, `targets`, `routines`, `loads`, `prs`, `progress` (XP), `plus`, `fast`, `fasts` (historial), `intents`, `hidden`, `equipo`, `grupo` ({gid}) · compartidos con Daily: `daily_settings/profile` (personaje, `fondo`, `rosSolo`) y `daily_settings/rosario` (avance del Rosario).
@@ -54,6 +54,7 @@ PWA sin compilación: módulos ES que se sirven tal cual.
 6. Mandar una imagen de vistazo y responder en pocas líneas qué se hizo y qué se decidió.
 
 ## Pendiente
+- **Aviso de Daily 2.0 (13/11/2026)**: Daily cambió de piel (bordó oscuro y crema, tipografía del sistema, ícono «Puerta de luz») y su rango de perseverancia ahora tiene **ocho** escalones: Hierro, Bronce, Plata, Oro, Platino, Diamante, **Celestial y Divino**, con insignias de PixelLab (`assets/rangos/*.png` en el repo de Daily) y tres puntitos de subnivel. El «Rango de fuerza» de Fit es otra escala (fuerza, seis rangos) y **no se tocó**: si Lorenzo quiere que Fit use los mismos ocho nombres o las mismas insignias, es una decisión suya y se hace cuando escriba «programar». `firestore.rules` ya es idéntico al de Daily (suma `ranking/{gid}`; Fit puede ignorarlo).
 - **Comidas por foto** (Scaeli+, con tope diario): requiere Firebase Blaze, una Cloud Function y una clave de API de un modelo de visión. Espera la decisión de Lorenzo.
 - **App nativa** (Capacitor + RevenueCat) para las tiendas: lectura de Apple Health / Health Connect (pasos y sueño en «Tu día»), compras de Scaeli+ y contador de pasos.
 - Activar Apple como proveedor en Firebase Authentication (requiere cuenta de Apple Developer).

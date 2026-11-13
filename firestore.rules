@@ -50,6 +50,20 @@ service cloud.firestore {
       }
     }
 
+    // Ranking de grupos (Daily 1.12): ranking/{gid} = {n, sem, pts, m, t}. Lo lee cualquiera con sesión (solo nombre del
+    // grupo, semana, promedio de puntos y cantidad de miembros: nada de personas). Lo escribe cualquier miembro de ese grupo.
+    match /ranking/{gid} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null
+                            && exists(/databases/$(database)/documents/grupos/$(gid)/miembros/$(request.auth.uid))
+                            && request.resource.data.keys().hasOnly(['n', 'sem', 'pts', 'm', 't'])
+                            && request.resource.data.n is string && request.resource.data.n.size() <= 40
+                            && request.resource.data.sem is string && request.resource.data.sem.size() == 10
+                            && request.resource.data.pts is number && request.resource.data.pts >= 0 && request.resource.data.pts <= 100000
+                            && request.resource.data.m is number && request.resource.data.m >= 1 && request.resource.data.m <= 200;
+      allow delete: if false;
+    }
+
     // Códigos de Scaeli+ (compartidos por las dos apps): cualquier usuario con sesión puede leerlos y sumar un uso.
     // Se crean desde la consola. Documento: codes/SCAELI-XXXX
     //   { label: "para quién", days: 0 (0 = para siempre), max: 1 (0 = sin límite), uses: 0, until: "2027-12-31" (opcional) }
